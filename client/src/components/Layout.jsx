@@ -5,7 +5,7 @@ export default function Layout() {
     <div className="min-h-screen flex flex-col bg-gray-50">
       
       <Navbar />
-      <main className="flex-1 max-w-6xl w-full mx-auto p-6">
+      <main className="flex-1 w-full">
         <Outlet />
       </main>
       
