@@ -50,7 +50,7 @@ export default function Home() {
             {products.map((product) => (
               <div
                 key={product.id}
-                className="min-w-[260px] max-w-[260px] border p-4 rounded-md hover:shadow-lg transition flex flex-col justify-between"
+                className="min-w-65 max-w-65 border p-4 rounded-md hover:shadow-lg transition flex flex-col justify-between"
               >
                 <div>
                   <img
