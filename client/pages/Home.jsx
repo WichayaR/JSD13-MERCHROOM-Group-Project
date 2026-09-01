@@ -24,7 +24,6 @@ export default function Home() {
   const scrollRef = useRef(null);
   const [activeTab, setActiveTab] = useState('best');
 
-  /* Mock: Best Sellers, New Arrival ของจริงจะมาจาก API ตอนต่อ server */
   const visibleProducts =
     activeTab === 'best'
       ? bestSellerIds.map((id) => findProduct(id)).filter(Boolean)
@@ -36,8 +35,7 @@ export default function Home() {
 
   return (
     <>
-      {/* HERO + hotspots */}
-      <section className="relative bg-brand-gradient">
+      <section className="relative -mt-navbar bg-brand-gradient">
         <div
           className="relative flex h-202.5 items-end justify-center pb-52"
           style={{
@@ -49,7 +47,6 @@ export default function Home() {
         >
           <h1 className="sr-only">MERCHROOM — Rooted in Culture</h1>
 
-          {/* product hotspots */}
           {heroHotspots.map((spot) => (
             <div key={spot.id} className={`absolute ${spot.x} ${spot.y}`}>
               <Hotspot product={findProduct(spot.productId)} size={spot.size} />
@@ -67,7 +64,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* BEST SELLERS */}
       <section className="relative -mt-9.5 rounded-t-section bg-cream py-20">
         <Container>
           <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
@@ -101,7 +97,6 @@ export default function Home() {
             </div>
           </div>
 
-          {/* desktop card */}
           <div
             ref={scrollRef}
             className="scrollbar-hide mt-10 flex gap-5 overflow-x-auto pb-2 snap-x snap-mandatory"
@@ -144,19 +139,14 @@ export default function Home() {
         </Container>
       </section>
 
-      {/* CATEGORIES */}
       <CategoriesGrid />
 
-      {/* STORY OF MERCHROOM */}
       <StoryCollage />
 
-      {/* ROAD TO THAI ARTIST — polaroid collage ใหญ่ */}
       <RoadToThaiArtist />
 
-      {/* BROWSE BY GENRE */}
       <GenreCircles />
 
-      {/* WHAT'S LANDING */}
       <LandingCarousel />
     </>
   );

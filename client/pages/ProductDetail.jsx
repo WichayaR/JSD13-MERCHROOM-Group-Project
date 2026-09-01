@@ -20,7 +20,6 @@ import Breadcrumb from '../src/components/ui/Breadcrumb';
 
 const SIZES = ['Small', 'Medium', 'Large', 'X-large'];
 
-/* สีเป็น mock ตาม Figma - ข้อมูลสินค้าจริงยังไม่มี field สี */
 const COLORS = [
   { id: 'black', label: 'Black', className: 'bg-ink' },
   { id: 'white', label: 'White', className: 'border border-ink/20 bg-white' },
@@ -33,7 +32,6 @@ const TABS = [
   { id: 'faqs', label: 'FAQs' },
 ];
 
-/* คำถามที่พบบ่อย (mock) — ตอนต่อ API จะย้ายไปฝั่ง server */
 const FAQS = [
   {
     q: 'สินค้าจัดส่งในกี่วัน?',
@@ -56,7 +54,6 @@ export default function ProductDetail() {
   const navigate = useNavigate();
   const { addToCart } = useCart();
 
-  // หา category ของสินค้านี้จาก id suffix เพื่อให้ breadcrumb กลับไปหน้า filter ที่ถูกต้อง
   const product = products.find((item) => String(item.id) === String(productId));
   const backToCat = (() => {
     if (!product) return null;
@@ -68,7 +65,6 @@ export default function ProductDetail() {
   const backTo = backToCat ? `/products?cat=${backToCat}` : '/products';
   const categoryLabel = backToCat ? categoryFilter[backToCat]?.label : 'Products';
 
-  /* ตัวเลือกสี/ไซซ์/จำนวนเป็น state เฉพาะหน้า - สินค้าจริงยังไม่มี field เหล่านี้ */
   const [size, setSize] = useState('Large');
   const [color, setColor] = useState('black');
   const [quantity, setQuantity] = useState(1);
@@ -84,12 +80,10 @@ export default function ProductDetail() {
     );
   }
 
-  // Gallery
   const sameBrand = products.filter((item) => item.brand === product.brand);
   const gallery = [product, ...sameBrand.filter((item) => item.id !== product.id)].slice(0, 3);
   const mainImage = gallery[galleryIndex]?.image || product.image;
 
-  // You might also like:
   const related = [
     ...sameBrand.filter((item) => item.id !== product.id),
     ...products.filter(
@@ -107,7 +101,6 @@ export default function ProductDetail() {
         ]}
       />
 
-      {/* รูป + ตัวเลือกสินค้า */}
       <div className="mt-6 grid items-start gap-10 lg:grid-cols-2">
         <div className="flex gap-4">
           <div className="flex flex-col gap-3">
@@ -159,7 +152,6 @@ export default function ProductDetail() {
             {product.description}
           </p>
 
-          {/* เลือกสี - mock ตาม Figma */}
           <div className="mt-6">
             <p className="text-sm font-semibold">Choose Colors</p>
             <div className="mt-3 flex gap-3">
@@ -234,7 +226,6 @@ export default function ProductDetail() {
         </div>
       </div>
 
-      {/* Tab details / reviews / faqs */}
       <div className="mt-16 border-b border-ink/10">
         <div role="tablist" aria-label="ข้อมูลสินค้า" className="flex">
           {TABS.map((tab) => {
@@ -274,7 +265,6 @@ export default function ProductDetail() {
             <h2 className="text-xl font-bold">All Reviews ({mockReviews.length})</h2>
 
             <div className="flex items-center gap-3">
-              {/* ตัวเรียงลำดับยังไม่ทำงานจริงไว้ทำตอนมี API รีวิว */}
               <button
                 type="button"
                 className="inline-flex h-10 items-center gap-2 rounded-pill border border-ink/15 px-4 text-sm"
@@ -334,7 +324,6 @@ export default function ProductDetail() {
         </div>
       )}
 
-      {/* You might also like */}
       {related.length > 0 && (
         <section className="mt-24" aria-label="สินค้าที่คุณอาจสนใจ">
           <h2 className="text-center text-3xl font-bold md:text-4xl">You might also like</h2>

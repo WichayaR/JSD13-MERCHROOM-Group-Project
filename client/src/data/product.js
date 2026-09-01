@@ -1,14 +1,9 @@
-/*ข้อมูลสินค้า (mock) — จะถูกแทนด้วย API จาก server/ ในอนาคต
- * เรื่องรูปภาพ: ห้ามใส่ path เป็น string ธรรมดา เพราะ Vite จะไม่ resolve
- * ให้ ทำให้รูปไม่ขึ้น ต้องผ่าน import.meta.glob เท่านั้น (ดู AGENTS.md) */
-
 const images = import.meta.glob('../../assets/{Thai,Eng,Heritage}/*.{png,PNG}', {
   eager: true,
   query: '?url',
   import: 'default',
 });
 
-/* หารูปจากชื่อไฟล์ที่ลงท้ายตรงกัน */
 function img(fileName) {
   const match = Object.keys(images).find((path) => path.endsWith(`/${fileName}`));
 
@@ -21,7 +16,6 @@ function img(fileName) {
 }
 
 export const products = [
-  // Product-TH
   {
     id: '01th',
     brand: 'THE PARKINSON',
@@ -65,7 +59,6 @@ export const products = [
     image: img('5.CANVAS_BAG_NO_ONE_ELSE.png'),
   },
 
-  // Product-EN
   {
     id: '01en',
     brand: 'TAYLOR SWIFT',
@@ -252,7 +245,6 @@ export const products = [
     image: img('23.A7X_End of World Trio.png'),
   },
 
-  // Product-Heritage
   {
     id: '06hr',
     brand: 'SACIT',

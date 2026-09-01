@@ -8,16 +8,15 @@ function findProduct(id) {
   return products.find((p) => p.id === id);
 }
 
-/* ตำแหน่งมุมซ้ายบน (px) ของแต่ละใบ เรียงตามลำดับเดียวกับข้อมูลใน sections.js */
 const POP_LAYOUT = [
-  { left: 23, top: 56, width: 280 }, // Taylor Swift
-  { left: 301, top: 146, width: 232 }, // Justin Bieber
-  { left: 473, top: 59, width: 209 }, // กองซ้อน Billie + Justin
+  { left: 23, top: 56, width: 280 },
+  { left: 301, top: 146, width: 232 },
+  { left: 473, top: 59, width: 209 },
 ];
 const THAI_LAYOUT = [
-  { left: 129, top: 497, width: 257 }, // PUN
-  { left: 303, top: 462, width: 200 }, // MILLI
-  { left: 459, top: 490, width: 200 }, // PROXIE
+  { left: 129, top: 497, width: 257 },
+  { left: 303, top: 462, width: 200 },
+  { left: 459, top: 490, width: 200 },
 ];
 const CRAFT_LAYOUT = [
   { left: 45, top: 96, w: 111, h: 111 },
@@ -28,7 +27,6 @@ const CRAFT_LAYOUT = [
   { left: 268, top: 215, w: 132, h: 88 },
 ];
 
-/** วงกลมเลขลำดับ cluster (01–03) — ตัวเลขใช้ font-editorial */
 function Badge({ number, className = '' }) {
   return (
     <div
@@ -39,11 +37,6 @@ function Badge({ number, className = '' }) {
   );
 }
 
-/* ครอบชิ้นส่วนของ collage ให้ลอยเข้ามารวมกันเมื่อ scroll ถึง
-  - position บน stage กำหนดที่ตัว Reveal (x/y เป็น px)
-  - style ที่ส่งเข้ามาคือ transform ประจำชิ้น (เช่นการหมุนเอียง)
-  - เล่นซ้ำ: opacity/transform สลับ true/false ตามการเข้า-ออกจอทุกครั้ง
- */
 function Reveal({ delay = 0, x = 0, y = 40, className = '', style, children }) {
   const ref = useRef(null);
   const [inView, setInView] = useState(false);
@@ -79,7 +72,6 @@ function Reveal({ delay = 0, x = 0, y = 40, className = '', style, children }) {
   );
 }
 
-/* polaroid พื้นขาว — cluster 01 (ศิลปินป๊อป) */
 function PopPolaroid({ item, layout }) {
   const product = findProduct(item.productId);
   if (!product) return null;
@@ -117,7 +109,6 @@ function PopPolaroid({ item, layout }) {
   );
 }
 
-/* polaroid พื้นเข้ม — cluster 02 (สินค้าไทย) */
 function ThaiPolaroid({ item, layout }) {
   const product = findProduct(item.productId);
   if (!product) return null;
@@ -164,7 +155,6 @@ export default function RoadToThaiArtist() {
               </Reveal>
             ))}
 
-            {/* กรอบไวนิลดำ */}
             <Reveal delay={200} y={50} className="absolute" style={{ left: 714, top: 0 }}>
               <div className="h-99 w-100.75 bg-black p-3 shadow-card">
                 <div className="flex h-full w-full items-center justify-center bg-ink p-2">
@@ -181,8 +171,6 @@ export default function RoadToThaiArtist() {
               </div>
             </Reveal>
 
-
-            {/* หัวข้อ cluster 01 */}
             <Reveal
               x={-140}
               y={24}
@@ -195,7 +183,6 @@ export default function RoadToThaiArtist() {
             </Reveal>
             <Badge number="01" className="left-0 top-12.25 bg-primary-deep" />
 
-            {/* แคปชันใต้กรอบไวนิล */}
             <Reveal
               delay={350}
               y={30}
@@ -207,7 +194,6 @@ export default function RoadToThaiArtist() {
               </p>
             </Reveal>
 
-            {/* หัวข้อ cluster 02 */}
             <Reveal
               x={-120}
               y={40}
@@ -220,7 +206,6 @@ export default function RoadToThaiArtist() {
             </Reveal>
             <Badge number="02" className="left-27 top-115 bg-violet" />
 
-            {/* polaroid ไทยพื้นเข้ม */}
             {thai.map((item, idx) => (
               <Reveal
                 key={item.id}
@@ -233,7 +218,6 @@ export default function RoadToThaiArtist() {
                 <ThaiPolaroid item={item} layout={THAI_LAYOUT[idx]} />
               </Reveal>
             ))}
-
 
             <Reveal
               delay={500}
@@ -256,7 +240,6 @@ export default function RoadToThaiArtist() {
               </div>
             </Reveal>
 
-            {/* การ์ด Thai Handcraft Edit */}
             <Reveal x={140} y={60} className="absolute" style={{ left: 756, top: 464 }}>
               <div className="relative h-76.5 w-139.5 border-[5px] border-black bg-white shadow-card">
                 <Badge number="03" className="left-8.5 top-8.25 bg-highlight" />
@@ -264,7 +247,6 @@ export default function RoadToThaiArtist() {
                   Thai Handcraft Edit
                 </h3>
 
-                {/* รูปหัตถกรรมวางอิสระทับการ์ด */}
                 {craftImages.map((src, idx) => (
                   <img
                     key={src}

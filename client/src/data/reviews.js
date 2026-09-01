@@ -1,4 +1,3 @@
-/* รีวิวสินค้า (mock) - หน้า ProductDetail ยังไม่มี API รีวิวจริง ต้องแทนด้วย API */
 export const mockReviews = [
   {
     id: 'r1',

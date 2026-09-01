@@ -3,7 +3,6 @@ import { Outlet } from 'react-router-dom';
 import Navbar from './Navbar';
 import Footer from './Footer';
 
-/* โครงหน้าเว็บ */
 export default function Layout() {
   useEffect(() => {
     const apply = () => {
@@ -18,7 +17,7 @@ export default function Layout() {
     <div className="flex min-h-screen flex-col bg-cream">
       <Navbar />
 
-      <main className="w-full flex-1">
+      <main className="w-full flex-1 pt-navbar">
         <Outlet />
       </main>
 

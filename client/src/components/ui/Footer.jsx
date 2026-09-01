@@ -1,6 +1,5 @@
-import Logo from './ui/Logo';
+import Logo from './Logo';
 
-/* โครงลิงก์ footer */
 const footerColumns = [
   {
     title: 'CATEGORIES',
@@ -39,7 +38,6 @@ export default function Footer() {
   return (
     <footer className="mt-auto bg-ink text-cream-text">
       <div className="px-6 pb-16 pt-10 lg:px-15">
-        {/* แบ่ง footer ออกจาก section คอนเสิร์ต */}
         <div className="h-px bg-white" />
 
         <div className="mt-9 grid gap-12 md:grid-cols-2 lg:grid-cols-[1fr_repeat(3,auto)] lg:gap-20">

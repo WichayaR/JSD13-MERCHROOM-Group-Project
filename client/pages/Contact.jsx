@@ -16,7 +16,6 @@ export default function Contact() {
 
   const handleSubmit = (event) => {
     event.preventDefault();
-    // ยังไม่มี API — ต่อ endpoint จริงตอนเชื่อม server/
     setSent(true);
     setForm(initialForm);
   };

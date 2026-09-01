@@ -6,7 +6,6 @@ export default function StoryCollage() {
     <section className="pb-20 pt-7">
       <Container>
         <div className="grid gap-12 lg:grid-cols-2">
-          {/* ซ้าย: eyebrow + หัวข้อ */}
           <div>
             <p className="text-xl font-bold uppercase tracking-wide text-primary">
               Story of Merchroom
@@ -17,7 +16,6 @@ export default function StoryCollage() {
             </h2>
           </div>
 
-          {/* ขวา: ย่อหน้า + แคปชันคู่กับปุ่ม */}
           <div>
             <p className="max-w-152.75 text-2xl font-bold leading-9">
               Long pre-orders. Drops that sell out in hours. Craftwork nobody&apos;s heard of.

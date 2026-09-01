@@ -1,7 +1,8 @@
-import { Link, NavLink } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { Search, ShoppingCart, User } from 'lucide-react';
-import { useCart } from '../context/CartContext';
-import Logo from './ui/Logo';
+import { useCart } from '../../context/CartContext';
+import Logo from './Logo';
 
 const navLinks = [
   { label: 'Pop Culture', to: '/pop-culture' },
@@ -12,21 +13,35 @@ const navLinks = [
 
 export default function Navbar() {
   const { cartCount } = useCart();
+  const { pathname } = useLocation();
+  const navigate = useNavigate();
+  const [scrolled, setScrolled] = useState(false);
+  const [query, setQuery] = useState('');
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 24);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  const onHero = pathname === '/' && !scrolled;
 
   return (
-    <header className="bg-brand-gradient sticky top-0 z-50 h-navbar text-white">
-      {/* navbar */}
+    <header
+      className={`fixed inset-x-0 top-0 z-50 h-navbar text-white transition-all duration-300 ${
+        onHero ? 'bg-navbar-gradient' : 'bg-navbar-gradient-fade backdrop-blur-lg'
+      }`}
+    >
       <div className="flex h-full w-full items-center gap-6 px-6 lg:gap-19.5 lg:px-15">
         <Logo />
 
-        {/* บล็อกเมนู */}
         <nav className="hidden items-center gap-6 lg:flex lg:w-106.75 lg:justify-between">
           {navLinks.map((link) => (
             <NavLink
               key={link.to}
               to={link.to}
               className={({ isActive }) =>
-                /* hover/active = ตัวอักษร + เส้นขีดใต้สีเหลืองไฮไลต์  */
                 `transition hover:text-highlight hover:underline hover:decoration-highlight hover:decoration-[3px] hover:underline-offset-8 ${
                   isActive
                     ? 'text-highlight underline decoration-highlight decoration-[3px] underline-offset-8'
@@ -40,16 +55,21 @@ export default function Navbar() {
         </nav>
 
         <form
-          className="ml-auto hidden h-12 w-107.75 items-center gap-3 rounded-pill bg-white/60 px-4 md:flex lg:ml-0"
+          className="ml-auto hidden h-11 w-107.75 items-center gap-3 rounded-pill bg-white/60 px-4 md:flex lg:ml-0"
           role="search"
-          onSubmit={(e) => e.preventDefault()}
+          onSubmit={(e) => {
+            e.preventDefault();
+            navigate(query.trim() ? `/products?q=${encodeURIComponent(query.trim())}` : '/products');
+          }}
         >
-          <Search className="size-5 shrink-0 text-black/40" aria-hidden="true" />
+          <Search className="size-5 shrink-0 text-ink/60" aria-hidden="true" />
           <input
             type="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
             placeholder="Search for products..."
             aria-label="ค้นหาสินค้า"
-            className="w-full bg-transparent text-black placeholder:text-black/40 focus:outline-none"
+            className="w-full bg-transparent text-sm text-ink placeholder:text-ink/50 focus:outline-none"
           />
         </form>
 

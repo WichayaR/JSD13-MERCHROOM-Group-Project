@@ -5,7 +5,6 @@ import Button from '../src/components/ui/Button';
 import Container from '../src/components/ui/Container';
 import Breadcrumb from '../src/components/ui/Breadcrumb';
 
-/* ส่วนลด/ค่าส่งเป็น mock - ของจริงจะมาจาก API และระบบโปรโมชันตอนต่อ server */
 const DISCOUNT_RATE = 0.2;
 const DELIVERY_FEE = 15;
 
@@ -34,10 +33,12 @@ export default function Cart() {
         </div>
       ) : (
         <div className="mt-10 grid items-start gap-8 lg:grid-cols-[1fr_420px]">
-          {/* รายการสินค้า */}
-          <div className="flex flex-col gap-6 rounded-card bg-white p-5 md:p-8">
+          <div className="flex flex-col gap-5">
             {items.map((item) => (
-              <div key={item.id} className="flex items-stretch gap-5">
+              <div
+                key={item.id}
+                className="flex items-stretch gap-5 rounded-card bg-white p-5"
+              >
                 <div className="size-25 shrink-0 overflow-hidden rounded-btn bg-cream">
                   {item.image ? (
                     <img
@@ -92,7 +93,6 @@ export default function Cart() {
             ))}
           </div>
 
-          {/* สรุปคำสั่งซื้อ */}
           <aside className="rounded-card bg-white p-6 md:p-8" aria-label="สรุปคำสั่งซื้อ">
             <h2 className="text-lg font-bold">Order Summary</h2>
 
@@ -111,12 +111,11 @@ export default function Cart() {
               </div>
             </dl>
 
-            <div className="mt-5 flex justify-between border-t border-ink/10 pt-5">
+            <div className="mt-6 flex items-center justify-between rounded-btn bg-cream px-5 py-3.5">
               <span className="font-bold">Total</span>
               <span className="font-[Sarabun] text-xl font-bold">{baht(total)}</span>
             </div>
 
-            {/* ระบบโค้ดส่วนลด */}
             <form
               className="mt-6 flex items-center gap-3"
               onSubmit={(e) => e.preventDefault()}
@@ -134,7 +133,6 @@ export default function Cart() {
               </Button>
             </form>
 
-            {/* หน้า checkout */}
             <Button variant="dark" size="lg" className="mt-4 w-full">
               Go to Checkout
               <ArrowRight className="size-4" aria-hidden="true" />

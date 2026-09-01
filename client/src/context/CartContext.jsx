@@ -5,7 +5,6 @@ const CartContext = createContext(null);
 export function CartProvider({ children }) {
   const [items, setItems] = useState([]);
 
-  /* เพิ่มสินค้าลงตะกร้า ถ้ามีอยู่แล้วให้บวกจำนวนแทนการเพิ่มรายการซ้ำ */
   const addToCart = useCallback((product, quantity = 1) => {
     if (!product?.id) {
       console.warn('[cart] addToCart ต้องรับ product object ไม่ใช่ event');
@@ -29,7 +28,6 @@ export function CartProvider({ children }) {
     setItems((prev) => prev.filter((item) => item.id !== id));
   }, []);
 
-  /** แก้จำนวนของรายการในตะกร้า (อย่างน้อย 1) - ใช้กับปุ่ม -/+ ในหน้า Cart */
   const updateQuantity = useCallback((id, quantity) => {
     setItems((prev) =>
       prev.map((item) =>

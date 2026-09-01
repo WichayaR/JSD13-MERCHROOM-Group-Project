@@ -12,7 +12,6 @@ export default function LandingCarousel() {
 
   const go = (delta) => setIndex((i) => (i + delta + total) % total);
 
-  // ดึงรายการแบบวน loop (offset ลบ/เกินก็ได้)
   const itemAt = (offset) => landingItems[(index + offset + total) % total];
   const current = itemAt(0);
 
@@ -50,7 +49,7 @@ export default function LandingCarousel() {
               type="button"
               onClick={() => go(-1)}
               aria-label="ก่อนหน้า"
-              className="grid size-9 place-items-center rounded-pill border border-white text-white transition hover:bg-white hover:text-ink"
+              className="grid size-9 place-items-center rounded-pill border border-white text-white transition hover:bg-white hover:text-ink cursor-pointer"
             >
               <ChevronLeft className="size-5" />
             </button>
@@ -58,7 +57,7 @@ export default function LandingCarousel() {
               type="button"
               onClick={() => go(1)}
               aria-label="ถัดไป"
-              className="grid size-9 place-items-center rounded-pill border border-white text-white transition hover:bg-white hover:text-ink"
+              className="grid size-9 place-items-center rounded-pill border border-white text-white transition hover:bg-white hover:text-ink cursor-pointer"
             >
               <ChevronRight className="size-5" />
             </button>
