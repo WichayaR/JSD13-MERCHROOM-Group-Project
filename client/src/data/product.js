@@ -1,112 +1,317 @@
+/*ข้อมูลสินค้า (mock) — จะถูกแทนด้วย API จาก server/ ในอนาคต
+ * เรื่องรูปภาพ: ห้ามใส่ path เป็น string ธรรมดา เพราะ Vite จะไม่ resolve
+ * ให้ ทำให้รูปไม่ขึ้น ต้องผ่าน import.meta.glob เท่านั้น (ดู AGENTS.md) */
 
+const images = import.meta.glob('../../assets/{Thai,Eng,Heritage}/*.{png,PNG}', {
+  eager: true,
+  query: '?url',
+  import: 'default',
+});
+
+/* หารูปจากชื่อไฟล์ที่ลงท้ายตรงกัน */
+function img(fileName) {
+  const match = Object.keys(images).find((path) => path.endsWith(`/${fileName}`));
+
+  if (!match) {
+    console.warn(`[product] ไม่พบรูป: ${fileName}`);
+    return '';
+  }
+
+  return images[match];
+}
 
 export const products = [
-  //Product-TH
+  // Product-TH
   {
-    id: "01th",
-    name: "VINYL: THE PARKINSON",
-    description: "The Parkinson Orchestra concert",
+    id: '01th',
+    brand: 'THE PARKINSON',
+    name: 'VINYL: THE PARKINSON',
+    description: 'The Parkinson Orchestra concert',
     price: 2200,
-    image: "../assets/Thai/1.CD_Parkinson.png"
+    image: img('1.CD_Parkinson.png'),
   },
   {
-    id: "02th",
-    name: "NFC Keychain: Smallroom 25th Anniversary",
-    description: "เสียงเพลงในรูปแบบเครื่องประดับสุดเท่ นอกจากจะเป็นพวงกุญแจที่สามารถพกติดตัวไปได้ทุกที่ แล้วNFC ยังทำให้แฟนๆห้องเล็กของคุณได้ฟังเพลง250เพลง",
+    id: '02th',
+    brand: 'SMALLROOM',
+    name: 'NFC Keychain: Smallroom 25th Anniversary',
+    description:
+      'เสียงเพลงในรูปแบบเครื่องประดับสุดเท่ นอกจากจะเป็นพวงกุญแจที่สามารถพกติดตัวไปได้ทุกที่ แล้วNFC ยังทำให้แฟนๆห้องเล็กของคุณได้ฟังเพลง250เพลง',
     price: 299,
-    image: "../assets/Thai/2.Keychain_Smallroom.png"
+    image: img('2.Keychain_Smallroom.png'),
   },
   {
-    id: "03th",
-    name: "SPMD0330-BLUEJEAN น้ำเงินยีนส์",
-    description: "LIDO LIVEHOUSE Nostalgia Replay presents",
+    id: '03th',
+    brand: 'LAONGFONG',
+    name: 'SPMD0330-BLUEJEAN น้ำเงินยีนส์',
+    description: 'LIDO LIVEHOUSE Nostalgia Replay presents',
     price: 490,
-    image: "../assets/Thai/3.LaongFong_Hat.png"
+    image: img('3.LaongFong_Hat.png'),
   },
   {
-    id: "04th",
-    name: "Charcoal Black Tee: Smallroom 25th Anniversary",
-    description: "เสื้อยืด Charcoal Black Tee ลายสุดพิเศษฉลอง 25ปี smallroom เสื้อยืดทรงสวย นุ่มสบาย ระบายอากาศดี",
+    id: '04th',
+    brand: 'SMALLROOM',
+    name: 'Charcoal Black Tee: Smallroom 25th Anniversary',
+    description:
+      'เสื้อยืด Charcoal Black Tee ลายสุดพิเศษฉลอง 25ปี smallroom เสื้อยืดทรงสวย นุ่มสบาย ระบายอากาศดี',
     price: 620,
-    image: "../assets/Thai/4.Charcoal_Black_Tee.png"
+    image: img('4.Charcoal_Black_Tee.png'),
   },
   {
-    id: "05th",
-    name: "CANVAS BAG NO ONE ELSE",
-    description: "ผลิตจากผ้าแคนวาส หนาพิเศษ อยู่ทรงตั้งได้ ภายในใส่ได้จุใจ",
+    id: '05th',
+    brand: 'SMALLROOM',
+    name: 'CANVAS BAG NO ONE ELSE',
+    description: 'ผลิตจากผ้าแคนวาส หนาพิเศษ อยู่ทรงตั้งได้ ภายในใส่ได้จุใจ',
     price: 1190,
-    image: "../assets/Thai/5.CANVAS_BAG_NO_ONE_ELSE.png"
+    image: img('5.CANVAS_BAG_NO_ONE_ELSE.png'),
   },
+
   // Product-EN
   {
-    id: "01en",
-    name: "BABY, THAT,S SHOW BUSINESS CROPPRD TEE",
+    id: '01en',
+    brand: 'TAYLOR SWIFT',
+    name: "BABY, THAT'S SHOW BUSINESS CROPPED TEE",
     description: "Ivory cropped t-shirt featuring 'The Life of a Showgirl' design.",
     price: 1308.94,
-    image: "../assets/Eng/1.Taylor-Swift_BUSINESS CROPPED TEE.png"
+    image: img('1.Taylor-Swift_BUSINESS CROPPED TEE.png'),
   },
   {
-    id: "02en",
-    name: "THE LIFE OF A SHOWGIRLS IT'S FRIGHTENING BLACK CREWNECK SWEATSHIRT",
-    description: "Black long sleeve crevneck sweatshirt featuring 'Taylor Swift' logo in red sparkle and photo of Taylor Swift with red sparkle border printed border printed on front with 'The Life of a Showgirl' album logo printed in red sparkle on wearer's left sleeve.",
-    price: 2126.80,
-    image: "../assets/Eng/2.Taylor-Swift_Sweatshirt.png"
+    id: '02en',
+    brand: 'TAYLOR SWIFT',
+    name: "THE LIFE OF A SHOWGIRL IT'S FRIGHTENING BLACK CREWNECK SWEATSHIRT",
+    description:
+      "Black long sleeve crewneck sweatshirt featuring 'Taylor Swift' logo in red sparkle and photo of Taylor Swift with red sparkle border printed on front with 'The Life of a Showgirl' album logo printed in red sparkle on wearer's left sleeve.",
+    price: 2126.8,
+    image: img('2.Taylor-Swift_Sweatshirt.png'),
   },
   {
-    id: "03en",
-    name: "THE LIFE OF A SHOWGIRL CREWNECK SWEATSHIRT BOX SET",
-    description: "Limited edition crewneck sweatshirt box set with exclusive track list graphic.",
-    price: 2126.80,
-    image: "../assets/Eng/3.Taylor-Swift_Crewneck Sweatshirt Box Set.png"
+    id: '03en',
+    brand: 'TAYLOR SWIFT',
+    name: 'THE LIFE OF A SHOWGIRL CREWNECK SWEATSHIRT BOX SET',
+    description: 'Limited edition crewneck sweatshirt box set with exclusive track list graphic.',
+    price: 2126.8,
+    image: img('3.Taylor-Swift_Crewneck Sweatshirt Box Set.png'),
   },
   {
-    id: "04en",
-    name: "THE TORTURED POETS DEPARTMENT GRAY PHOTO LONG SLEEVE T-SHIRT",
-    description: "Gray long sleeve t-shirt with album graphic and tracklist.",
+    id: '04en',
+    brand: 'TAYLOR SWIFT',
+    name: 'THE TORTURED POETS DEPARTMENT GRAY PHOTO LONG SLEEVE T-SHIRT',
+    description: 'Gray long sleeve t-shirt with album graphic and tracklist.',
     price: 1800,
-    image: "../assets/Eng/4.Taylor-Swift_Long Sleeve T-Shirt.png"
+    image: img('4.Taylor-Swift_Long Sleeve T-Shirt.png'),
   },
   {
-    id: "05en",
-    name: "THE TORTUREDNPOETS DEPARTMENT GRAY HOODIE",
-    description: "Smoke gray hoodie with front pocket and album graphics.",
+    id: '05en',
+    brand: 'TAYLOR SWIFT',
+    name: 'THE TORTURED POETS DEPARTMENT GRAY HOODIE',
+    description: 'Smoke gray hoodie with front pocket and album graphics.',
     price: 1800,
-    image: "../assets/Eng/5.Taylor-Swift_Gray Hoodie.png"
+    image: img('5.Taylor-Swift_Gray Hoodie.png'),
   },
-  //Product-Herritage
   {
-    id: "01hr",
-    name: "พวงกุญแจลิเภา",
-    description: "พวงกุญแจจักสานย่านลิเภา ที่เป็นงานหัตถกรรมที่สานหรือถักด้วย 'ย่านลิเภา' หรือ 'ลิเภา' ที่นำมาตีความใหม่ให้สามารถสะท้อนเสน่ห์งานจักสานแบบดั้งเดิม ให้เกิดรูปทรงและลวดลายที่งดงามร่วมสมัย",
+    id: '06en',
+    brand: 'JUSTIN BIEBER',
+    name: 'Ghost Bieber Crewneck III',
+    description: 'Crewneck จากคอลเลกชัน Ghost Bieber',
+    price: 1500,
+    image: img('6.Justin-Bieber_Ghost Bieber Crewneck III.png'),
+  },
+  {
+    id: '07en',
+    brand: 'JUSTIN BIEBER',
+    name: 'Peaches T-Shirt (Green)',
+    description: 'เสื้อยืดสีเขียวจากคอลเลกชัน Peaches',
+    price: 1100,
+    image: img('7.Justin-Bieber_Peaches T-Shirt (Green) .png'),
+  },
+  {
+    id: '08en',
+    brand: 'JUSTIN BIEBER',
+    name: 'Peaches Tie Dye Hoodie',
+    description: 'ฮู้ดดี้ tie-dye จากคอลเลกชัน Peaches',
+    price: 1900,
+    image: img('8.Justin-Bieber_Peaches Tie Dye Hodie.png'),
+  },
+  {
+    id: '09en',
+    brand: 'JUSTIN BIEBER',
+    name: 'Peaches Tie Dye Hoodie II',
+    description: 'ฮู้ดดี้ tie-dye จากคอลเลกชัน Peaches (อีกเฉดสี)',
+    price: 1900,
+    image: img('9.Justin-Bieber_Peaches Tie Dye Hodie.png'),
+  },
+  {
+    id: '10en',
+    brand: 'JUSTIN BIEBER',
+    name: 'Peaches Nalgene',
+    description: 'กระติกน้ำ Nalgene คอลเลกชัน Peaches',
+    price: 850,
+    image: img('10.Justin-Bieber_Peaches Nalgene.png'),
+  },
+  {
+    id: '11en',
+    brand: 'LINKIN PARK',
+    name: 'Unshatter Soundtrack Vinyl 2LP',
+    description: 'แผ่นเสียง 2LP จากซาวด์แทร็กเรื่อง Unshatter',
+    price: 2200,
+    image: img('11.Linkin-Park_Soundtrack Citrus Vinyl 2lp.png'),
+  },
+  {
+    id: '12en',
+    brand: 'LINKIN PARK',
+    name: 'Long Sleeve Tee',
+    description: 'เสื้อแขนยาวลาย Linkin Park',
+    price: 1300,
+    image: img('12.Linkin-Park_Long Sleeve.png'),
+  },
+  {
+    id: '13en',
+    brand: 'LINKIN PARK',
+    name: 'Long Sleeve Tee (2)',
+    description: 'เสื้อแขนยาวอีกแบบจาก Linkin Park',
+    price: 1300,
+    image: img('13.Linkin-Park_Long Sleeve.png'),
+  },
+  {
+    id: '14en',
+    brand: 'LINKIN PARK',
+    name: "Women's Crewneck",
+    description: 'เสื้อครูเชสเชอร์สำหรับผู้หญิง',
+    price: 1600,
+    image: img('14.Linkin-Park_Women’s Crewneck.png'),
+  },
+  {
+    id: '15en',
+    brand: 'LINKIN PARK',
+    name: "Ladies White Cropped Tee",
+    description: 'เสื้อครอปสีขาวสำหรับผู้หญิง',
+    price: 1200,
+    image: img('15.Linkin-Park_Ladies White Cropped Tee.png'),
+  },
+  {
+    id: '16en',
+    brand: 'BILLIE EILISH',
+    name: 'Hit Me Hard and Soft Tour Hoodie',
+    description: 'ฮู้ดดี้ทัวร์คอนเสิร์ต Hit Me Hard and Soft',
+    price: 2100,
+    image: img('16.Billie-Eilish_World Tour Pullover Hoodie.PNG'),
+  },
+  {
+    id: '17en',
+    brand: 'BILLIE EILISH',
+    name: 'Hit Me Hard and Soft Tour Hoodie (2)',
+    description: 'ฮู้ดดี้ทัวร์อีกเฉดสี',
+    price: 2100,
+    image: img('17.Billie-Eilish_World Tour Pullover Hoodie.PNG'),
+  },
+  {
+    id: '18en',
+    brand: 'BILLIE EILISH',
+    name: 'The Tour Gold T-Shirt',
+    description: 'เสื้อยืด The Tour สีทอง',
+    price: 1100,
+    image: img('18.Billie-Eilish_The Tour Gold T-Shirt.PNG'),
+  },
+  {
+    id: '19en',
+    brand: 'BILLIE EILISH',
+    name: 'Dateback Black Longsleeve',
+    description: 'เสื้อแขนยาว Dateback สีดำ',
+    price: 1400,
+    image: img('19.Billie-Eilish_Dateback Black Longsleeve.PNG'),
+  },
+  {
+    id: '20en',
+    brand: 'A7X',
+    name: 'Avenged Sevenfold Nightmare Tee',
+    description: 'เสื้อยืดอัลบั้ม Nightmare',
+    price: 1500,
+    image: img('20.A7X_Aveged Sevenfold_Nightmare-Tee.png'),
+  },
+  {
+    id: '21en',
+    brand: 'A7X',
+    name: 'Europe Tour LIBAD Tote',
+    description: 'กระเป๋าผ้า LIBAD Tour',
+    price: 950,
+    image: img('21.A7X_Europe Tour Libad-Tote.png'),
+  },
+  {
+    id: '22en',
+    brand: 'A7X',
+    name: 'Life Is But A Dream Vinyl',
+    description: 'แผ่นเสียง Life Is But A Dream',
+    price: 2400,
+    image: img('22.A7X_Life is but a Dream_Vinyl.png'),
+  },
+  {
+    id: '23en',
+    brand: 'A7X',
+    name: 'End of World Trio',
+    description: 'เซ็ตสินค้า End of World',
+    price: 1800,
+    image: img('23.A7X_End of World Trio.png'),
+  },
+
+  // Product-Heritage
+  {
+    id: '06hr',
+    brand: 'SACIT',
+    name: 'Pride Clutch ป่านศรนารายณ์',
+    description: 'กระเป๋า Clutch จากป่านศรนารายณ์',
+    price: 1500,
+    image: img('6.Pride Clutch ป่านศรนารายณ์.png'),
+  },
+  {
+    id: '07hr',
+    brand: 'SACIT',
+    name: 'โคมไฟเซรามิก',
+    description: 'โคมไฟเซรามิกลายไทย',
+    price: 6999,
+    image: img('7.โคมไฟเซรามิก1.png'),
+  },
+
+  {
+    id: '01hr',
+    brand: 'SACIT',
+    name: 'พวงกุญแจลิเภา',
+    description:
+      "พวงกุญแจจักสานย่านลิเภา ที่เป็นงานหัตถกรรมที่สานหรือถักด้วย 'ย่านลิเภา' หรือ 'ลิเภา' ที่นำมาตีความใหม่ให้สามารถสะท้อนเสน่ห์งานจักสานแบบดั้งเดิม ให้เกิดรูปทรงและลวดลายที่งดงามร่วมสมัย",
     price: 600,
-    image: "../assets/Heritage/1.พวงกุญแจลิเภา.png"
+    image: img('1.พวงกุญแจลิเภา.png'),
   },
   {
-    id: "02hr",
-    name: "กระเป๋าสานผักตบ รุ่นฟลอร่า M คละสี",
-    description: "กระเป๋าสานผักตบชวา บุด้วยผ้าฝ้ายลายดอกไม้สดใส เหมาะกับลุควันสบายๆ ชิคๆ ในสไตล์คุณ",
+    id: '02hr',
+    brand: 'SACIT',
+    name: 'กระเป๋าสานผักตบ รุ่นฟลอร่า M คละสี',
+    description:
+      'กระเป๋าสานผักตบชวา บุด้วยผ้าฝ้ายลายดอกไม้สดใส เหมาะกับลุควันสบายๆ ชิคๆ ในสไตล์คุณ',
     price: 3933,
-    image: "../assets/Heritage/2.กระเป๋าสานผักตบ_รุ่นฟลอร่า_M_คละสี.png"
+    image: img('2.กระเป๋าสานผักตบ_รุ่นฟลอร่า_M_คละสี.png'),
   },
   {
-    id: "03hr",
-    name: "กระเป๋า chaksan รุ่น Mini Candy (สีธรรมชาติ-ดำ)",
-    description: "กระเป๋าแฟชั่นฝีมือคนไทยที่ดึงความเป็นไทยมาเป็นจุดเด่น ผ่านการออกแบบให้เกิดเอกลักษณ์เฉพาะตัวที่โดดเด่น",
+    id: '03hr',
+    brand: 'CHAKSARN',
+    name: 'กระเป๋า chaksarn รุ่น Mini Candy (สีธรรมชาติ-ดำ)',
+    description:
+      'กระเป๋าแฟชั่นฝีมือคนไทยที่ดึงความเป็นไทยมาเป็นจุดเด่น ผ่านการออกแบบให้เกิดเอกลักษณ์เฉพาะตัวที่โดดเด่น',
     price: 1000,
-    image: "../assets/Heritage/3.กระเป๋า chaksarn รุ่นMini Candy สีธรรมชาติ-ดำ.png"
+    image: img('3.กระเป๋า chaksarn รุ่นMini Candy สีธรรมชาติ-ดำ.png'),
   },
   {
-    id: "04hr",
-    name: "ผ้าพันคอ4ตะขอ",
-    description: "ผ้าฝ้ายทอมือ ย้อมสีด้วยสีจากธรรมชาติ เป็นงานออกแบบผสานกับหัตถศิลป์ สีไม่ตก ลวดลายสวยงามและมีเอกลักษณ์ จากช่างฝีมือชาวสกลนคร",
+    id: '04hr',
+    brand: 'SACIT',
+    name: 'ผ้าพันคอ 4 ตะขอ',
+    description:
+      'ผ้าฝ้ายทอมือ ย้อมสีด้วยสีจากธรรมชาติ เป็นงานออกแบบผสานกับหัตถศิลป์ สีไม่ตก ลวดลายสวยงามและมีเอกลักษณ์ จากช่างฝีมือชาวสกลนคร',
     price: 960,
-    image: "../assets/Heritage/4.ผ้าพันคอ ตะกอสีเหลือง.png"
+    image: img('4.ผ้าพันคอ ตะกอสีเหลือง.png'),
   },
   {
-    id: "05hr",
-    name: "ชุดแก้วช้างลายคราม",
-    description: "ชุดแก้วลายคราม",
+    id: '05hr',
+    brand: 'SACIT',
+    name: 'ชุดแก้วช้างลายคราม',
+    description: 'ชุดแก้วลายคราม',
     price: 816,
-    image: "../assets/Heritage/5.ชุดแก้วช้างลายคราม.png"
-  }
+    image: img('5.ชุดแก้วช้างลายคราม.png'),
+  },
 ];

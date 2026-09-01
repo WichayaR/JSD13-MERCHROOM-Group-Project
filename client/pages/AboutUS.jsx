@@ -1,34 +1,32 @@
-import { Link } from 'react-router-dom';
+import Button from '../src/components/ui/Button';
+import Container from '../src/components/ui/Container';
+import SectionHeading from '../src/components/ui/SectionHeading';
 
 export default function About() {
   return (
-    <div className="p-4 bg-white rounded-md shadow-md max-w-xl mx-auto">
-      <h1 className="text-2xl font-bold text-teal-600 mb-4">About Us</h1>
-      <p className="text-gray-700 mb-4">
-        We provide high-quality products and excellent customer service.
-      </p>
-   
-      <h2 className="text-lg font-semibold mb-2">Our Values</h2>
-      <ul className="list-disc list-inside text-gray-700 mb-6 space-y-1">
-        <li>Quality first</li>
-        <li>Honesty & Integrity</li>
-        <li>Customer satisfaction</li>
-      </ul>
+    <Container className="py-16">
+      <div className="mx-auto max-w-2xl rounded-card bg-white p-8">
+        <SectionHeading eyebrow="Story of Merchroom" title="About Us" />
 
-      <div className="flex gap-4">
-        <Link 
-          to="/" 
-          className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600"
-        >
-          Home
-        </Link>
-        <Link 
-          to="/products" 
-          className="bg-teal-500 text-white px-4 py-2 rounded-md hover:bg-teal-600"
-        >
-          Products
-        </Link>
+        <p className="mt-6 leading-relaxed text-black/70">
+          Merchroom เป็นแพลตฟอร์มศูนย์กลางสินค้าลิขสิทธิ์แท้จากศิลปิน ที่มุ่งสร้างพื้นที่ให้ศิลปินไทย
+          งานหัตถกรรมท้องถิ่น และคอมมูนิตี้แฟนคลับได้อยู่ร่วมกันในห้องเดียว
+        </p>
+
+        <h2 className="mt-8 text-lg font-semibold">Our Values</h2>
+        <ul className="mt-3 list-inside list-disc space-y-1 text-black/70">
+          <li>ลิขสิทธิ์แท้ 100%</li>
+          <li>ความเป็นธรรมต่อศิลปินและผู้ซื้อ</li>
+          <li>ประสบการณ์ที่เข้าใจวัฒนธรรมแฟนคลับ</li>
+        </ul>
+
+        <div className="mt-8 flex flex-wrap gap-4">
+          <Button to="/" variant="outline">
+            Home
+          </Button>
+          <Button to="/products">Products</Button>
+        </div>
       </div>
-    </div>
+    </Container>
   );
 }
