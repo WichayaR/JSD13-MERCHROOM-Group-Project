@@ -1,11 +1,26 @@
+import { products } from '../src/data/product';
+import { useCart } from '../src/context/CartContext';
+import Container from '../src/components/ui/Container';
+import ProductCard from '../src/components/ui/ProductCard';
+import SectionHeading from '../src/components/ui/SectionHeading';
+
 export default function PopCulture() {
+  const { addToCart } = useCart();
+  const popProducts = products.filter((product) => product.id.endsWith('en'));
+
   return (
-    <div className="p-4 bg-white rounded-md shadow-md max-w-xl mx-auto">
-      <h1 className="text-2xl font-bold text-teal-600 mb-4">Pop Culture</h1>
-      <p className="text-gray-700 mb-4">
-        Discover our pop culture merchandise featuring your favorite international artists and trends.
-      </p>
-      <p className="text-gray-500">More products coming soon!</p>
-    </div>
+    <Container className="py-16">
+      <SectionHeading
+        eyebrow="Categories"
+        title="Pop Culture"
+        description="สินค้าลิขสิทธิ์แท้จากศิลปินและวงดนตรีระดับสากล ตั้งแต่เสื้อผ้าทัวร์คอนเสิร์ตจนถึงแผ่นเสียงสะสม"
+      />
+
+      <div className="mt-10 flex flex-wrap justify-center gap-5 lg:justify-start">
+        {popProducts.map((product) => (
+          <ProductCard key={product.id} product={product} onAddToCart={addToCart} />
+        ))}
+      </div>
+    </Container>
   );
 }

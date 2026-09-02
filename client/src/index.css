@@ -1,1 +1,58 @@
 @import "tailwindcss";
+
+@custom-variant hover (&:hover);
+
+@theme {
+  --color-primary: #ff5b30;
+  --color-primary-deep: #ff4500;
+  --color-highlight: #daff02;
+  --color-violet: #685bc7;
+  --color-ink: #201e1f;
+  --color-ink-soft: #2c1818;
+  --color-cream: #f0eee9;
+  --color-cream-text: #f3f0eb;
+  --color-muted: #b8b8b8;
+  --color-error: #f53e3e;
+  --color-success: #22c55e;
+  --color-warning: #f4b400;
+
+  --radius-card: 20px;
+  --radius-pill: 9999px;
+  --radius-btn: 12px;
+  --radius-section: 40px;
+
+  --shadow-card: 0 10px 30px rgba(0, 0, 0, 0.08);
+
+  --font-sans: 'Poppins', 'Sarabun', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Port Lligat Slab', serif;
+  --font-editorial: 'Source Serif 4', Georgia, serif;
+  --font-mono: 'Roboto Mono', ui-monospace, monospace;
+
+  --spacing-navbar: 72px;
+}
+
+@utility bg-navbar-gradient {
+  background: linear-gradient(90deg, #f47fa1 0%, #f17970 40%, #eb6a52 55%, #882601 100%);
+}
+
+@utility bg-navbar-gradient-fade {
+  background: linear-gradient(
+    90deg,
+    rgb(244 127 161 / 0.72),
+    rgb(241 121 112 / 0.72) 40%,
+    rgb(235 106 82 / 0.72) 55%,
+    rgb(136 38 1 / 0.72) 100%
+  );
+}
+
+@utility bg-brand-gradient {
+  background: linear-gradient(135deg, #201e1f 0%, #2c1818 100%);
+}
+
+@utility scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}

@@ -1,89 +1,153 @@
-import { useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { useRef, useState } from 'react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { products } from '../src/data/product';
+import { bestSellerIds, heroHotspots, prod as findProduct } from '../src/data/sections';
 import { useCart } from '../src/context/CartContext';
+import Button from '../src/components/ui/Button';
+import Container from '../src/components/ui/Container';
+import ProductCard from '../src/components/ui/ProductCard';
+import Hotspot from '../src/components/ui/Hotspot';
+import CategoriesGrid from '../src/components/sections/CategoriesGrid';
+import StoryCollage from '../src/components/sections/StoryCollage';
+import GenreCircles from '../src/components/sections/GenreCircles';
+import LandingCarousel from '../src/components/sections/LandingCarousel';
+import RoadToThaiArtist from '../src/components/sections/RoadToThaiArtist';
 import heroBanner from '../assets/Banner/hero-banner.png';
+
+const tabs = [
+  { id: 'best', label: 'Best Sellers' },
+  { id: 'new', label: 'New Arrival' },
+];
 
 export default function Home() {
   const { addToCart } = useCart();
   const scrollRef = useRef(null);
+  const [activeTab, setActiveTab] = useState('best');
 
-  const scrollLeft = () => {
-    scrollRef.current.scrollBy({ left: -300, behavior: 'smooth' });
-  };
+  const visibleProducts =
+    activeTab === 'best'
+      ? bestSellerIds.map((id) => findProduct(id)).filter(Boolean)
+      : products.filter((product) => product.id.endsWith('en'));
 
-  const scrollRight = () => {
-    scrollRef.current.scrollBy({ left: 300, behavior: 'smooth' });
+  const scrollByCard = (direction) => {
+    scrollRef.current?.scrollBy({ left: direction * 379, behavior: 'smooth' });
   };
 
   return (
-    <div>
-      <section
-        className="relative w-full h-[calc(100vh-64px)] bg-no-repeat bg-cover bg-center flex items-end justify-center pb-10"
-        style={{ backgroundImage: `url(${heroBanner})` }}
-      >
-        <Link
-          to="/products"
-          className="inline-block bg-lime-300 text-black px-8 py-3 rounded-md font-semibold hover:bg-lime-600 transition"
+    <>
+      <section className="relative -mt-navbar bg-brand-gradient">
+        <div
+          className="relative flex h-202.5 items-end justify-center pb-52"
+          style={{
+            backgroundImage: `url(${heroBanner})`,
+            backgroundSize: '1441px 810px',
+            backgroundPosition: 'center top',
+            backgroundRepeat: 'no-repeat',
+          }}
         >
-          Shop Now
-        </Link>
+          <h1 className="sr-only">MERCHROOM — Rooted in Culture</h1>
+
+          {heroHotspots.map((spot) => (
+            <div key={spot.id} className={`absolute ${spot.x} ${spot.y}`}>
+              <Hotspot product={findProduct(spot.productId)} size={spot.size} />
+            </div>
+          ))}
+
+          <Button
+            to="/products"
+            variant="highlight"
+            size="lg"
+            className="w-100 font-semibold lg:translate-x-19.5"
+          >
+            Support Thai Artist
+          </Button>
+        </div>
       </section>
 
-      <section className="py-8">
-        <h2 className="text-2xl font-bold mb-4 text-center">Featured Products</h2>
-        <div className="relative max-w-6xl mx-auto px-6">
-          <button
-            onClick={scrollLeft}
-            className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white shadow-md rounded-full p-2 hover:bg-gray-100 transition"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-            </svg>
-          </button>
+      <section className="relative -mt-9.5 rounded-t-section bg-cream py-20">
+        <Container>
+          <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+            <h2 className="font-display text-[32px] leading-tight md:text-5xl">
+              Find your merch Find your match
+            </h2>
+
+            <div className="flex items-center gap-8" role="tablist" aria-label="หมวดสินค้าแนะนำ">
+              {tabs.map((tab) => {
+                const isActive = activeTab === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    role="tab"
+                    aria-selected={isActive}
+                    onClick={() => setActiveTab(tab.id)}
+                    className="flex flex-col items-center gap-2"
+                  >
+                    <span
+                      className={`text-xl transition ${isActive ? 'font-semibold text-violet' : 'text-ink'}`}
+                    >
+                      {tab.label}
+                    </span>
+                    <span
+                      className={`h-1.25 w-32.5 rounded-card transition ${isActive ? 'bg-violet' : 'bg-transparent'}`}
+                    />
+                  </button>
+                );
+              })}
+            </div>
+          </div>
 
           <div
             ref={scrollRef}
-            className="flex gap-4 overflow-x-auto scrollbar-hide px-10 py-2"
-            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+            className="scrollbar-hide mt-10 flex gap-5 overflow-x-auto pb-2 snap-x snap-mandatory"
+            role="tabpanel"
           >
-            {products.map((product) => (
+            {visibleProducts.map((product) => (
               <div
                 key={product.id}
-                className="min-w-65 max-w-65 border p-4 rounded-md hover:shadow-lg transition flex flex-col justify-between"
+                className="flex w-[85%] shrink-0 snap-start sm:w-[calc(50%-10px)] lg:w-[calc(25%-15px)]"
               >
-                <div>
-                  <img
-                    src={product.image}
-                    alt={product.name}
-                    className="w-full h-48 object-cover rounded-md mb-3"
-                  />
-                  <h3 className="text-lg font-semibold mb-1">{product.name}</h3>
-                  <p className="text-gray-600 text-sm mb-2 line-clamp-2">{product.description}</p>
-                  <p className="text-teal-600 font-bold text-lg mb-3">
-                    ฿{product.price.toLocaleString()}
-                  </p>
-                </div>
-                <button
-                  onClick={addToCart}
-                  className="w-full bg-orange-500 text-white py-2 rounded-md font-semibold hover:bg-orange-600 transition"
-                >
-                  Add to Cart
-                </button>
+                <ProductCard product={product} onAddToCart={addToCart} fluid />
               </div>
             ))}
           </div>
 
-          <button
-            onClick={scrollRight}
-            className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white shadow-md rounded-full p-2 hover:bg-gray-100 transition"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-            </svg>
-          </button>
-        </div>
+          <div className="mt-8 flex items-center justify-between">
+            <div className="h-1.25 w-81 max-w-full rounded-card bg-muted">
+              <div className="h-full w-37.25 rounded-card bg-ink" />
+            </div>
+
+            <div className="flex items-center gap-6">
+              <button
+                type="button"
+                onClick={() => scrollByCard(-1)}
+                aria-label="เลื่อนไปทางซ้าย"
+                className="grid size-9 place-items-center rounded-pill bg-ink text-white transition hover:opacity-80"
+              >
+                <ChevronLeft className="size-5" />
+              </button>
+              <button
+                type="button"
+                onClick={() => scrollByCard(1)}
+                aria-label="เลื่อนไปทางขวา"
+                className="grid size-9 place-items-center rounded-pill bg-ink text-white transition hover:opacity-80"
+              >
+                <ChevronRight className="size-5" />
+              </button>
+            </div>
+          </div>
+        </Container>
       </section>
-    </div>
+
+      <CategoriesGrid />
+
+      <StoryCollage />
+
+      <RoadToThaiArtist />
+
+      <GenreCircles />
+
+      <LandingCarousel />
+    </>
   );
 }

@@ -1,63 +1,87 @@
 import { useState } from 'react';
+import Button from '../src/components/ui/Button';
+import Container from '../src/components/ui/Container';
+import SectionHeading from '../src/components/ui/SectionHeading';
+
+const initialForm = { name: '', email: '', message: '' };
 
 export default function Contact() {
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [message, setMessage] = useState('');
+  const [form, setForm] = useState(initialForm);
+  const [sent, setSent] = useState(false);
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    alert(`ขอบคุณครับคุณ ${name} เราได้รับข้อความแล้ว!`);
-    setName('');
-    setEmail('');
-    setMessage('');
+  const handleChange = (event) => {
+    const { name, value } = event.target;
+    setForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    setSent(true);
+    setForm(initialForm);
   };
 
   return (
-    <div className="max-w-md mx-auto p-4 bg-white rounded-md shadow-md">
-      <h1 className="text-2xl font-bold text-teal-600 mb-4 text-center">Contact Us</h1>
-      
-      <form onSubmit={handleSubmit} className="space-y-3">
-        <div>
-          <label className="block text-sm font-medium mb-1">Name</label>
-          <input
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
-            className="w-full p-2 border rounded-md"
-          />
-        </div>
+    <Container className="py-16">
+      <div className="mx-auto max-w-md rounded-card bg-white p-8">
+        <SectionHeading eyebrow="Get in touch" title="Contact Us" align="center" />
 
-        <div>
-          <label className="block text-sm font-medium mb-1">Email</label>
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            className="w-full p-2 border rounded-md"
-          />
-        </div>
+        {sent && (
+          <p className="mt-6 rounded-btn bg-success/10 p-3 text-sm text-success" role="status">
+            ขอบคุณครับ เราได้รับข้อความของคุณแล้ว
+          </p>
+        )}
 
-        <div>
-          <label className="block text-sm font-medium mb-1">Message</label>
-          <textarea
-            rows="3"
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            required
-            className="w-full p-2 border rounded-md"
-          />
-        </div>
+        <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+          <div>
+            <label htmlFor="name" className="mb-1 block text-sm font-medium">
+              Name
+            </label>
+            <input
+              id="name"
+              name="name"
+              type="text"
+              value={form.name}
+              onChange={handleChange}
+              required
+              className="w-full rounded-btn border border-muted p-2 focus:border-primary focus:outline-none"
+            />
+          </div>
 
-        <button
-          type="submit"
-          className="w-full bg-lime-300 text-black py-2 rounded-md hover:bg-lime-600"
-        >
-          Send Message
-        </button>
-      </form>
-    </div>
+          <div>
+            <label htmlFor="email" className="mb-1 block text-sm font-medium">
+              Email
+            </label>
+            <input
+              id="email"
+              name="email"
+              type="email"
+              value={form.email}
+              onChange={handleChange}
+              required
+              className="w-full rounded-btn border border-muted p-2 focus:border-primary focus:outline-none"
+            />
+          </div>
+
+          <div>
+            <label htmlFor="message" className="mb-1 block text-sm font-medium">
+              Message
+            </label>
+            <textarea
+              id="message"
+              name="message"
+              rows="4"
+              value={form.message}
+              onChange={handleChange}
+              required
+              className="w-full rounded-btn border border-muted p-2 focus:border-primary focus:outline-none"
+            />
+          </div>
+
+          <Button type="submit" size="lg" className="w-full">
+            Send Message
+          </Button>
+        </form>
+      </div>
+    </Container>
   );
 }
