@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
-@custom-variant hover (&:hover);
-
+/* Tailwind CSS v4 directive; ignored by generic CSS language services. */
+/* css-lsp-disable-next-line unknownAtRules */
 @theme {
   --color-primary: #ff5b30;
   --color-primary-deep: #ff4500;
@@ -31,28 +31,30 @@
   --spacing-navbar: 72px;
 }
 
-@utility bg-navbar-gradient {
-  background: linear-gradient(90deg, #f47fa1 0%, #f17970 40%, #eb6a52 55%, #882601 100%);
-}
+@layer utilities {
+  .bg-navbar-gradient {
+    background: linear-gradient(90deg, #f47fa1 0%, #f17970 40%, #eb6a52 55%, #882601 100%);
+  }
 
-@utility bg-navbar-gradient-fade {
-  background: linear-gradient(
-    90deg,
-    rgb(244 127 161 / 0.72),
-    rgb(241 121 112 / 0.72) 40%,
-    rgb(235 106 82 / 0.72) 55%,
-    rgb(136 38 1 / 0.72) 100%
-  );
-}
+  .bg-navbar-gradient-fade {
+    background: linear-gradient(
+      90deg,
+      rgb(244 127 161 / 0.72),
+      rgb(241 121 112 / 0.72) 40%,
+      rgb(235 106 82 / 0.72) 55%,
+      rgb(136 38 1 / 0.72) 100%
+    );
+  }
 
-@utility bg-brand-gradient {
-  background: linear-gradient(135deg, #201e1f 0%, #2c1818 100%);
-}
+  .bg-brand-gradient {
+    background: linear-gradient(135deg, #201e1f 0%, #2c1818 100%);
+  }
 
-@utility scrollbar-hide {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-  &::-webkit-scrollbar {
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
 }
