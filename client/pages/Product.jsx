@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { ChevronDown, Flag, Search, X } from 'lucide-react';
 import { products } from '../src/data/product';
@@ -25,9 +25,26 @@ const SORT_OPTIONS = ['Famous', 'Price: Low to High', 'Price: High to Low'];
 
 function Dropdown({ label, value, options, onChange }) {
   const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const handleClick = (e) => {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+    };
+    const handleKey = (e) => {
+      if (e.key === 'Escape') setOpen(false);
+    };
+    document.addEventListener('mousedown', handleClick);
+    document.addEventListener('keydown', handleKey);
+    return () => {
+      document.removeEventListener('mousedown', handleClick);
+      document.removeEventListener('keydown', handleKey);
+    };
+  }, [open]);
 
   return (
-    <div className="relative">
+    <div ref={ref} className="relative z-30">
       <button
         type="button"
         onClick={() => setOpen(!open)}
@@ -39,7 +56,7 @@ function Dropdown({ label, value, options, onChange }) {
       </button>
 
       {open && (
-        <div className="absolute left-0 top-12 z-20 w-48 rounded-card bg-white p-2 shadow-card">
+        <div className="absolute left-0 top-12 z-50 w-48 rounded-card bg-white p-2 shadow-card">
           {options.map((option) => (
             <button
               key={option}
@@ -130,6 +147,43 @@ export default function Products() {
   };
 
   const filterLabel = cat ? (categoryFilter[cat]?.label ?? 'Search') : 'Search';
+  const searchRef = useRef(null);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+
+  const suggestions = useMemo(() => {
+    if (!query.trim()) return [];
+    const q = query.toLowerCase();
+    const seen = new Set();
+    const results = [];
+    for (const p of products) {
+      const text = `${p.name} ${p.brand} ${p.description}`.toLowerCase();
+      if (text.includes(q)) {
+        const key = p.name;
+        if (!seen.has(key)) {
+          seen.add(key);
+          results.push({ name: p.name, brand: p.brand });
+        }
+      }
+      if (results.length >= 6) break;
+    }
+    return results;
+  }, [query]);
+
+  useEffect(() => {
+    if (!showSuggestions) return;
+    const handleClick = (e) => {
+      if (searchRef.current && !searchRef.current.contains(e.target)) setShowSuggestions(false);
+    };
+    const handleKey = (e) => {
+      if (e.key === 'Escape') setShowSuggestions(false);
+    };
+    document.addEventListener('mousedown', handleClick);
+    document.addEventListener('keydown', handleKey);
+    return () => {
+      document.removeEventListener('mousedown', handleClick);
+      document.removeEventListener('keydown', handleKey);
+    };
+  }, [showSuggestions]);
 
   return (
     <Container className="py-8">
@@ -137,24 +191,56 @@ export default function Products() {
         items={[{ label: 'Home', to: '/' }, { label: 'Shop', to: '/products' }, { label: filterLabel }]}
       />
 
-      <form
-        role="search"
-        className="mt-6 flex h-13 items-center gap-3 rounded-pill bg-white px-5 shadow-card"
-        onSubmit={(e) => e.preventDefault()}
-      >
-        <Search className="size-5 shrink-0 text-muted" aria-hidden="true" />
-        <input
-          type="search"
-          value={query}
-          onChange={(e) => {
-            setQuery(e.target.value);
-            setPage(1);
+      <div ref={searchRef} className="relative mt-6">
+        <form
+          role="search"
+          className="flex h-13 items-center gap-3 rounded-pill bg-white px-5 shadow-card"
+          onSubmit={(e) => {
+            e.preventDefault();
+            setShowSuggestions(false);
           }}
-          placeholder="Search for products..."
-          aria-label="ค้นหาสินค้า"
-          className="w-full bg-transparent text-sm text-ink placeholder:text-muted focus:outline-none"
-        />
-      </form>
+        >
+          <Search className="size-5 shrink-0 text-muted" aria-hidden="true" />
+          <input
+            type="search"
+            value={query}
+            onChange={(e) => {
+              setQuery(e.target.value);
+              setPage(1);
+              setShowSuggestions(true);
+            }}
+            onFocus={() => { if (query.trim()) setShowSuggestions(true); }}
+            placeholder="Search for products..."
+            aria-label="ค้นหาสินค้า"
+            aria-autocomplete="list"
+            aria-expanded={showSuggestions && suggestions.length > 0}
+            className="w-full bg-transparent text-sm text-ink placeholder:text-muted focus:outline-none"
+          />
+        </form>
+
+        {showSuggestions && suggestions.length > 0 && (
+          <ul className="absolute left-0 top-full z-50 mt-2 w-full rounded-card bg-white p-2 shadow-card" role="listbox">
+            {suggestions.map((s) => (
+              <li key={s.name}>
+                <button
+                  type="button"
+                  role="option"
+                  onClick={() => {
+                    setQuery(s.name);
+                    setPage(1);
+                    setShowSuggestions(false);
+                  }}
+                  className="flex w-full items-center gap-3 rounded-btn px-3 py-2 text-left text-sm transition hover:bg-cream"
+                >
+                  <Search className="size-4 shrink-0 text-muted" aria-hidden="true" />
+                  <span className="truncate font-medium text-ink">{s.name}</span>
+                  <span className="ml-auto shrink-0 text-xs text-muted">{s.brand}</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
 
       <div className="mt-8 flex gap-10" role="tablist" aria-label="เลือกมุมมองร้านค้า">
         {[
@@ -202,7 +288,7 @@ export default function Products() {
         </div>
       ) : (
         <>
-          <div className="mt-6 rounded-card bg-white p-5 md:p-6">
+          <div className="relative mt-6 rounded-card bg-white p-5 md:p-6">
             <p className="text-xs text-muted">Sort by Product</p>
             <div className="mt-3 flex flex-wrap gap-3">
               <Dropdown label="Category" value={category} options={CATEGORY_OPTIONS} onChange={(v) => { setCategory(v); setPage(1); }} />

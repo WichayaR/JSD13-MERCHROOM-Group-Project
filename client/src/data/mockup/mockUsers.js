@@ -1,0 +1,158 @@
+// mockup users_db
+// จัดเก็บข้อมูลผู้ใช้สำหรับทดสอบ (testing users) เพื่อใช้ล็อกอินเข้าสู่ระบบ
+// และแยกสิทธิ์การใช้งาน Dashboard ตาม role: customer (users dashboard) / admin (admin dashboard)
+
+export const USER_ROLES = {
+  customer: 'ลูกค้า',
+  admin: 'ผู้ดูแลระบบ',
+};
+
+// ตาราง mockup "users_db"
+export const mockUsers = [
+  // ── Customers ──────────────────────────────────────────────
+  {
+    _id: 'usr-non',
+    email: 'non@merchroom.com',
+    password: 'non1234',
+    firstName: 'นนท์',
+    lastName: 'ใจงาม',
+    phone: '0812345678',
+    address: '123 สุขุมวิท กรุงเทพฯ 10110',
+    role: 'customer',
+    employeeId: '',
+    memberSince: '2025-03-10',
+  },
+  {
+    _id: 'usr-touch',
+    email: 'touchy2003@gmail.com',
+    password: 'touch1234',
+    firstName: 'Touch',
+    lastName: 'Chy',
+    phone: '0809203752',
+    address: '45 ลาดพร้าว กรุงเทพฯ 10900',
+    role: 'customer',
+    employeeId: '',
+    memberSince: '2026-01-15',
+  },
+  {
+    _id: 'usr-earn',
+    email: 'earn.sarawut@gmail.com',
+    password: 'earn1234',
+    firstName: 'Earn',
+    lastName: 'Sarawut',
+    phone: '0864321987',
+    address: '789 สีลม ปทุมธานี 12000',
+    role: 'customer',
+    employeeId: '',
+    memberSince: '2025-12-20',
+  },
+  {
+    _id: 'usr-milk',
+    email: 'milk.pimchanok@gmail.com',
+    password: 'milk1234',
+    firstName: 'Milk',
+    lastName: 'Pimchanok',
+    phone: '0987654321',
+    address: '12 รัชดาภิเษก กรุงเทพฯ 10400',
+    role: 'customer',
+    employeeId: '',
+    memberSince: '2026-02-05',
+  },
+  {
+    _id: 'usr-mike',
+    email: 'mike.chayanit@gmail.com',
+    password: 'mike1234',
+    firstName: 'Mike',
+    lastName: 'Chayanit',
+    phone: '0819876543',
+    address: '56 ลาดพร้าว นนทบุรี 11000',
+    role: 'customer',
+    employeeId: '',
+    memberSince: '2026-03-14',
+  },
+  {
+    _id: 'usr-ploy',
+    email: 'ploy.apsara@gmail.com',
+    password: 'ploy1234',
+    firstName: 'Ploy',
+    lastName: 'Apsara',
+    phone: '0855556666',
+    address: '88 บางรัก กรุงเทพฯ 10500',
+    role: 'customer',
+    employeeId: '',
+    memberSince: '2026-04-01',
+  },
+  {
+    _id: 'usr-game',
+    email: 'game.wirayut@gmail.com',
+    password: 'game1234',
+    firstName: 'Game',
+    lastName: 'Wirayut',
+    phone: '0912345678',
+    address: '34 พระราม 9 กรุงเทพฯ 10310',
+    role: 'customer',
+    employeeId: '',
+    memberSince: '2026-05-22',
+  },
+  {
+    _id: 'usr-pim',
+    email: 'pim.nattaya@gmail.com',
+    password: 'pim1234',
+    firstName: 'Pim',
+    lastName: 'Nattaya',
+    phone: '0877778888',
+    address: '21 สุขุมวิท ชลบุรี 20000',
+    role: 'customer',
+    employeeId: '',
+    memberSince: '2026-06-10',
+  },
+
+  // ── Admins ─────────────────────────────────────────────────
+  {
+    _id: 'usr-admin',
+    email: 'admin@merchroom.com',
+    password: 'admin1234',
+    firstName: 'ทีม',
+    lastName: 'แอดมิน',
+    phone: '0898765432',
+    address: 'สำนักงานใหญ่ กรุงเทพฯ',
+    role: 'admin',
+    employeeId: 'EMP-0001',
+    memberSince: '2024-11-01',
+  },
+  {
+    _id: 'usr-focus',
+    email: 'focusjustdoit@gmail.com',
+    password: 'focus1234',
+    firstName: 'Focus',
+    lastName: 'Niti',
+    phone: '0809203752',
+    address: 'bangkok',
+    role: 'admin',
+    employeeId: 'EMP-0002',
+    memberSince: '2024-11-01',
+  },
+];
+
+// ฟังก์ชันจำลอง (mockup) สำหรับตรวจสอบการล็อกอินเหมือนเรียกจากฐานข้อมูลจริง
+export function findUserByEmail(email) {
+  return mockUsers.find((user) => user.email.toLowerCase() === email.toLowerCase()) || null;
+}
+
+export function authenticate(email, password) {
+  const user = findUserByEmail(email);
+  if (user && user.password === password) {
+    const safeUser = { ...user };
+    delete safeUser.password;
+    return safeUser;
+  }
+  return null;
+}
+
+export function getUsers() {
+  return [...mockUsers];
+}
+
+export function getUserById(userId) {
+  return mockUsers.find((user) => user._id === userId) || null;
+}

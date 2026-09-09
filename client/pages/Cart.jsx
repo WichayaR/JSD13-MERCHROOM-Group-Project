@@ -1,22 +1,50 @@
 import { useState } from 'react';
-import { ArrowRight, Minus, Plus, Trash2 } from 'lucide-react';
+import { ArrowRight, CheckCircle2, Minus, Plus, Trash2 } from 'lucide-react';
 import { useCart } from '../src/context/CartContext';
 import Button from '../src/components/ui/Button';
 import Container from '../src/components/ui/Container';
 import Breadcrumb from '../src/components/ui/Breadcrumb';
 
-const DISCOUNT_RATE = 0.2;
 const DELIVERY_FEE = 15;
+
+const PROMO_CODES = {
+  MERCH10: 0.1,
+  MERCHROOM: 0.2,
+  HELLO15: 0.15,
+};
 
 const baht = (value) => `฿${value.toLocaleString('th-TH', { minimumFractionDigits: 2 })}`;
 
 export default function Cart() {
   const { items, updateQuantity, removeFromCart } = useCart();
   const [promoCode, setPromoCode] = useState('');
+  const [appliedCode, setAppliedCode] = useState(null);
+  const [promoError, setPromoError] = useState('');
+  const [promoApplied, setPromoApplied] = useState(false);
 
   const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const discount = Math.round(subtotal * DISCOUNT_RATE);
-  const total = subtotal - discount + DELIVERY_FEE;
+  const promoRate = appliedCode ? PROMO_CODES[appliedCode] : 0;
+  const promoDiscount = Math.round(subtotal * promoRate);
+  const total = subtotal - promoDiscount + DELIVERY_FEE;
+
+  const applyPromo = (e) => {
+    e.preventDefault();
+    const code = promoCode.trim().toUpperCase();
+    if (!code) {
+      setPromoError('กรุณากรอกรหัสส่วนลดก่อน');
+      return;
+    }
+    if (PROMO_CODES[code]) {
+      setAppliedCode(code);
+      setPromoError('');
+      setPromoApplied(true);
+    } else {
+      setPromoError('รหัสส่วนลดไม่ถูกต้อง');
+      setPromoApplied(false);
+    }
+  };
+
+  const checkoutPath = appliedCode ? `/checkout?promo=${encodeURIComponent(appliedCode)}` : '/checkout';
 
   return (
     <Container className="py-10">
@@ -101,10 +129,14 @@ export default function Cart() {
                 <dt className="text-muted">Subtotal</dt>
                 <dd className="font-semibold">{baht(subtotal)}</dd>
               </div>
-              <div className="flex justify-between">
-                <dt className="text-muted">Discount (-{DISCOUNT_RATE * 100}%)</dt>
-                <dd className="font-semibold text-error">-{baht(discount)}</dd>
-              </div>
+              {promoRate > 0 && (
+                <div className="flex justify-between">
+                  <dt className="text-muted">
+                    Promo ({appliedCode}, -{promoRate * 100}%)
+                  </dt>
+                  <dd className="font-semibold text-error">-{baht(promoDiscount)}</dd>
+                </div>
+              )}
               <div className="flex justify-between">
                 <dt className="text-muted">Delivery Fee</dt>
                 <dd className="font-semibold">{baht(DELIVERY_FEE)}</dd>
@@ -118,7 +150,7 @@ export default function Cart() {
 
             <form
               className="mt-6 flex items-center gap-3"
-              onSubmit={(e) => e.preventDefault()}
+              onSubmit={applyPromo}
             >
               <input
                 type="text"
@@ -126,14 +158,29 @@ export default function Cart() {
                 onChange={(e) => setPromoCode(e.target.value)}
                 placeholder="Add promo code"
                 aria-label="รหัสส่วนลด"
-                className="h-10 min-w-0 flex-1 rounded-pill bg-cream px-4 text-sm placeholder:text-muted focus:outline-2 focus:outline-offset-1 focus:outline-violet"
+                disabled={promoApplied}
+                className="h-10 min-w-0 flex-1 rounded-pill bg-cream px-4 text-sm placeholder:text-muted focus:outline-2 focus:outline-offset-1 focus:outline-violet disabled:opacity-60"
               />
-              <Button type="submit" variant="dark" size="md" className="shrink-0">
-                Apply
+              <Button
+                type="submit"
+                variant="dark"
+                size="md"
+                className="shrink-0"
+                disabled={promoApplied}
+              >
+                {promoApplied ? 'Applied' : 'Apply'}
               </Button>
             </form>
 
-            <Button variant="dark" size="lg" className="mt-4 w-full">
+            {promoError && <p className="mt-2 text-sm text-error">{promoError}</p>}
+            {promoApplied && (
+              <p className="mt-2 flex items-center gap-1.5 text-sm text-success">
+                <CheckCircle2 className="size-4" aria-hidden="true" />
+                ใช้รหัส {appliedCode} แล้ว ลด {promoRate * 100}%
+              </p>
+            )}
+
+            <Button to={checkoutPath} variant="dark" size="lg" className="mt-4 w-full">
               Go to Checkout
               <ArrowRight className="size-4" aria-hidden="true" />
             </Button>

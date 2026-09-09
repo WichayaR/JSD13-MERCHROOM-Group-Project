@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { Search, ShoppingCart, User } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
+import { useAuth } from '../../context/AuthContext';
 import Logo from './Logo';
 
 const navLinks = [
@@ -13,6 +14,7 @@ const navLinks = [
 
 export default function Navbar() {
   const { cartCount } = useCart();
+  const { user, isAuthenticated } = useAuth();
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const [scrolled, setScrolled] = useState(false);
@@ -83,9 +85,13 @@ export default function Navbar() {
             )}
           </Link>
 
-          <button type="button" className="transition hover:opacity-80" aria-label="บัญชีผู้ใช้">
+          <Link
+            to={isAuthenticated ? (user.role === 'admin' ? '/admin/dashboard' : '/user/dashboard') : '/login'}
+            className="relative transition hover:opacity-80"
+            aria-label={isAuthenticated ? 'แดชบอร์ด' : 'เข้าสู่ระบบ'}
+          >
             <User className="size-6" />
-          </button>
+          </Link>
         </div>
       </div>
     </header>
