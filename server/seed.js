@@ -1,5 +1,5 @@
-// สคริปต์ seed ข้อมูลเริ่มต้นสำหรับระบบ
-// รันซ้ำได้ปลอดภัย (idempotent upsert): ถ้ามี _id เดิมอยู่แล้วจะอัปเดต ถ้ายังไม่มีจะแทรกเข้าใหม่
+
+// Seed database with initial dataset (upsert)
 const connectDB = require('./db');
 const User = require('./models/User');
 const Artist = require('./models/Artist');
@@ -11,7 +11,7 @@ const Payment = require('./models/Payment');
 const Review = require('./models/Review');
 const mongoose = require('mongoose');
 
-// ฟังก์ชัน upsert ข้อมูลแบบ bulk write โดยจับคู่ตาม _id
+// Upsert documents using _id filter
 async function upsertDocs(model, docs) {
     const ops = (Array.isArray(docs) ? docs : [docs]).map((doc) => ({
         updateOne: {
@@ -27,9 +27,7 @@ async function runSeed() {
     await connectDB();
 
     try {
-        // ==========================================
-        // ส่วนของ USER (ข้อมูลลูกค้าและแอดมิน)
-        // ==========================================
+        // Users (Admin & Customer)
         await upsertDocs(User, [
             {
                 _id: "681a0f1e2d3c4b5a6970f001",
@@ -91,9 +89,7 @@ async function runSeed() {
             }
         ]);
 
-        // ==========================================
-        // ส่วนของ CATEGORY (หมวดหมู่สินค้า)
-        // ==========================================
+        // Categories
         await upsertDocs(Category, [
             { _id: "681a0f1e2d3c4b5a6970f010", name: "เสื้อผ้า", slug: "apparel" },
             { _id: "681a0f1e2d3c4b5a6970f011", name: "หมวก", slug: "hat" },
@@ -101,9 +97,7 @@ async function runSeed() {
             { _id: "681a0f1e2d3c4b5a6970f014", name: "อัลบั้มเพลง", slug: "album" }
         ]);
 
-        // ==========================================
-        // ส่วนของ ARTIST (ข้อมูลศิลปิน)
-        // ==========================================
+        // Artists
         await upsertDocs(Artist, [
             {
                 _id: "681a0f1e2d3c4b5a6970f070",
@@ -209,9 +203,7 @@ async function runSeed() {
             }
         ]);
 
-        // ==========================================
-        // ส่วนของ PRODUCT (ข้อมูลสินค้าและพ่วงเมอร์ไช)
-        // ==========================================
+        // Products
         await upsertDocs(Product, [
         //Solo artist
             {
@@ -458,9 +450,7 @@ async function runSeed() {
             }
         ]);
 
-        // ==========================================
-        // ส่วนของ CART (ข้อมูลตะกร้าสินค้า)
-        // ==========================================
+        // Carts
         await upsertDocs(Cart, [
             {
                 _id: "681a0f1e2d3c4b5a6970f030",
@@ -469,9 +459,7 @@ async function runSeed() {
             }
         ]);
 
-        // ==========================================
-        // ส่วนของ ORDER & ORDER ITEM (จับมัดรวมข้อมูลเข้าด้วยกัน)
-        // ==========================================
+        // Orders
         await upsertDocs(Order, [
             {
                 _id: "681a0f1e2d3c4b5a6970f040",
@@ -500,9 +488,7 @@ async function runSeed() {
             }
         ]);
 
-        // ==========================================
-        // ส่วนของ PAYMENT (ข้อมูลการชำระเงิน)
-        // ==========================================
+        // Payments
         await upsertDocs(Payment, [
             {
                 _id: "681a0f1e2d3c4b5a6970f050",
@@ -513,9 +499,7 @@ async function runSeed() {
             }
         ]);
 
-        // ==========================================
-        // ส่วนของ REVIEW (ข้อมูลการรีวิวสินค้า)
-        // ==========================================
+        // Reviews
         await upsertDocs(Review, [
             {
                 _id: "681a0f1e2d3c4b5a6970f060",
@@ -526,12 +510,12 @@ async function runSeed() {
             }
         ]);
 
-        console.log('🎉 [SUCCESS] มัดรวมข้อมูลจริงทั้งหมดของเพื่อนยิงขึ้น Cloud สำเร็จ 100%!');
+        console.log('[SUCCESS 🎉] Database seeded successfully🍃');
 
     } catch (err) {
-        console.error('❌ เกิดข้อผิดพลาดในการยิงข้อมูล:', err);
+        console.error('[ERROR ❌] Seeding failed:', err);
     } finally {
-        mongoose.connection.close(); // ปิด database connection เมื่อ seed ข้อมูลเสร็จสิ้น
+        mongoose.connection.close();
     }
 }
 

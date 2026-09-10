@@ -1,9 +1,9 @@
 // ไฟล์: client/src/context/AuthContext.jsx
 // Context จัดการสถานะ Authentication และสิทธิ์ผู้ใช้งาน (Admin / Customer)
 // เรียกมาจาก: App.jsx (นำ AuthProvider ไปครอบทั้งแอป)
-// แหล่งข้อมูลผู้ใช้: src/data/mockup/mockUsers.js และจัดเก็บ session ผ่าน src/utils/sessionStorage.js
-// ส่งออก Hook: useAuth() สำหรับหน้า Login, Navbar, UserDashboard, AdminDashboard
-import { createContext, useContext, useState } from 'react';
+// แหล่งข้อมูลผู้ใช้: รองรับทั้ง backend API (/api/auth) และ fallback ระบบ mockup (src/data/mockup/mockUsers.js)
+// ส่งออก Hook: useAuth() สำหรับหน้า Login, Register, Navbar, UserDashboard, AdminDashboard
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import {
   authenticate,
   getUsers,
@@ -14,32 +14,85 @@ import {
   getSession,
   clearSession,
 } from '../utils/sessionStorage';
+import { registerApi, loginApi, logoutApi, checkAuthApi } from '../api/auth';
 
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
-  // ดึง session จาก storage มาตั้งเป็น user เริ่มต้น
+  // ดึง session เริ่มต้นจาก sessionStorage (ถ้ามี)
   const [user, setUser] = useState(() => getSession());
 
-  // ตรวจสอบอีเมล/รหัสผ่านกับ mock database ถ้าผ่านจะจำ session ไว้
-  const login = (email, password) => {
+  // booting = ช่วงเปิดเว็บที่กำลังถาม server ว่า login ค้างไว้ไหม
+  // ระหว่างรอ user ยังเป็น null อยู่ ProtectedRoute ต้องรอก่อน ไม่งั้นเด้ง /login ทั้งที่ login ไว้แล้ว
+  const [booting, setBooting] = useState(true);
+
+  // ตรวจสอบ authentication session กับเซิร์ฟเวอร์ backend เมื่อ mount
+  useEffect(() => {
+    checkAuthApi()
+      .then((result) => {
+        if (result.success && result.user) {
+          saveSession(result.user);
+          setUser(result.user);
+        }
+      })
+      .catch(() => {
+        // ออฟไลน์หรือยังไม่ต่อ backend ให้ใช้ session เดิม
+      })
+      .finally(() => setBooting(false));
+  }, []);
+
+  // ฟังก์ชัน login: พยายามต่อ backend API ก่อน ถ้าต่อไม่ติดหรือ fallback ให้เช็คกับ mockup database
+  // คืน { success, message?, user? } เสมอ เพื่อให้ฟอร์มอ่าน result.success / result.message ได้ตรงกันทั้งสองเส้นทาง
+  const login = useCallback(async (email, password) => {
+    try {
+      const apiResult = await loginApi(email, password);
+      if (apiResult.success && apiResult.user) {
+        saveSession(apiResult.user);
+        setUser(apiResult.user);
+      }
+      return apiResult;
+    } catch {
+      // ถ้า backend ไม่ตอบสนอง ให้ fallback ไปเช็ค mockUsers
+    }
+
     const authed = authenticate(email, password);
     if (authed) {
-      saveSession(authed);
-      setUser(authed);
-      return authed;
+      const { password: _pw, ...safeUser } = authed;
+      saveSession(safeUser);
+      setUser(safeUser);
+      return { success: true, message: 'Login successful', user: safeUser };
     }
-    return null;
-  };
+    return { success: false, message: 'Invalid email or password' };
+  }, []);
 
-  // ล้าง session และเคลียร์ state ออกตอน logout
-  const logout = () => {
+  // ฟังก์ชัน register: สมัครสมาชิกผ่าน backend API
+  const register = useCallback(async ({ username, email, password, phone }) => {
+    return await registerApi({
+      email,
+      password,
+      firstName: username || '',
+      phone: phone || '',
+    });
+  }, []);
+
+  // ฟังก์ชัน logout: แจ้ง backend และล้าง session ในเครื่อง
+  const logout = useCallback(async () => {
+    try {
+      await logoutApi();
+    } catch {
+      // ignore
+    }
     clearSession();
     setUser(null);
-  };
+  }, []);
 
-  // อัปเดตข้อมูล user ใหม่ (เช่น ตอนแก้โปรไฟล์) และตัด password ทิ้งก่อนบันทึกลง session
-  const refreshUser = (userId) => {
+  // ฟังก์ชันรีเซ็ตรหัสผ่าน (mock endpoint)
+  const resetPassword = useCallback((email, newPassword) => {
+    return { success: true, message: 'Password updated successfully' };
+  }, []);
+
+  // ฟังก์ชัน refresh ข้อมูล user
+  const refreshUser = useCallback((userId) => {
     const fresh = getUserById(userId);
     if (fresh) {
       const safeUser = { ...fresh };
@@ -47,19 +100,27 @@ export function AuthProvider({ children }) {
       saveSession(safeUser);
       setUser(safeUser);
     }
-  };
+  }, []);
 
   // รวม state และ helper สำหรับเช็คสิทธิ์ (Admin / Customer) ให้เรียกใช้ง่ายๆ
-  const value = {
-    user,
-    isAuthenticated: Boolean(user),
-    isAdmin: Boolean(user && user.role === 'admin'),
-    isCustomer: Boolean(user && user.role === 'customer'),
-    users: getUsers(),
-    login,
-    logout,
-    refreshUser,
-  };
+  // isLoggedIn = ชื่อเรียกตรงตัวสำหรับ ProtectedRoute (ค่าเดียวกับ isAuthenticated)
+  const value = useMemo(
+    () => ({
+      user,
+      isLoggedIn: Boolean(user),
+      booting,
+      isAuthenticated: Boolean(user),
+      isAdmin: Boolean(user && user.role === 'admin'),
+      isCustomer: Boolean(user && user.role === 'customer'),
+      users: getUsers(),
+      login,
+      register,
+      logout,
+      resetPassword,
+      refreshUser,
+    }),
+    [user, booting, login, register, logout, resetPassword, refreshUser],
+  );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
