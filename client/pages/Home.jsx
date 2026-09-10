@@ -1,3 +1,8 @@
+// ไฟล์: client/pages/Home.jsx
+// หน้าแรกของเว็บไซต์ (Landing Page)
+// เรียกมาจาก: App.jsx ผ่าน Route path="/"
+// แหล่งข้อมูลสินค้า: src/data/product.js และ src/data/sections.js
+// ส่วนประกอบย่อยในหน้านี้: Hotspot, ProductCard, CategoriesGrid, StoryCollage, GenreCircles, LandingCarousel, RoadToThaiArtist
 import { useRef, useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { products } from '../src/data/product';
@@ -14,6 +19,7 @@ import LandingCarousel from '../src/components/sections/LandingCarousel';
 import RoadToThaiArtist from '../src/components/sections/RoadToThaiArtist';
 import heroBanner from '../assets/Banner/hero-banner.png';
 
+// กำหนดแท็บสำหรับสลับดูสินค้าขายดี กับ สินค้ามาใหม่
 const tabs = [
   { id: 'best', label: 'Best Sellers' },
   { id: 'new', label: 'New Arrival' },
@@ -21,20 +27,24 @@ const tabs = [
 
 export default function Home() {
   const { addToCart } = useCart();
+  // ref สำหรับคุมการเลื่อน scroll แนวนอนของการ์ดสินค้า
   const scrollRef = useRef(null);
   const [activeTab, setActiveTab] = useState('best');
 
+  // สลับแสดงสินค้าตามแท็บ: Best Sellers (ดึงตาม id ที่กำหนด) หรือ New Arrival (สินค้าฝั่งสากล)
   const visibleProducts =
     activeTab === 'best'
       ? bestSellerIds.map((id) => findProduct(id)).filter(Boolean)
       : products.filter((product) => product.id.endsWith('en'));
 
+  // ฟังก์ชันเลื่อนการ์ดสินค้าในแนวนอนตามความกว้างของการ์ด (379px รวม gap)
   const scrollByCard = (direction) => {
     scrollRef.current?.scrollBy({ left: direction * 379, behavior: 'smooth' });
   };
 
   return (
     <>
+      {/* Hero Section: แบนเนอร์หลักพร้อมหมุด Hotspot ลอยบนรูปให้กดดูของได้เลย */}
       <section className="relative -mt-navbar bg-brand-gradient">
         <div
           className="relative flex h-202.5 items-end justify-center pb-52"
@@ -47,12 +57,14 @@ export default function Home() {
         >
           <h1 className="sr-only">MERCHROOM — Rooted in Culture</h1>
 
+          {/* วางหมุด Hotspot ตามพิกัด x, y ที่ระบุไว้ใน sections.js */}
           {heroHotspots.map((spot) => (
             <div key={spot.id} className={`absolute ${spot.x} ${spot.y}`}>
               <Hotspot product={findProduct(spot.productId)} size={spot.size} />
             </div>
           ))}
 
+          {/* ปุ่ม CTA พาวิ่งไปหน้ารวมสินค้าทั้งหมด */}
           <Button
             to="/products"
             variant="highlight"
@@ -64,6 +76,7 @@ export default function Home() {
         </div>
       </section>
 
+      {/* ส่วนสินค้าแนะนำ: สลับแท็บ Best Sellers / New Arrival เลื่อนดูสินค้าได้แบบแนวนอน */}
       <section className="relative -mt-9.5 rounded-t-section bg-cream py-20">
         <Container>
           <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
@@ -71,6 +84,7 @@ export default function Home() {
               Find your merch Find your match
             </h2>
 
+            {/* แถบสลับแท็บสินค้า */}
             <div className="flex items-center gap-8" role="tablist" aria-label="หมวดสินค้าแนะนำ">
               {tabs.map((tab) => {
                 const isActive = activeTab === tab.id;
@@ -97,6 +111,7 @@ export default function Home() {
             </div>
           </div>
 
+          {/* แถวการ์ดสินค้าแนวนอน (Horizontal Scroll + Snap) */}
           <div
             ref={scrollRef}
             className="scrollbar-hide mt-10 flex gap-5 overflow-x-auto pb-2 snap-x snap-mandatory"
@@ -112,6 +127,7 @@ export default function Home() {
             ))}
           </div>
 
+          {/* แถบความคืบหน้า (UI mock) และปุ่มลูกศรกดเลื่อนการ์ดซ้าย-ขวา */}
           <div className="mt-8 flex items-center justify-between">
             <div className="h-1.25 w-81 max-w-full rounded-card bg-muted">
               <div className="h-full w-37.25 rounded-card bg-ink" />
@@ -139,14 +155,11 @@ export default function Home() {
         </Container>
       </section>
 
+      {/* รวม Section ย่อยอื่นๆ แยก Component ไว้ใน sections/ เพื่อความเป็นระเบียบ */}
       <CategoriesGrid />
-
       <StoryCollage />
-
       <RoadToThaiArtist />
-
       <GenreCircles />
-
       <LandingCarousel />
     </>
   );

@@ -1,3 +1,7 @@
+// ไฟล์: client/pages/Login.jsx
+// หน้าเข้าสู่ระบบ (Sign In)
+// เรียกมาจาก: App.jsx ผ่าน Route path="/login" หรือคลิกไอคอน User บน Navbar
+// แหล่งข้อมูล: ฟังก์ชัน login จาก AuthContext และข้อมูลผู้ใช้ทดสอบจาก src/data/mockup/mockUsers.js
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LogIn, Lock, Mail, ShieldCheck, User } from 'lucide-react';
@@ -7,6 +11,7 @@ import Button from '../src/components/ui/Button';
 import Container from '../src/components/ui/Container';
 import Breadcrumb from '../src/components/ui/Breadcrumb';
 
+// หน้าเข้าสู่ระบบ (Sign In) พร้อมปุ่มคลิกทดสอบบัญชี Demo
 export default function Login() {
   const { login } = useAuth();
   const navigate = useNavigate();
@@ -15,6 +20,7 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
+  // ฟังก์ชันล็อกอิน: ตรวจสอบข้อมูล ถ้าผ่านให้ redirect แยกตามบทบาท (admin หรือ customer)
   const handleSubmit = (e) => {
     e.preventDefault();
     setError('');
@@ -26,6 +32,7 @@ export default function Login() {
     navigate(authed.role === 'admin' ? '/admin/dashboard' : '/user/dashboard');
   };
 
+  // Helper สำหรับกดเลือกบัญชีทดสอบแล้วกรอกอีเมล/รหัสผ่านให้อัตโนมัติ (ไว้เดโมพรีเซนต์)
   const quickFill = (user) => {
     setEmail(user.email);
     setPassword(user.password);

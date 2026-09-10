@@ -1,8 +1,9 @@
+// โครงสร้างข้อมูลคำสั่งซื้อ (Order Schema)
 const mongoose = require('mongoose');
 
 const OrderSchema = new mongoose.Schema({
     userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-    // ดึงฟิลด์ทั้งหมดจากไฟล์ OrderItem มาฝังไว้ในนี้เลย
+    // ฝัง items เป็น subdocument เพื่อ snapshot ข้อมูลและราคา ณ วันสั่งซื้อโดยตรง
     items: [{
         _id: mongoose.Schema.Types.ObjectId,
         productId: { type: mongoose.Schema.Types.ObjectId, ref: 'Product' },

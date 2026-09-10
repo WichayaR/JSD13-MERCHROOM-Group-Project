@@ -1,3 +1,6 @@
+// ไฟล์: client/src/data/reviews.js
+// ข้อมูลรีวิวสินค้าตัวอย่าง (Mock Customer Reviews)
+// เรียกใช้งานโดย: pages/ProductDetail.jsx สำหรับแสดงแท็บรีวิวและคะแนนความพึงพอใจของลูกค้า
 export const mockReviews = [
   {
     id: 'r1',

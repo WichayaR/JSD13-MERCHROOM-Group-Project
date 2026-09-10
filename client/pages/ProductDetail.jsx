@@ -1,3 +1,7 @@
+// ไฟล์: client/pages/ProductDetail.jsx
+// หน้าแสดงรายละเอียดสินค้า (Product Detail Page)
+// เรียกมาจาก: App.jsx ผ่าน Route path="/productDetail/:id"
+// แหล่งข้อมูล: ค้นหาข้อมูลสินค้าตาม id จาก src/data/product.js และดึงรีวิวจาก src/data/reviews.js
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
@@ -49,12 +53,17 @@ const FAQS = [
 
 const baht = (value) => `฿${value.toLocaleString('th-TH', { minimumFractionDigits: 2 })}`;
 
+// หน้ารายละเอียดสินค้า: แสดงรูปภาพ ข้อมูลสินค้า ตัวเลือกไซซ์/สี และสินค้าที่เกี่ยวข้อง
 export default function ProductDetail() {
+  // ดึง productId จาก URL param เช่น /productDetail/01th
   const { productId } = useParams();
   const navigate = useNavigate();
   const { addToCart } = useCart();
 
+  // ค้นหาสินค้าจาก data array ตาม id
   const product = products.find((item) => String(item.id) === String(productId));
+
+  // แมป category ย้อนกลับจาก suffix รหัสสินค้าเพื่อทำ Breadcrumb ลิงก์กลับหน้าเดิม
   const backToCat = (() => {
     if (!product) return null;
     if (product.id.endsWith('th')) return 'thai-band';
@@ -71,6 +80,7 @@ export default function ProductDetail() {
   const [activeTab, setActiveTab] = useState('reviews');
   const [galleryIndex, setGalleryIndex] = useState(0);
 
+  // ดักกรณีพิมพ์ id มั่วแล้วหาของไม่เจอ แสดงหน้าแจ้งเตือนพร้อมปุ่มพากลับ
   if (!product) {
     return (
       <Container className="py-20 text-center">
@@ -80,10 +90,12 @@ export default function ProductDetail() {
     );
   }
 
+  // เตรียมรูปในแกลเลอรี โดยดึงสินค้าร่วมแบรนด์เดียวกันมาแสดงเป็นภาพย่อย
   const sameBrand = products.filter((item) => item.brand === product.brand);
   const gallery = [product, ...sameBrand.filter((item) => item.id !== product.id)].slice(0, 3);
   const mainImage = gallery[galleryIndex]?.image || product.image;
 
+  // แนะนำสินค้าที่เกี่ยวข้อง: เรียงจากแบรนด์เดียวกันก่อน แล้วตามด้วยหมวดหมู่เดียวกัน
   const related = [
     ...sameBrand.filter((item) => item.id !== product.id),
     ...products.filter(
@@ -93,6 +105,7 @@ export default function ProductDetail() {
 
   return (
     <Container className="py-10">
+      {/* แถบนำทาง Breadcrumb ย้อนกลับไปยังหมวดหมู่หลักของสินค้า */}
       <Breadcrumb
         items={[
           { label: 'Home', to: '/' },
@@ -102,7 +115,9 @@ export default function ProductDetail() {
       />
 
       <div className="mt-6 grid items-start gap-10 lg:grid-cols-2">
+        {/* แกลเลอรีรูปภาพ: คลิกรูปย่อยซ้ายมือเพื่อสลับรูปหลัก */}
         <div className="flex gap-4">
+          {/* Thumbnails สลับรูปหลักเมื่อคลิก */}
           <div className="flex flex-col gap-3">
             {gallery.map((item, idx) => (
               <button
@@ -122,6 +137,7 @@ export default function ProductDetail() {
             ))}
           </div>
 
+          {/* กรอบรูปภาพใหญ่ของสินค้า */}
           <div className="flex-1 overflow-hidden rounded-btn bg-white">
             {mainImage ? (
               <img
@@ -137,6 +153,7 @@ export default function ProductDetail() {
           </div>
         </div>
 
+        {/* ข้อมูลสินค้า: ชื่อ ราคา คำบรรยาย ตัวเลือกขนาด สี และปุ่มหยิบใส่ตะกร้า */}
         <div>
           {product.brand && (
             <p className="text-base font-semibold uppercase text-primary">{product.brand}</p>
@@ -152,6 +169,7 @@ export default function ProductDetail() {
             {product.description}
           </p>
 
+          {/* เลือกสีสินค้า */}
           <div className="mt-6">
             <p className="text-sm font-semibold">Choose Colors</p>
             <div className="mt-3 flex gap-3">
@@ -172,6 +190,7 @@ export default function ProductDetail() {
             </div>
           </div>
 
+          {/* เลือกไซซ์สินค้า */}
           <div className="mt-6">
             <p className="text-sm font-semibold">Choose Size</p>
             <div className="mt-3 flex flex-wrap gap-3">
@@ -193,6 +212,7 @@ export default function ProductDetail() {
             </div>
           </div>
 
+          {/* ตัวปรับจำนวนสินค้า (+/- ล็อคขั้นต่ำ 1 ชิ้น) และปุ่มกดใส่ตะกร้า */}
           <div className="mt-8 flex flex-col gap-4 sm:flex-row">
             <div className="flex h-btn-lg items-center gap-5 rounded-pill border border-ink/20 px-5">
               <button

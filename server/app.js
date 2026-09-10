@@ -1,9 +1,10 @@
-//ไฟล์หลักสำหรับเปิดรันระบบหลังบ้านเว็บในภาพรวมในอนาคต
+// Entry point หลักของ backend (Node.js)
+const connectDB = require('./db');
 
-const connectDB = require('./db'); // 🌟 ดึงไฟล์เชื่อมต่อหลักมาเปิดท่อเชื่อมใช้งาน
+// สั่งเชื่อมต่อ MongoDB ทันทีตอน start server
+connectDB();
 
-connectDB(); // จั่วหัวเชื่อมต่อเมื่อเซิร์ฟเวอร์หลักเริ่มรันงาน
-// ⚠️ โมเดลที่ import ข้างล่าง (เช่น User, Product) จะใช้ท่อเชื่อมนี้ได้ทันที
-// เช่น: const User = require('./models/User');  แล้วใช้ User.find() ได้เลย
+// โมเดลต่างๆ (User, Product ฯลฯ) สามารถ require มาเรียกใช้ query ได้ทันที
+// ตัวอย่าง: const User = require('./models/User'); const users = await User.find();
 
-console.log("🚀 ระบบหลังบ้านตัวหลัก พร้อมเชื่อมต่อทำงานร่วมกับฐานข้อมูลแบบสากลแล้ว!");
+console.log('Server is running and connecting to MongoDB...');

@@ -1,3 +1,7 @@
+// ไฟล์: client/pages/Product.jsx
+// หน้าแสดงแคตตาล็อกสินค้าทั้งหมด (Products Catalog)
+// เรียกมาจาก: App.jsx ผ่าน Route path="/products" (รองรับ query เช่น ?cat=... หรือ ?q=...)
+// แหล่งข้อมูลสินค้า: src/data/product.js และฟิลเตอร์หมวดหมู่จาก src/data/sections.js
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { ChevronDown, Flag, Search, X } from 'lucide-react';
@@ -23,15 +27,18 @@ const STYLE_OPTIONS = ['All', 'Illustration', 'Photo', 'Typography'];
 const MEDIUM_OPTIONS = ['All', 'T-Shirt', 'Vinyl', 'Accessories', 'Home & Living'];
 const SORT_OPTIONS = ['Famous', 'Price: Low to High', 'Price: High to Low'];
 
+// Component Dropdown แบบ custom รองรับคลิกนอกกล่องเพื่อปิด และปุ่ม Esc
 function Dropdown({ label, value, options, onChange }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
 
   useEffect(() => {
     if (!open) return;
+    // ปิด dropdown เมื่อผู้ใช้คลิกข้างนอก element
     const handleClick = (e) => {
       if (ref.current && !ref.current.contains(e.target)) setOpen(false);
     };
+    // กด Esc เพื่อปิดเมนู
     const handleKey = (e) => {
       if (e.key === 'Escape') setOpen(false);
     };
@@ -78,9 +85,11 @@ function Dropdown({ label, value, options, onChange }) {
   );
 }
 
+// หน้าแสดงรายการสินค้า พร้อมระบบค้นหา ฟิลเตอร์หลายมิติ จัดเรียง และแบ่งหน้า (Pagination)
 export default function Products() {
   const { addToCart } = useCart();
   const [searchParams, setSearchParams] = useSearchParams();
+  // รับ query string จาก URL เช่น ?cat=thai-band หรือ ?q=parkinson
   const cat = searchParams.get('cat');
   const q = searchParams.get('q') ?? '';
 
@@ -93,6 +102,7 @@ export default function Products() {
   const [sort, setSort] = useState('Famous');
   const [page, setPage] = useState(1);
 
+  // ซิงค์ filter state เมื่อ query param ?cat= เปลี่ยน พร้อมรีเซ็ต pagination กลับหน้า 1
   const [prevCat, setPrevCat] = useState(cat);
   if (cat !== prevCat) {
     setPrevCat(cat);
@@ -100,6 +110,7 @@ export default function Products() {
     setPage(1);
   }
 
+  // ซิงค์คำค้นหาเมื่อ ?q= จาก navbar มีการเปลี่ยนแปลง
   const [prevQ, setPrevQ] = useState(q);
   if (q !== prevQ) {
     setPrevQ(q);
@@ -107,34 +118,42 @@ export default function Products() {
     setPage(1);
   }
 
+  // กรองและ sort ข้อมูลสินค้า (ใช้ useMemo กัน re-calculate ซ้ำถ้า filter ไม่เปลี่ยน)
   const filtered = useMemo(() => {
     const suffix = category !== 'All' ? CATEGORY_SUFFIX[category] : null;
     let result = products.filter((product) => {
+      // เช็คหมวดหมู่ตาม suffix รหัสสินค้า เช่น 'th', 'en', 'hr'
       if (suffix && !product.id.endsWith(suffix)) return false;
       if (thaiOnly && !product.id.endsWith('th')) return false;
       if (artist !== 'All' && product.brand !== artist) return false;
+      // กรองช่วงราคา
       if (price === '< ฿1,000' && product.price >= 1000) return false;
       if (price === '฿1,000 - ฿3,000' && (product.price < 1000 || product.price > 3000)) return false;
       if (price === '> ฿3,000' && product.price <= 3000) return false;
+      // ค้นหาแบบ case-insensitive ในชื่อสินค้า ศิลปิน และคำบรรยาย
       const text = `${product.name} ${product.brand} ${product.description}`.toLowerCase();
       if (query && !text.includes(query.toLowerCase())) return false;
       return true;
     });
 
+    // เรียงลำดับสินค้าตามราคา
     if (sort === 'Price: Low to High') result = [...result].sort((a, b) => a.price - b.price);
     if (sort === 'Price: High to Low') result = [...result].sort((a, b) => b.price - a.price);
     return result;
   }, [category, thaiOnly, artist, price, query, sort]);
 
+  // ตัดแบ่งหน้า แสดงหน้าละ PER_PAGE รายการ
   const totalPages = Math.max(1, Math.ceil(filtered.length / PER_PAGE));
   const pageItems = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE);
 
+  // สร้างรายการ filter chips ที่กำลังเปิดใช้งานอยู่ เพื่อให้ผู้ใช้กดลบทิ้งรายตัวได้
   const chips = [];
   if (category !== 'All') chips.push({ label: category, clear: () => setCategory('All') });
   if (price !== 'All') chips.push({ label: price, clear: () => setPrice('All') });
   if (artist !== 'All') chips.push({ label: artist, clear: () => setArtist('All') });
   if (thaiOnly) chips.push({ label: 'Thai artist', clear: () => setThaiOnly(false) });
 
+  // ล้างตัวกรองทั้งหมดกลับเป็นค่าเริ่มต้น
   const clearAll = () => {
     setCategory('All');
     setPrice('All');
@@ -150,6 +169,7 @@ export default function Products() {
   const searchRef = useRef(null);
   const [showSuggestions, setShowSuggestions] = useState(false);
 
+  // ดึงรายการคำค้นหาแนะนำ (Auto-suggestions) สูงสุด 6 รายการที่ไม่ซ้ำกัน
   const suggestions = useMemo(() => {
     if (!query.trim()) return [];
     const q = query.toLowerCase();
@@ -169,6 +189,7 @@ export default function Products() {
     return results;
   }, [query]);
 
+  // ดัก event คลิกนอกกล่องค้นหาเพื่อปิด dropdown คำแนะนำ
   useEffect(() => {
     if (!showSuggestions) return;
     const handleClick = (e) => {
@@ -187,10 +208,12 @@ export default function Products() {
 
   return (
     <Container className="py-8">
+      {/* 1. Breadcrumb นำทางตามหมวดที่เลือก */}
       <Breadcrumb
         items={[{ label: 'Home', to: '/' }, { label: 'Shop', to: '/products' }, { label: filterLabel }]}
       />
 
+      {/* 2. ช่องค้นหาสินค้า พร้อมระบบ Auto-complete suggestions */}
       <div ref={searchRef} className="relative mt-6">
         <form
           role="search"
@@ -218,6 +241,7 @@ export default function Products() {
           />
         </form>
 
+        {/* กล่องรายการคำค้นหาแนะนำเมื่อกำลังพิมพ์ */}
         {showSuggestions && suggestions.length > 0 && (
           <ul className="absolute left-0 top-full z-50 mt-2 w-full rounded-card bg-white p-2 shadow-card" role="listbox">
             {suggestions.map((s) => (
@@ -242,6 +266,7 @@ export default function Products() {
         )}
       </div>
 
+      {/* 3. แถบสลับมุมมอง: ดูตามรายการสินค้า (Product) หรือ ดูตามศิลปิน (Artist) */}
       <div className="mt-8 flex gap-10" role="tablist" aria-label="เลือกมุมมองร้านค้า">
         {[
           { id: 'product', label: 'Product' },
@@ -266,7 +291,9 @@ export default function Products() {
         })}
       </div>
 
+      {/* 4. แสดงผลตามแท็บที่เลือก */}
       {tab === 'artist' ? (
+        // แท็บศิลปิน: แสดงการ์ดรายชื่อศิลปิน/แบรนด์ พร้อมจำนวนผลงาน
         <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {BRANDS.map((brand) => {
             const count = products.filter((product) => product.brand === brand).length;
@@ -287,6 +314,7 @@ export default function Products() {
           })}
         </div>
       ) : (
+        // แท็บสินค้า: กล่องเครื่องมือกรองสินค้า (Filter Panel)
         <>
           <div className="relative mt-6 rounded-card bg-white p-5 md:p-6">
             <p className="text-xs text-muted">Sort by Product</p>
@@ -305,6 +333,7 @@ export default function Products() {
               <Dropdown label="Style" value="All" options={STYLE_OPTIONS} onChange={() => {}} />
               <Dropdown label="Medium" value="All" options={MEDIUM_OPTIONS} onChange={() => {}} />
 
+              {/* ปุ่มเปิด/ปิดเฉพาะศิลปินไทย */}
               <button
                 type="button"
                 onClick={() => {
@@ -322,6 +351,7 @@ export default function Products() {
             </div>
           </div>
 
+          {/* 5. แสดงชิปตัวกรองที่เปิดอยู่ (Active Filter Chips) พร้อมตัวเลือกเรียงลำดับ */}
           <div className="mt-6 flex flex-wrap items-center justify-between gap-4">
             <div className="flex flex-wrap items-center gap-3">
               {chips.map((chip) => (
@@ -347,9 +377,11 @@ export default function Products() {
               )}
             </div>
 
+            {/* Dropdown จัดเรียงลำดับราคา */}
             <Dropdown label="Sort by" value={sort} options={SORT_OPTIONS} onChange={setSort} />
           </div>
 
+          {/* 6. ตารางแสดงสินค้า (Product Grid) และ Fallback เมื่อค้นหาไม่เจอ */}
           <div className="mt-8 grid grid-cols-2 gap-5 lg:grid-cols-4">
             {pageItems.map((product) => (
               <ProductCard key={product.id} product={product} onAddToCart={addToCart} fluid />
@@ -360,6 +392,8 @@ export default function Products() {
               </p>
             )}
           </div>
+
+          {/* 7. ตัวแบ่งหน้า (Pagination) แสดงเมื่อมีมากกว่า 1 หน้า */}
 
           {totalPages > 1 && (
             <nav className="mt-10 flex items-center justify-center gap-2" aria-label="แบ่งหน้าสินค้า">

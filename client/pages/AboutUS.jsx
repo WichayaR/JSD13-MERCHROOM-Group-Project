@@ -1,3 +1,7 @@
+// ไฟล์: client/pages/AboutUS.jsx
+// หน้าแนะนำทีมงานและเรื่องราวของ Merchroom (About Us)
+// เรียกมาจาก: App.jsx ผ่าน Route path="/about" หรือคลิกเมนู About Us บน Navbar
+// แหล่งรูปภาพทีมงาน: โฟลเดอร์ assets/Development-Team-Image/
 import { Zap, BadgeCheck, HeartHandshake } from 'lucide-react';
 import Container from '../src/components/ui/Container';
 import SectionHeading from '../src/components/ui/SectionHeading';
@@ -22,6 +26,7 @@ const socialLinks = {
   Email: iconEmail,
 };
 
+// Team Member
 const team = [
   {
     name: 'Nitichaya G.',
@@ -48,7 +53,7 @@ const team = [
     role: 'SCRUM Master',
     image: imgChaowiwat,
     links: {
-      LinkedIn: '#',
+      LinkedIn: 'https://www.linkedin.com/in/chaowiwat-nantapatsiri-94610538b/',
       GitHub: 'https://github.com/TonySmitch/',
       Email: 'smitch.crystal@gmail.com',
     },
@@ -75,6 +80,7 @@ const team = [
   },
 ];
 
+// main value 3 ข้อของ Merchroom
 const values = [
   {
     icon: Zap,
@@ -93,10 +99,11 @@ const values = [
   },
 ];
 
+// หน้า About Us: แสดงวิสัยทัศน์ คุณค่าของแบรนด์ และแนะนำทีมพัฒนา 5 คน
 export default function About() {
   return (
     <div>
-      
+      {/* 1. Hero Banner พร้อมภาพพื้นหลังผ้าไหมไทย */}
       <section className="relative flex h-60 items-center justify-center overflow-hidden md:h-72">
         <img
           src={bgThaiSilk}
@@ -108,7 +115,7 @@ export default function About() {
         <h1 className="relative text-4xl font-bold text-white md:text-5xl">About Us</h1>
       </section>
 
-     
+      {/* 2. ส่วนเรื่องราว Story of Merchroom และการ์ด Core Values 3 ใบ */}
       <section className="bg-white py-14 md:py-20">
         <Container>
           <div className="grid gap-10 lg:grid-cols-[minmax(0,5fr)_minmax(0,4fr)] lg:gap-16">

@@ -1,3 +1,7 @@
+// ไฟล์: client/pages/AdminDashboard.jsx
+// หน้าแดชบอร์ดสำหรับผู้ดูแลระบบ (Admin Dashboard)
+// เรียกมาจาก: App.jsx ผ่าน Route path="/admin/dashboard" (สงวนสิทธิ์เฉพาะผู้ใช้ role admin)
+// แหล่งข้อมูล: สถิติรายได้ KPI และรายการคำสั่งซื้อทั้งหมดจาก src/data/mockup/mockOrders.js
 import { useState } from 'react';
 import {
   Box,
@@ -46,12 +50,14 @@ const periodFetchers = {
   yearly: getOrdersYearly,
 };
 
+// หน้าแดชบอร์ดผู้ดูแลระบบ (Admin): สรุปยอดขาย รายงานตามช่วงเวลา จัดการคำสั่งซื้อและสมาชิก
 export default function AdminDashboard() {
   const { user, isAdmin } = useAuth();
   const [activePeriod, setActivePeriod] = useState('monthly');
   const orders = getOrders();
   const users = getUsers();
 
+  // Guard สิทธิ์: ถ้ายังไม่ล็อกอิน หรือไม่ใช่แอดมิน ให้บล็อกแล้วส่งไปหน้าล็อกอิน
   if (!user || !isAdmin) {
     return (
       <Container className="py-10 text-center">
@@ -63,9 +69,12 @@ export default function AdminDashboard() {
     );
   }
 
+  // กรองคำสั่งซื้อตามช่วงเวลาที่เลือก (รายวัน/สัปดาห์/เดือน/ปี)
   const filteredOrders = periodFetchers[activePeriod](new Date());
+  // คำนวณสรุปผลยอดขายและจำนวนออเดอร์
   const summary = computeReportSummary(filteredOrders);
 
+  // นับจำนวนออเดอร์ทั้งหมดแยกตามสถานะจัดส่ง
   const allStatusCounts = ['pending', 'shipping', 'in_transit', 'delivered', 'cancelled', 'failed'].map(
     (s) => ({
       status: s,
@@ -73,6 +82,7 @@ export default function AdminDashboard() {
     }),
   );
 
+  // คำนวณสถิติและยอดเงินสำหรับรายงานเฉพาะช่วงเวลาที่เลือก
   const reportStatusCounts = ['pending', 'shipping', 'in_transit', 'delivered', 'cancelled', 'failed'].map(
     (s) => ({
       status: s,
@@ -89,6 +99,7 @@ export default function AdminDashboard() {
     <Container className="py-10">
       <Breadcrumb items={[{ label: 'Home', to: '/' }, { label: 'Admin Dashboard' }]} />
 
+      {/* ส่วนหัวแสดงชื่อแอดมินและรหัสพนักงาน */}
       <div className="mt-4 flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold uppercase">Admin Dashboard</h1>
@@ -106,7 +117,7 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* ── Report Period Menu ───────────────────────────────── */}
+      {/* แถบเลือกช่วงเวลาสำหรับสรุปรายงาน (รายวัน / สัปดาห์ / เดือน / ปี) */}
       <section className="mt-8 rounded-card bg-white p-6 md:p-8 shadow-card" aria-label="รายงาน">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
@@ -139,7 +150,7 @@ export default function AdminDashboard() {
           })}
         </div>
 
-        {/* ── Period Summary Cards ────────────────────────────── */}
+        {/* การ์ดสรุป KPI ประจำรอบเวลา (จำนวนออเดอร์, รายได้, ยอดเฉลี่ยต่อออเดอร์, จำนวนที่จ่ายแล้ว) */}
         <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <SummaryCard
             icon={Box}
@@ -167,13 +178,12 @@ export default function AdminDashboard() {
           />
         </div>
 
-        {/* ── Two-Column Report Detail ────────────────────────── */}
+        {/* รายละเอียดรายงานแบบ 2 คอลัมน์: กราฟแท่งสถานะ + สินค้าขายดี (ซ้าย) และ สถานะชำระเงิน + ออเดอร์ล่าสุด (ขวา) */}
         <div className="mt-8 grid items-start gap-8 lg:grid-cols-[1fr_380px]">
 
-          {/* Left — Status Breakdown + Top Products */}
+          {/* คอลัมน์ซ้าย: กราฟแจกแจงสถานะจัดส่ง และสินค้าขายดี Top 5 */}
           <div className="flex flex-col gap-8">
 
-            {/* Status Breakdown Bar Chart */}
             <div className="rounded-card bg-cream p-5 md:p-6">
               <h3 className="text-sm font-bold uppercase tracking-wide text-ink">
                 Delivery Status Breakdown
@@ -200,7 +210,7 @@ export default function AdminDashboard() {
               </div>
             </div>
 
-            {/* Top Products */}
+            {/* 5 อันดับสินค้าที่ทำยอดขายได้สูงสุด */}
             <div className="rounded-card bg-cream p-5 md:p-6">
               <h3 className="text-sm font-bold uppercase tracking-wide text-ink">
                 Top Products ({REPORT_PERIODS[activePeriod].labelShort})
@@ -233,10 +243,9 @@ export default function AdminDashboard() {
             </div>
           </div>
 
-          {/* Right — Payment Overview + Recent Orders */}
+          {/* คอลัมน์ขวา: สถานะการชำระเงิน สรุปภาพรวมคำสั่งซื้อทั้งหมด และ 5 ออเดอร์ล่าสุด */}
           <div className="flex flex-col gap-8">
 
-            {/* Payment Overview */}
             <div className="rounded-card bg-cream p-5 md:p-6">
               <h3 className="text-sm font-bold uppercase tracking-wide text-ink">
                 Payment Status ({REPORT_PERIODS[activePeriod].labelShort})
@@ -268,7 +277,7 @@ export default function AdminDashboard() {
               </div>
             </div>
 
-            {/* All-Time Summary (compact) */}
+            {/* สรุปสถิติภาพรวมทั้งหมดตั้งแต่เปิดระบบ (All-Time Overview) */}
             <div className="rounded-card bg-cream p-5 md:p-6">
               <h3 className="text-sm font-bold uppercase tracking-wide text-ink">All-Time Overview</h3>
               <dl className="mt-4 flex flex-col gap-3 text-sm">
@@ -296,7 +305,7 @@ export default function AdminDashboard() {
               </dl>
             </div>
 
-            {/* Recent Orders in period */}
+            {/* รายการคำสั่งซื้อล่าสุด 5 รายการในรอบเวลานี้ */}
             <div className="rounded-card bg-cream p-5 md:p-6">
               <h3 className="text-sm font-bold uppercase tracking-wide text-ink">
                 Recent Orders ({REPORT_PERIODS[activePeriod].labelShort})
@@ -336,7 +345,7 @@ export default function AdminDashboard() {
         </div>
       </section>
 
-      {/* ── Full Orders Table + Users ────────────────────────── */}
+      {/* ตารางแสดงรายการคำสั่งซื้อทั้งหมด และรายชื่อผู้ใช้งานในระบบ */}
       <div className="mt-8 grid items-start gap-8 lg:grid-cols-[1fr_380px]">
         <div className="flex flex-col gap-8">
           <section className="rounded-card bg-white p-6 md:p-8 shadow-card" aria-label="คำสั่งซื้อทั้งหมด">
@@ -472,7 +481,7 @@ export default function AdminDashboard() {
   );
 }
 
-// ── Helper sub-components ────────────────────────────────────
+// คอมโพเนนต์ย่อยสำหรับแสดงการ์ดสรุป KPI (SummaryCard) และแถวข้อมูลสถิติ (Row)
 
 function SummaryCard({ icon: Icon, label, value, color }) {
   return (

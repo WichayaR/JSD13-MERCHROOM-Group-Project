@@ -1,15 +1,16 @@
-// mockup users_db
-// จัดเก็บข้อมูลผู้ใช้สำหรับทดสอบ (testing users) เพื่อใช้ล็อกอินเข้าสู่ระบบ
-// และแยกสิทธิ์การใช้งาน Dashboard ตาม role: customer (users dashboard) / admin (admin dashboard)
+// ไฟล์: client/src/data/mockup/mockUsers.js
+// ข้อมูลจำลองบัญชีผู้ใช้งาน (Mock Users) สำหรับทดสอบระบบ Login และ Role-Based Access Control
+// เรียกใช้งานโดย: AuthContext, Login, AdminDashboard, UserDashboard
+// จัดโครงสร้างให้สอดคล้องกับ User Schema ฝั่ง Backend (แยกสิทธิ์ customer และ admin)
 
 export const USER_ROLES = {
   customer: 'ลูกค้า',
   admin: 'ผู้ดูแลระบบ',
 };
 
-// ตาราง mockup "users_db"
+// รายชื่อบัญชีผู้ใช้สำหรับทดสอบสิทธิ์ในแต่ละส่วนของระบบ
 export const mockUsers = [
-  // ── Customers ──────────────────────────────────────────────
+  // ข้อมูลลูกค้าทั่วไป (Role: customer)
   {
     _id: 'usr-non',
     email: 'non@merchroom.com',
@@ -107,7 +108,7 @@ export const mockUsers = [
     memberSince: '2026-06-10',
   },
 
-  // ── Admins ─────────────────────────────────────────────────
+  // ข้อมูลผู้ดูแลระบบ (Role: admin)
   {
     _id: 'usr-admin',
     email: 'admin@merchroom.com',
@@ -134,7 +135,8 @@ export const mockUsers = [
   },
 ];
 
-// ฟังก์ชันจำลอง (mockup) สำหรับตรวจสอบการล็อกอินเหมือนเรียกจากฐานข้อมูลจริง
+// Data Access & Authentication Helper
+// จำลองการตรวจสอบสิทธิ์และตัดฟิลด์ password ออกก่อนคืนค่า user session
 export function findUserByEmail(email) {
   return mockUsers.find((user) => user.email.toLowerCase() === email.toLowerCase()) || null;
 }

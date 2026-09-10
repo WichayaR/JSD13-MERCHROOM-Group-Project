@@ -1,3 +1,7 @@
+// ไฟล์: client/pages/Checkout.jsx
+// หน้าชำระเงินและกรอกข้อมูลจัดส่ง (Checkout Page)
+// เรียกมาจาก: App.jsx ผ่าน Route path="/checkout" (ส่งต่อมาจากหน้า /cart)
+// แหล่งข้อมูล: รับสินค้าจาก CartContext และบันทึกออเดอร์ลง LocalStorage ผ่าน src/utils/orderStorage.js
 import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowRight, CreditCard, Landmark, QrCode, Truck } from 'lucide-react';
@@ -69,6 +73,7 @@ export default function Checkout() {
 
   const selectedMethod = PAYMENT_METHODS.find((m) => m.id === paymentMethod);
 
+  // เช็ค validation ข้อมูลผู้รับและข้อมูลบัตรเครดิตก่อนยอมให้สร้างคำสั่งซื้อ
   const validate = () => {
     const next = {};
 
@@ -79,6 +84,7 @@ export default function Checkout() {
       next.phone = 'เบอร์โทรไม่ถูกต้อง (9-10 หลัก)';
     if (form.address.trim().length < 10) next.address = 'กรุณากรอกที่อยู่ให้ครบถ้วน (อย่างน้อย 10 ตัวอักษร)';
 
+    // เคสจ่ายด้วยบัตรเครดิต ต้องเช็ค format เลขบัตร 16 หลัก วันหมดอายุ และ CVV เพิ่ม
     if (paymentMethod === 'card') {
       if (!/^\d{16}$/.test(cardFields.cardNumber.replace(/\s/g, '')))
         next.cardNumber = 'เลขบัตรต้องเป็น 16 หลัก';
@@ -92,6 +98,7 @@ export default function Checkout() {
     return Object.keys(next).length === 0;
   };
 
+  // สร้าง snapshot คำสั่งซื้อ บันทึกลง LocalStorage เคลียร์ cart แล้ว redirect ไปหน้าสรุปออเดอร์
   const placeOrder = (e) => {
     e.preventDefault();
 
@@ -138,6 +145,7 @@ export default function Checkout() {
     navigate(`/order-confirmation/${orderId}`);
   };
 
+  // ดักกรณีผู้ใช้เปิดเข้ามาตรงๆ โดยไม่มีสินค้าในตะกร้า
   if (items.length === 0) {
     return (
       <Container className="py-10">
@@ -154,6 +162,7 @@ export default function Checkout() {
 
   return (
     <Container className="py-10">
+      {/* 1. Breadcrumb นำทางตามขั้นตอน Cart -> Checkout */}
       <Breadcrumb
         items={[{ label: 'Home', to: '/' }, { label: 'Cart', to: '/cart' }, { label: 'Checkout' }]}
       />
@@ -162,6 +171,7 @@ export default function Checkout() {
 
       <form onSubmit={placeOrder} className="mt-10 grid items-start gap-8 lg:grid-cols-[1fr_420px]">
         <div className="flex flex-col gap-8">
+          {/* 2. ส่วนกรอกข้อมูลสำหรับจัดส่งสินค้า */}
           <section className="rounded-card bg-white p-6 md:p-8" aria-label="ข้อมูลจัดส่ง">
             <h2 className="text-lg font-bold">Shipping Information</h2>
             <div className="mt-6 grid gap-4 sm:grid-cols-2">
@@ -243,6 +253,7 @@ export default function Checkout() {
             </div>
           </section>
 
+          {/* 3. ส่วนเลือกวิธีชำระเงิน (PromptPay, บัตรเครดิต, โอนธนาคาร, เก็บเงินปลายทาง) */}
           <section className="rounded-card bg-white p-6 md:p-8" aria-label="เลือกวิธีการชำระเงิน">
             <h2 className="text-lg font-bold">Payment Method</h2>
             <p className="mt-1 text-sm text-muted">เลือกวิธีการชำระเงินสำหรับคำสั่งซื้อของคุณ</p>
@@ -276,6 +287,7 @@ export default function Checkout() {
               })}
             </div>
 
+            {/* ช่องกรอกข้อมูลบัตรเครดิต (แสดงเฉพาะตอนเลือกชำระผ่านบัตร) */}
             {paymentMethod === 'card' && (
               <div className="mt-5 grid gap-4 rounded-btn bg-cream p-5 sm:grid-cols-2">
                 <div className="sm:col-span-2">

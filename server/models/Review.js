@@ -1,3 +1,5 @@
+// Schema รีวิวสินค้า (Review Schema)
+// บันทึกคะแนนรีวิว 1-5 ดาว และคอมเมนต์ของผู้ใช้ต่อสินค้าแต่ละชิ้น
 const mongoose = require('mongoose');
 
 const ReviewSchema = new mongoose.Schema({

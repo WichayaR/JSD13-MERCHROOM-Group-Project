@@ -1,3 +1,6 @@
+// ไฟล์: client/src/data/sections.js
+// ข้อมูลคอนฟิกสำหรับแต่ละ Section ในหน้าแรก (Hotspots, หมวดหมู่, แบนเนอร์, รายการแนวเพลง, และบอร์ดนิทรรศการ)
+// เรียกใช้งานโดย: Home.jsx และคอมโพเนนต์ย่อยในโฟลเดอร์ src/components/sections/*
 import { products } from './product';
 export { products };
 

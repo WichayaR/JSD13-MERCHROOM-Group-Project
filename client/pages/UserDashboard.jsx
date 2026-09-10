@@ -1,3 +1,7 @@
+// ไฟล์: client/pages/UserDashboard.jsx
+// หน้าแดชบอร์ดสำหรับลูกค้าทั่วไป (Customer Dashboard)
+// เรียกมาจาก: App.jsx ผ่าน Route path="/user/dashboard" (หรือ redirect จากหน้า Login)
+// แหล่งข้อมูล: โปรไฟล์ผู้ใช้จาก useAuth() และประวัติการสั่งซื้อจาก src/data/mockup/mockOrders.js
 import { useNavigate } from 'react-router-dom';
 import {
   BadgeCheck,
@@ -17,10 +21,12 @@ import Breadcrumb from '../src/components/ui/Breadcrumb';
 
 const baht = (value) => `฿${value.toLocaleString('th-TH')}`;
 
+// หน้า Dashboard สำหรับลูกค้าทั่วไป (Customer): ดูประวัติคำสั่งซื้อ สถานะจัดส่ง และข้อมูลส่วนตัว
 export default function UserDashboard() {
   const { user, isCustomer } = useAuth();
   const navigate = useNavigate();
 
+  // ป้องกันการเข้าถึง: ถ้ายังไม่ได้ล็อกอิน หรือไม่มีสิทธิ์ customer ให้เตือนแล้ว redirect ไปหน้า login
   if (!user || !isCustomer) {
     return (
       <Container className="py-10 text-center">
@@ -32,10 +38,13 @@ export default function UserDashboard() {
     );
   }
 
+  // ดึงรายการคำสั่งซื้อเฉพาะของ user คนนี้
   const orders = getOrdersByUser(user._id);
 
+  // ฟังก์ชันนับจำนวนออเดอร์ตามสถานะจัดส่ง
   const countByStatus = (status) => orders.filter((o) => o.deliveryStatus === status).length;
 
+  // การ์ดสรุปสถิติ 4 ใบ: ทั้งหมด, กำลังจัดส่ง, สำเร็จแล้ว, ยกเลิก
   const stats = [
     { label: 'ทั้งหมด', value: orders.length, icon: Box, color: 'bg-ink text-white' },
     { label: 'กำลังจัดส่ง', value: countByStatus('in_transit'), icon: Truck, color: 'bg-violet text-white' },
@@ -47,6 +56,7 @@ export default function UserDashboard() {
     <Container className="py-10">
       <Breadcrumb items={[{ label: 'Home', to: '/' }, { label: 'Users Dashboard' }]} />
 
+      {/* ส่วนหัวแสดงโปรไฟล์ผู้ใช้ และปุ่มลัด */}
       <div className="mt-4 flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold uppercase">Users Dashboard</h1>
@@ -64,6 +74,7 @@ export default function UserDashboard() {
         </div>
       </div>
 
+      {/* สรุปตัวเลขออเดอร์แยกตามสถานะจัดส่ง */}
       <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {stats.map((s) => {
           const Icon = s.icon;
@@ -81,6 +92,7 @@ export default function UserDashboard() {
         })}
       </div>
 
+      {/* ประวัติการสั่งซื้อทั้งหมดของผู้ใช้ */}
       <section className="mt-8 rounded-card bg-white p-6 md:p-8 shadow-card" aria-label="ประวัติการสั่งซื้อ">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-bold">Order History</h2>

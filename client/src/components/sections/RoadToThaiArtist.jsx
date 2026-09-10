@@ -1,23 +1,33 @@
+// ไฟล์: client/src/components/sections/RoadToThaiArtist.jsx
+// ส่วนจัดแสดงคอลเลกชันนิทรรศการ Road to Thai Artist (บอร์ดจัดแสดงสไตล์ Editorial)
+// เรียกมาจาก: Home.jsx (วางเป็น section ล่างสุดของหน้าแรกก่อนถึง footer)
+// แหล่งข้อมูล: roadToThaiArtist จาก src/data/sections.js และข้อมูลสินค้าจาก src/data/product.js
 import { useEffect, useRef, useState } from 'react';
 import { products, roadToThaiArtist } from '../../data/sections';
 import Container from '../ui/Container';
 import ScaledStage from '../ui/ScaledStage';
 import Placeholder from '../ui/Placeholder';
 
+// ฟังก์ชันช่วยดึงข้อมูลสินค้าจาก array products ตาม id
 function findProduct(id) {
   return products.find((p) => p.id === id);
 }
 
+// พิกัดตำแหน่ง absolute (x, y, width) ของการ์ด Pop Culture บนบอร์ด 1320x815px
 const POP_LAYOUT = [
   { left: 23, top: 56, width: 280 },
   { left: 301, top: 146, width: 232 },
   { left: 473, top: 59, width: 209 },
 ];
+
+// พิกัดตำแหน่ง absolute ของการ์ดฝั่งศิลปินไทย
 const THAI_LAYOUT = [
   { left: 129, top: 497, width: 257 },
   { left: 303, top: 462, width: 200 },
   { left: 459, top: 490, width: 200 },
 ];
+
+// พิกัดและขนาดรูปสินค้าหัตถกรรมไทยในกรอบขวาล่าง
 const CRAFT_LAYOUT = [
   { left: 45, top: 96, w: 111, h: 111 },
   { left: 143, top: 63, w: 137, h: 205 },
@@ -27,6 +37,7 @@ const CRAFT_LAYOUT = [
   { left: 268, top: 215, w: 132, h: 88 },
 ];
 
+// ป้ายตัวเลขกลมๆ สไตล์ editorial บอกหมายเลขโซน เช่น 01, 02, 03
 function Badge({ number, className = '' }) {
   return (
     <div
@@ -37,6 +48,8 @@ function Badge({ number, className = '' }) {
   );
 }
 
+// คอมโพเนนต์ทำ Scroll Reveal Animation โดยใช้ IntersectionObserver
+// ดักจับเมื่อผู้ใช้เลื่อนจอมาถึง threshold 20% แล้วค่อย fade in และลอยเข้าสู่ตำแหน่งจริง
 function Reveal({ delay = 0, x = 0, y = 40, className = '', style, children }) {
   const ref = useRef(null);
   const [inView, setInView] = useState(false);
@@ -72,6 +85,7 @@ function Reveal({ delay = 0, x = 0, y = 40, className = '', style, children }) {
   );
 }
 
+// การ์ดแสดงรูปสไตล์โพลารอยด์สีขาว (สำหรับฝั่ง Pop Culture) พร้อมองศาเอียงและการแสดงรูปซ้อน
 function PopPolaroid({ item, layout }) {
   const product = findProduct(item.productId);
   if (!product) return null;
@@ -93,6 +107,7 @@ function PopPolaroid({ item, layout }) {
         ) : (
           <Placeholder label={product.name} className="aspect-square" />
         )}
+        {/* เลเยอร์รูปซ้อนเหลื่อมกันเล็กน้อย เพิ่มมิติแบบงานคอลลาจ */}
         {overlay?.image && (
           <img
             src={overlay.image}
@@ -109,6 +124,7 @@ function PopPolaroid({ item, layout }) {
   );
 }
 
+// การ์ดแสดงรูปสไตล์โพลารอยด์พื้นดำ (สำหรับฝั่งศิลปินไทย)
 function ThaiPolaroid({ item, layout }) {
   const product = findProduct(item.productId);
   if (!product) return null;
@@ -132,6 +148,8 @@ function ThaiPolaroid({ item, layout }) {
   );
 }
 
+// ส่วนจัดแสดงคอลเลกชัน "Road to Thai Artist" สไตล์บอร์ดนิทรรศการ (Editorial Stage)
+// ใช้ ScaledStage คุมขนาด 1320x815px แล้วให้ทั้งบอร์ดย่อ-ขยายตามขนาดหน้าจอแบบอัตโนมัติ
 export default function RoadToThaiArtist() {
   const { pop, thai, handcraft, vinylProductId } = roadToThaiArtist;
   const vinyl = findProduct(vinylProductId);
@@ -140,8 +158,10 @@ export default function RoadToThaiArtist() {
   return (
     <section className="pb-12">
       <Container>
+        {/* ครอบด้วย ScaledStage เพื่อรักษาอัตราส่วนพิกัด x,y ขององค์ประกอบทั้งหมดในบอร์ด */}
         <ScaledStage width={1320} height={815}>
           <div className="relative h-203.75 w-330">  
+            {/* โซนที่ 1: การ์ดโพลารอยด์ฝั่งสากล (Pop Culture) ลอยเยื้องซ้ายบน */}
             {pop.map((item, idx) => (
               <Reveal
                 key={item.id}
@@ -155,6 +175,7 @@ export default function RoadToThaiArtist() {
               </Reveal>
             ))}
 
+            {/* แผ่นเสียงไวนิลชิ้นไฮไลต์ตรงกลางขวา */}
             <Reveal delay={200} y={50} className="absolute" style={{ left: 714, top: 0 }}>
               <div className="h-99 w-100.75 bg-black p-3 shadow-card">
                 <div className="flex h-full w-full items-center justify-center bg-ink p-2">
@@ -171,6 +192,7 @@ export default function RoadToThaiArtist() {
               </div>
             </Reveal>
 
+            {/* ป้ายคำบรรยายและ Badge หมายเลข 01 */}
             <Reveal
               x={-140}
               y={24}
@@ -183,6 +205,7 @@ export default function RoadToThaiArtist() {
             </Reveal>
             <Badge number="01" className="left-0 top-12.25 bg-primary-deep" />
 
+            {/* ข้อความสไตล์นิตยสารกำกับข้างแผ่นเสียง */}
             <Reveal
               delay={350}
               y={30}
@@ -194,6 +217,7 @@ export default function RoadToThaiArtist() {
               </p>
             </Reveal>
 
+            {/* หัวเรื่องโซน 02 "Road to Thai Artist" */}
             <Reveal
               x={-120}
               y={40}
@@ -206,6 +230,7 @@ export default function RoadToThaiArtist() {
             </Reveal>
             <Badge number="02" className="left-27 top-115 bg-violet" />
 
+            {/* โซนที่ 2: การ์ดสินค้าศิลปินไทย */}
             {thai.map((item, idx) => (
               <Reveal
                 key={item.id}
@@ -219,6 +244,7 @@ export default function RoadToThaiArtist() {
               </Reveal>
             ))}
 
+            {/* โน้ตสติกเกอร์การ์ด Merchroom สไตล์บันทึกของนักสะสม */}
             <Reveal
               delay={500}
               x={60}
@@ -240,6 +266,7 @@ export default function RoadToThaiArtist() {
               </div>
             </Reveal>
 
+            {/* โซนที่ 3: กรอบรวมงานหัตถกรรมไทย (Thai Handcraft Edit) พร้อม Badge 03 */}
             <Reveal x={140} y={60} className="absolute" style={{ left: 756, top: 464 }}>
               <div className="relative h-76.5 w-139.5 border-[5px] border-black bg-white shadow-card">
                 <Badge number="03" className="left-8.5 top-8.25 bg-highlight" />

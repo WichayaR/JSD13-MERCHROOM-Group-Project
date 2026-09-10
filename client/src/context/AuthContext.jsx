@@ -1,4 +1,8 @@
-// Context จัดการสถานะการล็อกอิน (session) ของ mockup users_db ให้ทุกหน้าเข้าถึงได้
+// ไฟล์: client/src/context/AuthContext.jsx
+// Context จัดการสถานะ Authentication และสิทธิ์ผู้ใช้งาน (Admin / Customer)
+// เรียกมาจาก: App.jsx (นำ AuthProvider ไปครอบทั้งแอป)
+// แหล่งข้อมูลผู้ใช้: src/data/mockup/mockUsers.js และจัดเก็บ session ผ่าน src/utils/sessionStorage.js
+// ส่งออก Hook: useAuth() สำหรับหน้า Login, Navbar, UserDashboard, AdminDashboard
 import { createContext, useContext, useState } from 'react';
 import {
   authenticate,
@@ -14,8 +18,10 @@ import {
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
+  // ดึง session จาก storage มาตั้งเป็น user เริ่มต้น
   const [user, setUser] = useState(() => getSession());
 
+  // ตรวจสอบอีเมล/รหัสผ่านกับ mock database ถ้าผ่านจะจำ session ไว้
   const login = (email, password) => {
     const authed = authenticate(email, password);
     if (authed) {
@@ -26,11 +32,13 @@ export function AuthProvider({ children }) {
     return null;
   };
 
+  // ล้าง session และเคลียร์ state ออกตอน logout
   const logout = () => {
     clearSession();
     setUser(null);
   };
 
+  // อัปเดตข้อมูล user ใหม่ (เช่น ตอนแก้โปรไฟล์) และตัด password ทิ้งก่อนบันทึกลง session
   const refreshUser = (userId) => {
     const fresh = getUserById(userId);
     if (fresh) {
@@ -41,6 +49,7 @@ export function AuthProvider({ children }) {
     }
   };
 
+  // รวม state และ helper สำหรับเช็คสิทธิ์ (Admin / Customer) ให้เรียกใช้ง่ายๆ
   const value = {
     user,
     isAuthenticated: Boolean(user),
@@ -55,6 +64,7 @@ export function AuthProvider({ children }) {
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
+// Custom hook สำหรับดึง context การล็อกอินไปใช้ในหน้าอื่นๆ
 // eslint-disable-next-line react-refresh/only-export-components
 export function useAuth() {
   const context = useContext(AuthContext);

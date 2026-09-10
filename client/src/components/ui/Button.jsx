@@ -1,5 +1,9 @@
 import { Link } from 'react-router-dom';
 
+// ไฟล์: client/src/components/ui/Button.jsx
+// คอมโพเนนต์ปุ่มกดกลางของทั้งระบบ (Polymorphic Button / Link)
+// เรียกมาจาก: ใช้งานเกือบทุกหน้า เช่น Home, ProductCard, ProductDetail, Cart, Checkout, StoryCollage, LandingCarousel
+// จุดเด่น: ถ้าส่ง prop to จะทำงานเป็น Link ของ React Router ถ้าไม่ส่งจะทำงานเป็นปุ่มกด button ทั่วไป
 export default function Button({
   children,
   to,
@@ -14,6 +18,7 @@ export default function Button({
   const baseClasses =
     'inline-flex items-center justify-center gap-2 rounded-btn font-medium tracking-[0.25px] transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed';
 
+  // แมปสีตาม Design Token ใน index.css (@theme)
   const variantClasses =
     {
       primary: 'bg-primary text-white hover:bg-primary/90',
@@ -32,6 +37,7 @@ export default function Button({
 
   const combinedClasses = `${baseClasses} ${variantClasses} ${sizeClasses} ${className}`;
 
+  // ถ้ามี prop `to` ให้ render เป็นลิงก์เปลี่ยนหน้าของ react-router
   if (to) {
     return (
       <Link to={to} className={combinedClasses} onClick={onClick} {...props}>
@@ -40,6 +46,7 @@ export default function Button({
     );
   }
 
+  // ถ้าไม่มี ให้ render เป็น <button> ธรรมดา
   return (
     <button
       type={type}

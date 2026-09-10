@@ -1,9 +1,15 @@
+// ไฟล์: client/src/data/product.js
+// คลังข้อมูลรายการสินค้าทั้งหมดของระบบ (Mock Data กลางของฝั่ง Frontend)
+// เรียกใช้งานโดย: หน้าสินค้าและคอมโพเนนต์เกือบทั้งหมด เช่น Product, ProductDetail, Home, Cart, Checkout
+// หมายเหตุเรื่องรูปภาพ: Vite จะไม่ bundle รูปถ้าใช้ path แบบ dynamic string ตรงๆ
+// จึงต้องใช้ import.meta.glob ดึง URL ของรูปภาพทั้งหมดในโฟลเดอร์ assets เข้ามาเตรียมไว้ล่วงหน้า
 const images = import.meta.glob('../../assets/{Thai,Eng,Heritage}/*.{png,PNG}', {
   eager: true,
   query: '?url',
   import: 'default',
 });
 
+// ฟังก์ชันจับคู่ชื่อไฟล์ ให้กลายเป็น asset URL ที่ผ่านการ bundle แล้ว
 function img(fileName) {
   const match = Object.keys(images).find((path) => path.endsWith(`/${fileName}`));
 
