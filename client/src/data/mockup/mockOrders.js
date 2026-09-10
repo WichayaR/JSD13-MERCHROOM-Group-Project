@@ -1,6 +1,7 @@
-// mockup order_status_db
-// จัดเก็บข้อมูลประวัติการสั่งซื้อ (order history) และสถานะการจัดส่ง (tracking/delivery status)
-// พร้อมวัน-เวลาที่เกิดเหตุการณ์แต่ละขั้นตอน (date time stamp)
+// ไฟล์: client/src/data/mockup/mockOrders.js
+// ข้อมูลจำลองคำสั่งซื้อ (Order History), สถานะการจัดส่ง และ Timeline ติดตามพัสดุ
+// เรียกใช้งานโดย: AdminDashboard, UserDashboard, OrderConfirmation
+// จัดโครงสร้างให้ตรงกับ Order Schema ฝั่ง Backend เพื่อให้รองรับการเปลี่ยนผ่านไปใช้ API จริง
 
 export const DELIVERY_STATUS = {
   pending: { label: 'รับคำสั่งซื้อ', color: 'text-warning' },
@@ -18,7 +19,7 @@ export const PAYMENT_STATUS = {
   refunded: { label: 'คืนเงินแล้ว', color: 'text-muted' },
 };
 
-// ตาราง mockup "order_status_db"
+// รายการ Mock Orders ทั้งหมด สำหรับใช้คำนวณสถิติและทดสอบระบบจัดการคำสั่งซื้อ
 export const mockOrders = [
   // ═══════════════════════════════════════════
   //  มกราคม 2026 (Jan)
@@ -1134,7 +1135,7 @@ export function getOrdersYearly(referenceDate = new Date()) {
   return filterOrdersByRange(startOfYear(referenceDate), endOfYear(referenceDate));
 }
 
-// สรุปยอดรวมจากรายการออเดอร์ (ใช้สำหรับสรุป Report)
+// คำนวณ KPI รายได้รวม ออเดอร์ตามสถานะ และ 5 อันดับสินค้าขายดี สำหรับ Admin Report
 export function computeReportSummary(orders) {
   const totalOrders = orders.length;
   const paidOrders = orders.filter((o) => o.paymentStatus === 'paid');
@@ -1176,7 +1177,7 @@ export function computeReportSummary(orders) {
   };
 }
 
-// ฟังก์ชันจำลอง (mockup) สำหรับ query ข้อมูลเหมือนเรียกจากฐานข้อมูลจริง
+// Data Access Layer จำลองการ query คำสั่งซื้อตามเงื่อนไข (UserId, OrderId, DeliveryStatus)
 export function getOrders() {
   return [...mockOrders];
 }

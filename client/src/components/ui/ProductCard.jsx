@@ -4,11 +4,15 @@ import Button from './Button';
 const baht = (value) =>
   `฿${Number(value || 0).toLocaleString('th-TH', { minimumFractionDigits: 2 })}`;
 
+// ไฟล์: client/src/components/ui/ProductCard.jsx
+// คอมโพเนนต์การ์ดแสดงรายการสินค้า (Product Card)
+// เรียกมาจาก: Home.jsx, Product.jsx, ProductDetail.jsx (Related items), ThaiHeritage.jsx, PopCulture.jsx
+// รับข้อมูลผ่าน: prop product (อิงตามโครงสร้างใน src/data/product.js) และฟังก์ชัน onAddToCart
 export default function ProductCard({
   product,
   onAddToCart,
-  fluid = false,
-  compact = false,
+  fluid = false, // ให้ยืดเต็มความกว้าง 100% ตาม container พ่อ
+  compact = false, // ซ่อนปุ่ม Add to Cart (เหมาะกับหน้าแสดงแบบกระชับ)
 }) {
   if (!product) return null;
 

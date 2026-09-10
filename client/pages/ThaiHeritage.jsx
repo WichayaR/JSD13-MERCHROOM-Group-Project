@@ -1,3 +1,7 @@
+// ไฟล์: client/pages/ThaiHeritage.jsx
+// หน้าคอลเลกชันสินค้ามรดกและหัตถกรรมไทย (Thai Heritage)
+// เรียกมาจาก: App.jsx ผ่าน Route path="/thai-heritage" หรือคลิกเมนูบน Navbar
+// แหล่งข้อมูลสินค้า: src/data/product.js (กรองสินค้าที่รหัสลงท้ายด้วย hr)
 import {
   Droplets,
   Flower2,
@@ -11,6 +15,7 @@ import ProductCard from '../src/components/ui/ProductCard';
 import Button from '../src/components/ui/Button';
 import { useCart } from '../src/context/CartContext';
 
+// รายการเทคนิคงานหัตถกรรมไทย 5 รูปแบบ
 const TECHNIQUES = [
   { id: '01', icon: Sparkles, label: 'ลายผ้าย้อม' },
   { id: '02', icon: Droplets, label: 'เครื่องเขิน' },
@@ -19,18 +24,22 @@ const TECHNIQUES = [
   { id: '05', icon: Scissors, label: 'งานสาน' },
 ];
 
+// ตัวเลขสถิติผลตอบรับและการสนับสนุนชุมชน
 const STATS = [
   { value: '18', label: 'ชุมชน' },
   { value: '12', label: 'ศิลปิน' },
   { value: '200+', label: 'ชิ้นงาน' },
 ];
 
+// หน้า Thai Heritage: นำเสนอผลงานหัตถกรรม ช่างชุมชน และสินค้ามรดกทางวัฒนธรรม
 export default function ThaiHeritage() {
   const { addToCart } = useCart();
+  // กรองสินค้าเฉพาะหมวด Thai Heritage ตาม suffix รหัสสินค้า 'hr'
   const heritageProducts = products.filter((product) => product.id.endsWith('hr'));
 
   return (
     <Container className="py-8">
+      {/* 1. Hero Banner ประจำหน้า Thai Heritage */}
       <section className="rounded-section bg-[#b56a4c] px-8 py-14 text-cream-text md:px-14">
         <p className="text-xs font-bold uppercase tracking-widest text-white/90">Thai Heritage</p>
         <h1 className="mt-3 font-display text-3xl leading-tight md:text-5xl">Explore Thai Creativity</h1>
@@ -42,6 +51,7 @@ export default function ThaiHeritage() {
         </Button>
       </section>
 
+      {/* 2. ส่วนเรื่องเล่างานคราฟต์ (Craft Story) */}
       <section className="mt-16 grid items-center gap-10 lg:grid-cols-2">
         <div className="h-60 rounded-section bg-ink/5" aria-hidden="true" />
         <div>
@@ -59,6 +69,7 @@ export default function ThaiHeritage() {
         </div>
       </section>
 
+      {/* 3. แนะนำชุมชนช่างฝีมือเด่น (Featured Community) */}
       <section className="mt-20">
         <p className="text-xs font-bold uppercase tracking-widest text-primary">Featured Community</p>
         <h2 className="mt-3 text-2xl font-bold leading-snug md:text-3xl">งานของชุมชนที่เราคัดส่ง</h2>
@@ -84,6 +95,7 @@ export default function ThaiHeritage() {
         </div>
       </section>
 
+      {/* 4. เทคนิคงานคราฟต์ 5 สไตล์ (Browse by Technique) */}
       <section className="mt-20">
         <p className="text-xs font-bold uppercase tracking-widest text-primary">Browse by Technique</p>
         <h2 className="mt-3 text-2xl font-bold leading-snug md:text-3xl">ตระเวนเทคนิค</h2>
@@ -100,6 +112,7 @@ export default function ThaiHeritage() {
         </div>
       </section>
 
+      {/* 5. ไฮไลต์สินค้าหัตถกรรมเด่น (Handcraft Collection) */}
       <section className="mt-20">
         <p className="text-xs font-bold uppercase tracking-widest text-primary">Handcraft Collection</p>
         <h2 className="mt-3 text-2xl font-bold leading-snug md:text-3xl">งานประณีตจากช่างชนเผ่า</h2>
@@ -113,6 +126,7 @@ export default function ThaiHeritage() {
         </div>
       </section>
 
+      {/* 6. ตัวเลขสถิติสนับสนุนชุมชน (Community Impact Stats) */}
       <section className="mt-20 rounded-section bg-ink px-8 py-10 text-cream-text md:px-14">
         <div className="flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-between">
           <div>

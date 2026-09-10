@@ -1,3 +1,7 @@
+// ไฟล์: client/pages/OrderConfirmation.jsx
+// หน้าแสดงผลการสั่งซื้อสำเร็จและติดตามสถานะจัดส่ง (Order Confirmation & Tracking)
+// เรียกมาจาก: App.jsx ผ่าน Route path="/order-confirmation/:orderId" (ส่งต่อมาจากหน้า /checkout)
+// แหล่งข้อมูล: ดึงออเดอร์ตาม id จาก LocalStorage (orderStorage.js) หรือ mockOrders.js
 import { useParams } from 'react-router-dom';
 import {
   BadgeCheck,
@@ -67,10 +71,13 @@ function StatusPill({ order }) {
   );
 }
 
+// หน้าแสดงใบเสร็จและติดตามสถานะคำสั่งซื้อ
 export default function OrderConfirmation() {
   const { orderId } = useParams();
+  // ค้นหาออเดอร์จาก localStorage ก่อน ถ้าไม่เจอค่อยไปค้นจาก mock data
   const order = getLocalOrderById(orderId) || getMockOrderById(orderId);
 
+  // ดักกรณีอ้างอิงเลขออเดอร์ที่ไม่ถูกต้อง
   if (!order) {
     return (
       <Container className="py-10">
@@ -85,6 +92,7 @@ export default function OrderConfirmation() {
     );
   }
 
+  // หา step ปัจจุบันในไทม์ไลน์การจัดส่ง
   const deliveryIndex = DELIVERY_STEPS.findIndex(
     (step) => step.key === order.deliveryStatus,
   );
@@ -110,6 +118,7 @@ export default function OrderConfirmation() {
 
       <div className="mt-8 grid items-start gap-8 lg:grid-cols-[1fr_380px]">
         <div className="flex flex-col gap-8">
+          {/* ไทม์ไลน์สถานะการจัดส่ง 4 สเต็ป (รับคำสั่งซื้อ -> แพ็คของ -> ขนส่ง -> สำเร็จ) */}
           <section className="rounded-card bg-white p-6 md:p-8" aria-label="สถานะการจัดส่ง">
             <h2 className="text-lg font-bold">Delivery Status</h2>
             <p className="mt-1 text-sm text-muted">
@@ -121,6 +130,7 @@ export default function OrderConfirmation() {
                 คำสั่งซื้อนี้ถูกยกเลิก
               </div>
             ) : (
+              // แสดง 4 สเต็ปจัดส่ง พร้อมไฮไลต์สเต็ปปัจจุบัน
               <ol className="mt-8 grid gap-0 sm:grid-cols-4 sm:gap-2">
                 {DELIVERY_STEPS.map((step, index) => {
                   const Icon = step.icon;
@@ -162,6 +172,7 @@ export default function OrderConfirmation() {
               </ol>
             )}
 
+            {/* บันทึกวันและเวลาแต่ละขั้นตอนย่อย (Date Time Stamp) */}
             {order.timeline && order.timeline.length > 0 && (
               <div className="mt-8 border-t border-ink/10 pt-6">
                 <h3 className="text-sm font-bold uppercase tracking-wide text-ink">
@@ -197,6 +208,7 @@ export default function OrderConfirmation() {
             )}
           </section>
 
+          {/* รายการสินค้าทั้งหมดในออเดอร์นี้ */}
           <section className="rounded-card bg-white p-6 md:p-8" aria-label="สินค้าในคำสั่งซื้อ">
             <h2 className="text-lg font-bold">Items ({order.items.length})</h2>
             <div className="mt-5 flex flex-col gap-4">
@@ -227,6 +239,7 @@ export default function OrderConfirmation() {
           </section>
         </div>
 
+        {/* สรุปยอดชำระเงิน วิธีจ่ายเงิน และที่อยู่จัดส่ง */}
         <div className="flex flex-col gap-8">
           <aside className="rounded-card bg-white p-6 md:p-8" aria-label="สรุปคำสั่งซื้อ">
             <h2 className="text-lg font-bold">Order Summary</h2>

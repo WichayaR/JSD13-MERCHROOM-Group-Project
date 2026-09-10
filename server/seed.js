@@ -1,5 +1,5 @@
-// ไฟล์สคริปต์รวมมิตรใช้ยิงข้อมูลจริงทั้งหมดของโปรเจกต์กลุ่มขึ้นคลาวด์ออนไลน์
-// รันได้เรื่อย ๆ แบบ upsert: มี id อยู่แล้ว = อัปเดต, ยังไม่มี = เพิ่มใหม่ ไม่ลบข้อมูลเดิม
+// สคริปต์ seed ข้อมูลเริ่มต้นสำหรับระบบ
+// รันซ้ำได้ปลอดภัย (idempotent upsert): ถ้ามี _id เดิมอยู่แล้วจะอัปเดต ถ้ายังไม่มีจะแทรกเข้าใหม่
 const connectDB = require('./db');
 const User = require('./models/User');
 const Artist = require('./models/Artist');
@@ -11,7 +11,7 @@ const Payment = require('./models/Payment');
 const Review = require('./models/Review');
 const mongoose = require('mongoose');
 
-// ฟังก์ชัน upsert ทั่วไป: ยิงทีละชุด ใช้ _id เป็นตัวจับคู่
+// ฟังก์ชัน upsert ข้อมูลแบบ bulk write โดยจับคู่ตาม _id
 async function upsertDocs(model, docs) {
     const ops = (Array.isArray(docs) ? docs : [docs]).map((doc) => ({
         updateOne: {
@@ -24,7 +24,7 @@ async function upsertDocs(model, docs) {
 }
 
 async function runSeed() {
-    await connectDB(); // ต่อมองโกตัวจริงผ่านไฟล์ db.js
+    await connectDB();
 
     try {
         // ==========================================
@@ -531,7 +531,7 @@ async function runSeed() {
     } catch (err) {
         console.error('❌ เกิดข้อผิดพลาดในการยิงข้อมูล:', err);
     } finally {
-        mongoose.connection.close(); // ทำงานเสร็จปิดท่ออย่างปลอดภัย
+        mongoose.connection.close(); // ปิด database connection เมื่อ seed ข้อมูลเสร็จสิ้น
     }
 }
 

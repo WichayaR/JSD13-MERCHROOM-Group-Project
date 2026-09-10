@@ -1,3 +1,7 @@
+// ไฟล์: client/pages/Cart.jsx
+// หน้าตะกร้าสินค้า (Shopping Cart)
+// เรียกมาจาก: App.jsx ผ่าน Route path="/cart" หรือคลิกไอคอนตะกร้าบน Navbar
+// แหล่งข้อมูล: ดึงรายการสินค้าและคำนวณยอดรวมผ่าน useCart() จาก CartContext
 import { useState } from 'react';
 import { ArrowRight, CheckCircle2, Minus, Plus, Trash2 } from 'lucide-react';
 import { useCart } from '../src/context/CartContext';
@@ -15,6 +19,7 @@ const PROMO_CODES = {
 
 const baht = (value) => `฿${value.toLocaleString('th-TH', { minimumFractionDigits: 2 })}`;
 
+// หน้าตะกร้าสินค้า: คำนวณยอดเงิน เช็ครหัสส่วนลด และส่งต่อไปยังขั้นตอน Checkout
 export default function Cart() {
   const { items, updateQuantity, removeFromCart } = useCart();
   const [promoCode, setPromoCode] = useState('');
@@ -22,11 +27,13 @@ export default function Cart() {
   const [promoError, setPromoError] = useState('');
   const [promoApplied, setPromoApplied] = useState(false);
 
+  // คำนวณยอดรวมสินค้า หักส่วนลดโปรโมชัน และบวกค่าส่งคงที่
   const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const promoRate = appliedCode ? PROMO_CODES[appliedCode] : 0;
   const promoDiscount = Math.round(subtotal * promoRate);
   const total = subtotal - promoDiscount + DELIVERY_FEE;
 
+  // ตรวจสอบและใช้งานโค้ดส่วนลด
   const applyPromo = (e) => {
     e.preventDefault();
     const code = promoCode.trim().toUpperCase();
@@ -44,6 +51,7 @@ export default function Cart() {
     }
   };
 
+  // ส่งต่อโค้ดโปรโมชันไปหน้า checkout ผ่าน query param (?promo=...)
   const checkoutPath = appliedCode ? `/checkout?promo=${encodeURIComponent(appliedCode)}` : '/checkout';
 
   return (
@@ -52,6 +60,7 @@ export default function Cart() {
 
       <h1 className="mt-4 text-3xl font-bold uppercase md:text-4xl">Your Cart</h1>
 
+      {/* แสดงกล่องแจ้งเตือนเมื่อตะกร้าว่างเปล่า พร้อมปุ่มนำทางไปเลือกสินค้า */}
       {items.length === 0 ? (
         <div className="mt-10 flex flex-col items-center gap-6 rounded-card bg-white p-16 text-center">
           <p className="text-lg font-semibold">ยังไม่มีสินค้าในตะกร้าของคุณ</p>
@@ -60,13 +69,16 @@ export default function Cart() {
           </Button>
         </div>
       ) : (
+        // แบ่ง 2 คอลัมน์: รายการสินค้าฝั่งซ้าย และกล่องคำนวณยอดเงินฝั่งขวา
         <div className="mt-10 grid items-start gap-8 lg:grid-cols-[1fr_420px]">
+          {/* รายการสินค้าที่อยู่ในตะกร้า */}
           <div className="flex flex-col gap-5">
             {items.map((item) => (
               <div
                 key={item.id}
                 className="flex items-stretch gap-5 rounded-card bg-white p-5"
               >
+                {/* รูปตัวอย่างสินค้า */}
                 <div className="size-25 shrink-0 overflow-hidden rounded-btn bg-cream">
                   {item.image ? (
                     <img
@@ -81,12 +93,14 @@ export default function Cart() {
                   )}
                 </div>
 
+                {/* ชื่อ แบรนด์ และราคาต่อชิ้น */}
                 <div className="min-w-0 flex-1 py-1">
                   <p className="font-semibold">{item.name}</p>
                   {item.brand && <p className="mt-0.5 text-xs text-muted">{item.brand}</p>}
                   <p className="mt-2 font-[Sarabun] text-lg font-semibold">{baht(item.price)}</p>
                 </div>
 
+                {/* ปุ่มลบสินค้าออกจากตะกร้า และปุ่มเพิ่ม/ลดจำนวนชิ้น */}
                 <div className="flex flex-col items-end justify-between py-1">
                   <button
                     type="button"
@@ -121,9 +135,11 @@ export default function Cart() {
             ))}
           </div>
 
+          {/* กล่องคำนวณและสรุปคำสั่งซื้อ (Order Summary) ขวามือ */}
           <aside className="rounded-card bg-white p-6 md:p-8" aria-label="สรุปคำสั่งซื้อ">
             <h2 className="text-lg font-bold">Order Summary</h2>
 
+            {/* แสดงยอดรวมย่อย ส่วนลด และค่าจัดส่ง */}
             <dl className="mt-6 flex flex-col gap-3 text-sm">
               <div className="flex justify-between">
                 <dt className="text-muted">Subtotal</dt>
@@ -143,11 +159,13 @@ export default function Cart() {
               </div>
             </dl>
 
+            {/* ยอดสุทธิที่ต้องชำระ */}
             <div className="mt-6 flex items-center justify-between rounded-btn bg-cream px-5 py-3.5">
               <span className="font-bold">Total</span>
               <span className="font-[Sarabun] text-xl font-bold">{baht(total)}</span>
             </div>
 
+            {/* ฟอร์มกรอกและตรวจสอบโค้ดส่วนลด */}
             <form
               className="mt-6 flex items-center gap-3"
               onSubmit={applyPromo}
@@ -180,6 +198,7 @@ export default function Cart() {
               </p>
             )}
 
+            {/* ปุ่มกดดำเนินการต่อไปยังหน้าชำระเงิน */}
             <Button to={checkoutPath} variant="dark" size="lg" className="mt-4 w-full">
               Go to Checkout
               <ArrowRight className="size-4" aria-hidden="true" />

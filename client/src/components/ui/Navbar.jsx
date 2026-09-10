@@ -1,3 +1,7 @@
+// ไฟล์: client/src/components/ui/Navbar.jsx
+// คอมโพเนนต์แถบเมนูด้านบนของเว็บไซต์ (Global Header Navbar)
+// เรียกมาจาก: Layout.jsx (แสดงผลอยู่ด้านบนสุดของทุกหน้า)
+// แหล่งข้อมูลที่ใช้งาน: useCart (นับจำนวนชิ้นในตะกร้า) และ useAuth (เช็คการเข้าสู่ระบบเพื่อสลับไปหน้า User/Admin Dashboard)
 import { useEffect, useState } from 'react';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { Search, ShoppingCart, User } from 'lucide-react';
@@ -20,6 +24,7 @@ export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [query, setQuery] = useState('');
 
+  // ตรวจจับการเลื่อนจอเกิน 24px เพื่อสลับพื้นหลัง Navbar ให้เป็นแบบเบลอ (Glassmorphism)
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24);
     onScroll();
@@ -27,6 +32,7 @@ export default function Navbar() {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
+  // เช็คว่าอยู่หน้าแรกและยังไม่ได้เลื่อนจอหรือไม่ เพื่อปรับสี navbar ให้กลืนกับ hero banner
   const onHero = pathname === '/' && !scrolled;
 
   return (
@@ -36,8 +42,10 @@ export default function Navbar() {
       }`}
     >
       <div className="flex h-full w-full items-center gap-6 px-6 lg:gap-19.5 lg:px-15">
+        {/* โลโก้แบรนด์ Merchroom (กดแล้วพากลับหน้าแรก) */}
         <Logo />
 
+        {/* เมนูลิงก์นำทางหลัก (แสดงเฉพาะจอขนาดใหญ่) */}
         <nav className="hidden items-center gap-6 lg:flex lg:w-106.75 lg:justify-between">
           {navLinks.map((link) => (
             <NavLink
@@ -56,6 +64,7 @@ export default function Navbar() {
           ))}
         </nav>
 
+        {/* ช่องค้นหาด่วน (Quick Search) กด Enter แล้ว push query ไปหน้า /products?q=... */}
         <form
           className="ml-auto hidden h-11 w-107.75 items-center gap-3 rounded-pill bg-white/60 px-4 md:flex lg:ml-0"
           role="search"
@@ -75,7 +84,9 @@ export default function Navbar() {
           />
         </form>
 
+        {/* ปุ่มไอคอนฝั่งขวา: ตะกร้าสินค้า และ โปรไฟล์/เข้าสู่ระบบ */}
         <div className="ml-auto flex items-center gap-6 md:ml-0 lg:ml-auto">
+          {/* ไอคอนตะกร้าสินค้า พร้อมตัวเลขนับจำนวนชิ้นสีส้ม */}
           <Link to="/cart" className="relative transition hover:opacity-80" aria-label="ตะกร้าสินค้า">
             <ShoppingCart className="size-6" />
             {cartCount > 0 && (
@@ -85,6 +96,7 @@ export default function Navbar() {
             )}
           </Link>
 
+          {/* ไอคอนผู้ใช้: ถ้าล็อกอินแล้วจะพาไป Dashboard ตามบทบาท (Admin หรือ Customer) ถ้ายังไม่ล็อกอินจะพาไปหน้า Login */}
           <Link
             to={isAuthenticated ? (user.role === 'admin' ? '/admin/dashboard' : '/user/dashboard') : '/login'}
             className="relative transition hover:opacity-80"

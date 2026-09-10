@@ -1,7 +1,4 @@
-//ไฟล์โครงสร้างตารางข้อมูลศิลปิน ไม่ใช่ user เพราะศิลปินไม่ได้ login/สั่งซื้อ
-// 🟢 โมเดล = ตารางใน MongoDB หลังต่อ DB แล้วจะไปสร้าง collection ชื่อ "artists" ให้อัตโนมัติ
-// วิธีใช้: const Artist = require('./Artist'); แล้วเรียก Artist.find(), Artist.create({...}) ฯลฯ
-
+// Schema ข้อมูลศิลปิน (แยกออกจาก User เพราะไม่ได้ใช้สิทธิ์ล็อกอินในระบบ)
 const mongoose = require('mongoose');
 
 const ArtistSchema = new mongoose.Schema({

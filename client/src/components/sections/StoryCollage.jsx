@@ -1,10 +1,15 @@
 import Button from '../ui/Button';
 import Container from '../ui/Container';
 
+// ไฟล์: client/src/components/sections/StoryCollage.jsx
+// ส่วนเล่าเรื่องราวและวิสัยทัศน์ของแบรนด์ (Story of Merchroom)
+// เรียกมาจาก: Home.jsx (วางต่อจากหมวดหมู่ CategoriesGrid)
+// มีปุ่ม CTA พาผู้ใช้ไปยัง: หน้าแนะนำทีมงาน (/about)
 export default function StoryCollage() {
   return (
     <section className="pb-20 pt-7">
       <Container>
+        {/* เลย์เอาต์แบ่ง 2 ฝั่ง: ซ้ายเป็นหัวข้อหลัก ขวาเป็นข้อความขยายความและปุ่มกด */}
         <div className="grid gap-12 lg:grid-cols-2">
           <div>
             <p className="text-xl font-bold uppercase tracking-wide text-primary">
@@ -22,10 +27,12 @@ export default function StoryCollage() {
               MERCHROOM brings it all into one room.
             </p>
 
+            {/* แถวล่าง: คำอธิบายสนับสนุนคู่กับปุ่ม Meet the Room */}
             <div className="mt-2 flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
               <p className="max-w-63.25 text-[15px] font-bold leading-5.5 text-muted">
                 STORY OF MAKING SPACE FOR THAI ARTISTS, LOCAL CRAFTS, AND FAN COMMUNITIES
               </p>
+              {/* ส่ง prop to="/about" เพื่อให้ Button เรนเดอร์เป็น Link ของ react-router โดยอัตโนมัติ */}
               <Button
                 to="/about"
                 variant="highlight"
