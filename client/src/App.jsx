@@ -1,4 +1,3 @@
-
 // ไฟล์: client/src/App.jsx
 // ศูนย์รวม Routing และ Global State ทั้งหมดของเว็บไซต์
 // เรียกมาจาก: client/src/main.jsx
@@ -19,8 +18,12 @@ import OrderConfirmation from '../pages/OrderConfirmation';
 import ThaiHeritage from '../pages/ThaiHeritage';
 import PopCulture from '../pages/PopCulture';
 import Login from '../pages/Login';
+import Register from '../pages/Register';
+import ForgetPassword from '../pages/ForgetPassword';
+import User from '../pages/User';
 import UserDashboard from '../pages/UserDashboard';
 import AdminDashboard from '../pages/AdminDashboard';
+import ProtectedRoute from './components/auth/ProtectedRoute';
 
 // รวม Route ทั้งหมดของเว็บไว้ที่นี่
 export default function App() {
@@ -49,10 +52,37 @@ export default function App() {
 
               <Route path="thai-heritage" element={<ThaiHeritage />} />
               <Route path="pop-culture" element={<PopCulture />} />
-              <Route path="login" element={<Login />} />
-              <Route path="user/dashboard" element={<UserDashboard />} />
-              <Route path="admin/dashboard" element={<AdminDashboard />} />
+
+              <Route
+                path="user"
+                element={
+                  <ProtectedRoute>
+                    <User />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="user/dashboard"
+                element={
+                  <ProtectedRoute>
+                    <UserDashboard />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="admin/dashboard"
+                element={
+                  <ProtectedRoute>
+                    <AdminDashboard />
+                  </ProtectedRoute>
+                }
+              />
             </Route>
+
+            {/* หน้าระบบสมาชิกวางนอก Layout เป็นหน้าเต็มจอแบ่งซ้ายรูป/ขวาฟอร์มตาม figma จึงไม่มี Navbar/Footer */}
+            <Route path="login" element={<Login />} />
+            <Route path="register" element={<Register />} />
+            <Route path="forgot-password" element={<ForgetPassword />} />
           </Routes>
         </BrowserRouter>
       </CartProvider>
