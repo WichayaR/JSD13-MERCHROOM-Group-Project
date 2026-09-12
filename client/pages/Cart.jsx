@@ -1,209 +1,215 @@
-// ไฟล์: client/pages/Cart.jsx
-// หน้าตะกร้าสินค้า (Shopping Cart)
-// เรียกมาจาก: App.jsx ผ่าน Route path="/cart" หรือคลิกไอคอนตะกร้าบน Navbar
-// แหล่งข้อมูล: ดึงรายการสินค้าและคำนวณยอดรวมผ่าน useCart() จาก CartContext
 import { useState } from 'react';
-import { ArrowRight, CheckCircle2, Minus, Plus, Trash2 } from 'lucide-react';
+import { ArrowRight, Minus, Plus, Trash2, Tag } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { useCart } from '../src/context/CartContext';
+import { PROMO_CODES } from '../src/data/promoCodes';
 import Button from '../src/components/ui/Button';
 import Container from '../src/components/ui/Container';
 import Breadcrumb from '../src/components/ui/Breadcrumb';
 
 const DELIVERY_FEE = 15;
 
-const PROMO_CODES = {
-  MERCH10: 0.1,
-  MERCHROOM: 0.2,
-  HELLO15: 0.15,
-};
+const baht = (value) => `$${value.toLocaleString('en-US', { minimumFractionDigits: 0 })}`;
 
-const baht = (value) => `฿${value.toLocaleString('th-TH', { minimumFractionDigits: 2 })}`;
-
-// หน้าตะกร้าสินค้า: คำนวณยอดเงิน เช็ครหัสส่วนลด และส่งต่อไปยังขั้นตอน Checkout
 export default function Cart() {
-  const { items, updateQuantity, removeFromCart } = useCart();
-  const [promoCode, setPromoCode] = useState('');
-  const [appliedCode, setAppliedCode] = useState(null);
-  const [promoError, setPromoError] = useState('');
-  const [promoApplied, setPromoApplied] = useState(false);
+  const { items, updateQuantity, removeFromCart, discountRate, applyDiscount } = useCart();
+  
+  const [promoInput, setPromoInput] = useState('');
+  const [promoMessage, setPromoMessage] = useState({ text: '', isError: false });
 
-  // คำนวณยอดรวมสินค้า หักส่วนลดโปรโมชัน และบวกค่าส่งคงที่
-  const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const promoRate = appliedCode ? PROMO_CODES[appliedCode] : 0;
-  const promoDiscount = Math.round(subtotal * promoRate);
-  const total = subtotal - promoDiscount + DELIVERY_FEE;
-
-  // ตรวจสอบและใช้งานโค้ดส่วนลด
-  const applyPromo = (e) => {
+  const handleApplyPromo = (e) => {
     e.preventDefault();
-    const code = promoCode.trim().toUpperCase();
-    if (!code) {
-      setPromoError('กรุณากรอกรหัสส่วนลดก่อน');
+    const cleanCode = promoInput.trim().toUpperCase();
+
+    if (!cleanCode) {
+      setPromoMessage({ text: 'Please enter a promo code', isError: true });
       return;
     }
-    if (PROMO_CODES[code]) {
-      setAppliedCode(code);
-      setPromoError('');
-      setPromoApplied(true);
+
+    if (PROMO_CODES[cleanCode] !== undefined) {
+      const discount = PROMO_CODES[cleanCode];
+      applyDiscount(discount);
+      setPromoMessage({ 
+        text: `Promo code ${cleanCode} (${discount * 100}%) applied!`, 
+        isError: false 
+      });
+      setPromoInput('');
     } else {
-      setPromoError('รหัสส่วนลดไม่ถูกต้อง');
-      setPromoApplied(false);
+      setPromoMessage({ text: 'Invalid or expired promo code', isError: true });
     }
   };
 
-  // ส่งต่อโค้ดโปรโมชันไปหน้า checkout ผ่าน query param (?promo=...)
-  const checkoutPath = appliedCode ? `/checkout?promo=${encodeURIComponent(appliedCode)}` : '/checkout';
+  const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const discount = Math.round(subtotal * discountRate);
+  const currentDeliveryFee = items.length > 0 ? DELIVERY_FEE : 0;
+  const total = Math.max(0, subtotal - discount) + currentDeliveryFee;
 
   return (
-    <Container className="py-10">
+    <Container className="max-w-[1160px] py-6 md:py-8">
       <Breadcrumb items={[{ label: 'Home', to: '/' }, { label: 'Cart' }]} />
 
-      <h1 className="mt-4 text-3xl font-bold uppercase md:text-4xl">Your Cart</h1>
+      <h1 className="mt-4 text-2xl font-extrabold uppercase tracking-tight text-black md:text-3xl leading-none font-integral">
+        YOUR CART
+      </h1>
 
-      {/* แสดงกล่องแจ้งเตือนเมื่อตะกร้าว่างเปล่า พร้อมปุ่มนำทางไปเลือกสินค้า */}
       {items.length === 0 ? (
-        <div className="mt-10 flex flex-col items-center gap-6 rounded-card bg-white p-16 text-center">
-          <p className="text-lg font-semibold">ยังไม่มีสินค้าในตะกร้าของคุณ</p>
-          <Button to="/products" variant="primary" size="lg">
-            ไปเลือกสินค้า
+        <div className="mt-6 flex flex-col items-center gap-6 rounded-[20px] bg-white p-12 text-center border border-black/10">
+          <p className="text-lg font-semibold">Your cart is currently empty</p>
+          <Button to="/products" className="bg-primary text-white hover:opacity-90 rounded-full px-8" size="lg">
+            Shop Now
           </Button>
         </div>
       ) : (
-        // แบ่ง 2 คอลัมน์: รายการสินค้าฝั่งซ้าย และกล่องคำนวณยอดเงินฝั่งขวา
-        <div className="mt-10 grid items-start gap-8 lg:grid-cols-[1fr_420px]">
-          {/* รายการสินค้าที่อยู่ในตะกร้า */}
-          <div className="flex flex-col gap-5">
-            {items.map((item) => (
-              <div
-                key={item.id}
-                className="flex items-stretch gap-5 rounded-card bg-white p-5"
-              >
-                {/* รูปตัวอย่างสินค้า */}
-                <div className="size-25 shrink-0 overflow-hidden rounded-btn bg-cream">
-                  {item.image ? (
-                    <img
-                      src={item.image}
-                      alt={item.name}
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
-                    <div className="flex h-full items-center justify-center text-xs text-muted">
-                      ไม่มีรูป
+        <div className="mt-6 flex flex-col gap-5 lg:flex-row items-start justify-between">
+          
+          {/* Cart Items List Container - Compact Width */}
+          <div className="w-full lg:w-[680px] shrink-0 flex flex-col rounded-[20px] border border-black/10 bg-white px-5 py-4">
+            {items.map((item, index) => (
+              <div key={item.id} className="flex flex-col">
+                <div className="flex items-center gap-4 py-2">
+                  
+                  {/* รูปสินค้า */}
+                  <div className="size-20 md:size-[110px] shrink-0 overflow-hidden rounded-[8px] bg-[#F0F0F0]">
+                    {item.image ? (
+                      <img
+                        src={item.image}
+                        alt={item.name}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-full items-center justify-center text-xs text-black/40">
+                        No Image
+                      </div>
+                    )}
+                  </div>
+
+                  {/* รายละเอียดสินค้า */}
+                  <div className="min-w-0 flex-1">
+                    <p className="font-bold text-base md:text-lg leading-snug text-black truncate">{item.name}</p>
+                    {item.size && (
+                      <p className="mt-0.5 text-xs md:text-sm text-black/60">
+                        Size: <span className="text-black/60">{item.size}</span>
+                      </p>
+                    )}
+                    {item.color && (
+                      <p className="mt-0.5 text-xs md:text-sm text-black/60">
+                        Color: <span className="text-black/60">{item.color}</span>
+                      </p>
+                    )}
+                    <p className="mt-1.5 text-lg md:text-xl font-bold text-black">{baht(item.price)}</p>
+                  </div>
+
+                  {/* ปุ่มลบ และ ปุ่มปรับจำนวน */}
+                  <div className="flex flex-col items-end justify-between h-20 md:h-[110px] py-0.5 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => removeFromCart(item.id)}
+                      aria-label={`Remove ${item.name} from cart`}
+                      className="text-[#FF3333] transition hover:opacity-70"
+                    >
+                      <Trash2 className="size-4.5 md:size-5" />
+                    </button>
+
+                    <div className="flex h-8 md:h-9 w-24 md:w-[110px] items-center justify-between rounded-full bg-[#F0F0F0] px-3">
+                      <button
+                        type="button"
+                        onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                        aria-label={`Decrease quantity of ${item.name}`}
+                        className="grid place-items-center text-black font-bold transition hover:opacity-70"
+                      >
+                        <Minus className="size-3 md:size-3.5" />
+                      </button>
+                      <span className="text-xs md:text-sm font-semibold text-black">{item.quantity}</span>
+                      <button
+                        type="button"
+                        onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                        aria-label={`Increase quantity of ${item.name}`}
+                        className="grid place-items-center text-black font-bold transition hover:opacity-70"
+                      >
+                        <Plus className="size-3 md:size-3.5" />
+                      </button>
                     </div>
-                  )}
-                </div>
-
-                {/* ชื่อ แบรนด์ และราคาต่อชิ้น */}
-                <div className="min-w-0 flex-1 py-1">
-                  <p className="font-semibold">{item.name}</p>
-                  {item.brand && <p className="mt-0.5 text-xs text-muted">{item.brand}</p>}
-                  <p className="mt-2 font-[Sarabun] text-lg font-semibold">{baht(item.price)}</p>
-                </div>
-
-                {/* ปุ่มลบสินค้าออกจากตะกร้า และปุ่มเพิ่ม/ลดจำนวนชิ้น */}
-                <div className="flex flex-col items-end justify-between py-1">
-                  <button
-                    type="button"
-                    onClick={() => removeFromCart(item.id)}
-                    aria-label={`นำ ${item.name} ออกจากตะกร้า`}
-                    className="text-error transition hover:opacity-70"
-                  >
-                    <Trash2 className="size-5" />
-                  </button>
-
-                  <div className="flex h-9 items-center gap-4 rounded-pill border border-ink/15 px-3">
-                    <button
-                      type="button"
-                      onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                      aria-label={`ลดจำนวน ${item.name}`}
-                      className="grid size-6 place-items-center text-muted transition hover:text-ink"
-                    >
-                      <Minus className="size-4" />
-                    </button>
-                    <span className="min-w-4 text-center text-sm font-medium">{item.quantity}</span>
-                    <button
-                      type="button"
-                      onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                      aria-label={`เพิ่มจำนวน ${item.name}`}
-                      className="grid size-6 place-items-center text-muted transition hover:text-ink"
-                    >
-                      <Plus className="size-4" />
-                    </button>
                   </div>
                 </div>
+
+                {/* เส้นคั่นระหว่างรายการสินค้า */}
+                {index < items.length - 1 && (
+                  <div className="my-3 border-t border-black/10" />
+                )}
               </div>
             ))}
           </div>
 
-          {/* กล่องคำนวณและสรุปคำสั่งซื้อ (Order Summary) ขวามือ */}
-          <aside className="rounded-card bg-white p-6 md:p-8" aria-label="สรุปคำสั่งซื้อ">
-            <h2 className="text-lg font-bold">Order Summary</h2>
+          {/* Order Summary Side Card - Compact Width */}
+          <aside className="w-full lg:w-[440px] shrink-0 rounded-[20px] border border-black/10 bg-white px-5 py-5" aria-label="Order Summary">
+            <h2 className="text-lg md:text-xl font-bold text-black">Order Summary</h2>
 
-            {/* แสดงยอดรวมย่อย ส่วนลด และค่าจัดส่ง */}
-            <dl className="mt-6 flex flex-col gap-3 text-sm">
-              <div className="flex justify-between">
-                <dt className="text-muted">Subtotal</dt>
-                <dd className="font-semibold">{baht(subtotal)}</dd>
+            <dl className="mt-4 flex flex-col gap-3.5 text-sm md:text-base">
+              <div className="flex justify-between items-center">
+                <dt className="text-black/60">Subtotal</dt>
+                <dd className="font-bold text-black">{baht(subtotal)}</dd>
               </div>
-              {promoRate > 0 && (
-                <div className="flex justify-between">
-                  <dt className="text-muted">
-                    Promo ({appliedCode}, -{promoRate * 100}%)
-                  </dt>
-                  <dd className="font-semibold text-error">-{baht(promoDiscount)}</dd>
+              
+              {discountRate > 0 && (
+                <div className="flex justify-between items-center">
+                  <dt className="text-black/60">Discount (-{Math.round(discountRate * 100)}%)</dt>
+                  <dd className="font-bold text-[#FF3333]">-{baht(discount)}</dd>
                 </div>
               )}
-              <div className="flex justify-between">
-                <dt className="text-muted">Delivery Fee</dt>
-                <dd className="font-semibold">{baht(DELIVERY_FEE)}</dd>
+
+              <div className="flex justify-between items-center">
+                <dt className="text-black/60">Delivery Fee</dt>
+                <dd className="font-bold text-black">{baht(currentDeliveryFee)}</dd>
               </div>
             </dl>
 
-            {/* ยอดสุทธิที่ต้องชำระ */}
-            <div className="mt-6 flex items-center justify-between rounded-btn bg-cream px-5 py-3.5">
-              <span className="font-bold">Total</span>
-              <span className="font-[Sarabun] text-xl font-bold">{baht(total)}</span>
+            <div className="my-4 border-t border-black/10" />
+
+            <div className="flex items-center justify-between">
+              <span className="text-base md:text-lg text-black font-medium">Total</span>
+              <span className="text-lg md:text-xl font-bold text-black">{baht(total)}</span>
             </div>
 
-            {/* ฟอร์มกรอกและตรวจสอบโค้ดส่วนลด */}
+            {/* Promo Code Form */}
             <form
-              className="mt-6 flex items-center gap-3"
-              onSubmit={applyPromo}
+              className="mt-5 flex items-center gap-2.5"
+              onSubmit={handleApplyPromo}
             >
-              <input
-                type="text"
-                value={promoCode}
-                onChange={(e) => setPromoCode(e.target.value)}
-                placeholder="Add promo code"
-                aria-label="รหัสส่วนลด"
-                disabled={promoApplied}
-                className="h-10 min-w-0 flex-1 rounded-pill bg-cream px-4 text-sm placeholder:text-muted focus:outline-2 focus:outline-offset-1 focus:outline-violet disabled:opacity-60"
-              />
-              <Button
+              <div className="relative flex-1">
+                <input
+                  type="text"
+                  value={promoInput}
+                  onChange={(e) => setPromoInput(e.target.value)}
+                  placeholder="Add promo code"
+                  aria-label="Promo Code"
+                  className="h-11 w-full rounded-full bg-[#F0F0F0] pl-10 pr-3 text-sm text-black placeholder:text-black/40 focus:outline-none"
+                />
+                <Tag className="absolute left-3.5 top-3 size-4.5 text-black/40" />
+              </div>
+              <button
                 type="submit"
-                variant="dark"
-                size="md"
-                className="shrink-0"
-                disabled={promoApplied}
+                className="h-11 px-6 rounded-full bg-primary text-sm font-semibold text-white transition hover:opacity-90 shrink-0"
               >
-                {promoApplied ? 'Applied' : 'Apply'}
-              </Button>
+                Apply
+              </button>
             </form>
 
-            {promoError && <p className="mt-2 text-sm text-error">{promoError}</p>}
-            {promoApplied && (
-              <p className="mt-2 flex items-center gap-1.5 text-sm text-success">
-                <CheckCircle2 className="size-4" aria-hidden="true" />
-                ใช้รหัส {appliedCode} แล้ว ลด {promoRate * 100}%
+            {promoMessage.text && (
+              <p className={`mt-2 text-xs ${promoMessage.isError ? 'text-[#FF3333]' : 'text-green-600'}`}>
+                {promoMessage.text}
               </p>
             )}
 
-            {/* ปุ่มกดดำเนินการต่อไปยังหน้าชำระเงิน */}
-            <Button to={checkoutPath} variant="dark" size="lg" className="mt-4 w-full">
+            {/* ปุ่ม Go to Checkout */}
+            <Link
+              to="/checkout"
+              className="mt-5 flex h-13 w-full items-center justify-center gap-2 rounded-full bg-primary text-base font-semibold text-white transition hover:opacity-90"
+            >
               Go to Checkout
-              <ArrowRight className="size-4" aria-hidden="true" />
-            </Button>
+              <ArrowRight className="size-5" aria-hidden="true" />
+            </Link>
           </aside>
+
         </div>
       )}
     </Container>
