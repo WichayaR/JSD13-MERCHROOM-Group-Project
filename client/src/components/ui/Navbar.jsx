@@ -2,7 +2,9 @@
 import { useEffect, useRef, useState, useMemo } from 'react';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { Key, LogOut, Search, ShoppingCart, User, X } from 'lucide-react';
+// - useCart: จัดการ state สินค้าในตะกร้า (cartItems, updateQuantity, removeItem, totalPrice ฯลฯ)
 import { useCart } from '../../context/CartContext';
+// - useAuth: ดึง user, isAuthenticated, logout สำหรับสลับเมนูโปรไฟล์/Login
 import { useAuth } from '../../context/AuthContext';
 import Logo from './Logo';
 
