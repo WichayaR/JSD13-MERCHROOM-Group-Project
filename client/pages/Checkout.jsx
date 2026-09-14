@@ -1,431 +1,354 @@
-// ไฟล์: client/pages/Checkout.jsx
-// หน้าชำระเงินและกรอกข้อมูลจัดส่ง (Checkout Page)
-// เรียกมาจาก: App.jsx ผ่าน Route path="/checkout" (ส่งต่อมาจากหน้า /cart)
-// แหล่งข้อมูล: รับสินค้าจาก CartContext และบันทึกออเดอร์ลง LocalStorage ผ่าน src/utils/orderStorage.js
 import { useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowRight, CreditCard, Landmark, QrCode, Truck } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useCart } from '../src/context/CartContext';
-import {
-  PAYMENT_METHODS,
-  generateOrderId,
-  saveOrder,
-} from '../src/utils/orderStorage';
-import Button from '../src/components/ui/Button';
 import Container from '../src/components/ui/Container';
 import Breadcrumb from '../src/components/ui/Breadcrumb';
 
 const DELIVERY_FEE = 15;
-
-const PROMO_CODES = {
-  MERCH10: 0.1,
-  MERCHROOM: 0.2,
-  HELLO15: 0.15,
-};
-
-const paymentIcons = {
-  promptpay: QrCode,
-  card: CreditCard,
-  bank: Landmark,
-  cod: Truck,
-};
-
-const baht = (value) => `฿${value.toLocaleString('th-TH', { minimumFractionDigits: 2 })}`;
-
-const inputClasses =
-  'h-11 w-full rounded-pill bg-cream px-4 text-sm placeholder:text-muted focus:outline-2 focus:outline-offset-1 focus:outline-violet';
+const formatCurrency = (val) => `$${val.toLocaleString('en-US', { minimumFractionDigits: 0 })}`;
 
 export default function Checkout() {
-  const { items, cartTotal, clearCart } = useCart();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const { items, clearCart, discountRate = 0 } = useCart();
 
-  const promoCodeFromUrl = (searchParams.get('promo') || '').toUpperCase();
-  const promoRate = PROMO_CODES[promoCodeFromUrl] || 0;
-  const promoDiscount = Math.round(cartTotal * promoRate);
-  const total = cartTotal - promoDiscount + DELIVERY_FEE;
+  const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const discountAmount = Math.round(subtotal * discountRate);
+  const deliveryFee = items.length > 0 ? DELIVERY_FEE : 0;
+  const total = Math.max(0, subtotal - discountAmount) + deliveryFee;
 
-  const [form, setForm] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
-    phone: '',
-    address: '',
+  const [useSameAddress, setUseSameAddress] = useState(true);
+  const [saveDefaultCard, setSaveDefaultCard] = useState(false);
+
+  const [formData, setFormData] = useState({
+    name: '', email: '', city: '', state: '', zipCode: '', country: '',
+    addressLine: '', addressLine2: '', deliveryName: '', deliveryAddressLine: '',
+    deliveryAddressLine2: '', deliveryCity: '', deliveryState: '', deliveryZipCode: '',
+    deliveryCountry: '', cardName: '', cardNumber: '', expDate: '', cvc: '',
   });
-  const [paymentMethod, setPaymentMethod] = useState('promptpay');
-  const [cardFields, setCardFields] = useState({
-    cardNumber: '',
-    cardName: '',
-    cardExpiry: '',
-    cardCvv: '',
-  });
-  const [errors, setErrors] = useState({});
 
-  const updateField = (e) => {
+  const handleChange = (e) => {
     const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const updateCardField = (e) => {
-    const { name, value } = e.target;
-    setCardFields((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const selectedMethod = PAYMENT_METHODS.find((m) => m.id === paymentMethod);
-
-  // เช็ค validation ข้อมูลผู้รับและข้อมูลบัตรเครดิตก่อนยอมให้สร้างคำสั่งซื้อ
-  const validate = () => {
-    const next = {};
-
-    if (!form.firstName.trim()) next.firstName = 'กรุณากรอกชื่อ';
-    if (!form.lastName.trim()) next.lastName = 'กรุณากรอกนามสกุล';
-    if (!/^\S+@\S+\.\S+$/.test(form.email.trim())) next.email = 'อีเมลไม่ถูกต้อง';
-    if (!form.phone.trim() || !/^\d{9,10}$/.test(form.phone.trim()))
-      next.phone = 'เบอร์โทรไม่ถูกต้อง (9-10 หลัก)';
-    if (form.address.trim().length < 10) next.address = 'กรุณากรอกที่อยู่ให้ครบถ้วน (อย่างน้อย 10 ตัวอักษร)';
-
-    // เคสจ่ายด้วยบัตรเครดิต ต้องเช็ค format เลขบัตร 16 หลัก วันหมดอายุ และ CVV เพิ่ม
-    if (paymentMethod === 'card') {
-      if (!/^\d{16}$/.test(cardFields.cardNumber.replace(/\s/g, '')))
-        next.cardNumber = 'เลขบัตรต้องเป็น 16 หลัก';
-      if (!cardFields.cardName.trim()) next.cardName = 'กรุณากรอกชื่อบนบัตร';
-      if (!/^(0[1-9]|1[0-2])\/\d{2}$/.test(cardFields.cardExpiry.trim()))
-        next.cardExpiry = 'รูปแบบ MM/YY';
-      if (!/^\d{3}$/.test(cardFields.cardCvv.trim())) next.cardCvv = 'CVV 3 หลัก';
-    }
-
-    setErrors(next);
-    return Object.keys(next).length === 0;
-  };
-
-  // สร้าง snapshot คำสั่งซื้อ บันทึกลง LocalStorage เคลียร์ cart แล้ว redirect ไปหน้าสรุปออเดอร์
-  const placeOrder = (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
 
-    if (!validate()) return;
-
-    const orderId = generateOrderId();
-    const now = new Date().toISOString();
-
-    const orderItems = items.map((item) => ({
-      productId: item.id,
-      name: item.name,
-      brand: item.brand || '',
-      image: item.image || '',
-      price: item.price,
-      quantity: item.quantity,
-    }));
-
-    const order = {
-      id: orderId,
-      items: orderItems,
-      subtotal: cartTotal,
-      promoCode: promoRate > 0 ? promoCodeFromUrl : null,
-      promoDiscount: promoRate > 0 ? promoDiscount : 0,
-      deliveryFee: DELIVERY_FEE,
-      totalAmount: total,
-      paymentMethod,
-      paymentMethodLabel: selectedMethod?.label || paymentMethod,
-      paymentStatus: 'paid',
-      status: 'pending',
-      deliveryStatus: 'pending',
-      shippingProvider: 'Kerry Express',
-      shippingAddress: `${form.address} (${form.firstName} ${form.lastName} โทร ${form.phone})`,
-      customer: {
-        firstName: form.firstName,
-        lastName: form.lastName,
-        email: form.email,
-        phone: form.phone,
-      },
-      createdAt: now,
+    const newOrder = {
+      id: `ORD-${Date.now().toString().slice(-6)}`,
+      date: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
+      status: 'Processing',
+      total: total,
+      items: items.map((item) => ({
+        id: item.id,
+        name: item.name,
+        size: item.size || 'M',
+        color: item.color || 'Standard',
+        price: item.price,
+        quantity: item.quantity,
+        image: item.image || '',
+      })),
     };
 
-    saveOrder(order);
-    clearCart();
-    navigate(`/order-confirmation/${orderId}`);
+    const existingOrders = JSON.parse(localStorage.getItem('my_orders') || '[]');
+    localStorage.setItem('my_orders', JSON.stringify([newOrder, ...existingOrders]));
+
+    if (clearCart) clearCart();
+    navigate('/orders');
   };
 
-  // ดักกรณีผู้ใช้เปิดเข้ามาตรงๆ โดยไม่มีสินค้าในตะกร้า
-  if (items.length === 0) {
-    return (
-      <Container className="py-10">
-        <Breadcrumb items={[{ label: 'Home', to: '/' }, { label: 'Checkout' }]} />
-        <div className="mt-10 flex flex-col items-center gap-6 rounded-card bg-white p-16 text-center">
-          <p className="text-lg font-semibold">ตะกร้าของคุณว่างเปล่า</p>
-          <Button to="/products" variant="primary" size="lg">
-            ไปเลือกสินค้า
-          </Button>
-        </div>
-      </Container>
-    );
-  }
-
   return (
-    <Container className="py-10">
-      {/* 1. Breadcrumb นำทางตามขั้นตอน Cart -> Checkout */}
-      <Breadcrumb
-        items={[{ label: 'Home', to: '/' }, { label: 'Cart', to: '/cart' }, { label: 'Checkout' }]}
-      />
+    <Container className="max-w-[1160px] py-6 md:py-8">
+      <Breadcrumb items={[{ label: 'Home', to: '/' }, { label: 'Cart', to: '/cart' }, { label: 'Checkout' }]} />
 
-      <h1 className="mt-4 text-3xl font-bold uppercase md:text-4xl">Checkout</h1>
+      <h1 className="mt-4 text-2xl font-extrabold uppercase tracking-tight text-black md:text-3xl leading-none font-integral">
+        CHECKOUT
+      </h1>
 
-      <form onSubmit={placeOrder} className="mt-10 grid items-start gap-8 lg:grid-cols-[1fr_420px]">
-        <div className="flex flex-col gap-8">
-          {/* 2. ส่วนกรอกข้อมูลสำหรับจัดส่งสินค้า */}
-          <section className="rounded-card bg-white p-6 md:p-8" aria-label="ข้อมูลจัดส่ง">
-            <h2 className="text-lg font-bold">Shipping Information</h2>
-            <div className="mt-6 grid gap-4 sm:grid-cols-2">
-              <div>
-                <label htmlFor="firstName" className="mb-1.5 block text-sm font-medium">
-                  ชื่อ <span className="text-error">*</span>
-                </label>
+      <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-5 lg:flex-row items-start justify-between">
+        
+        {/* Left Column: Form Sections */}
+        <div className="w-full lg:w-[680px] shrink-0 flex flex-col gap-5">
+          
+          {/* Section 1: Contact Information */}
+          <section className="rounded-[20px] border border-black/10 bg-white p-5 md:p-6">
+            <h2 className="text-lg md:text-xl font-bold text-black">Contact information</h2>
+            <div className="mt-4 flex flex-col gap-3">
+              <input
+                type="text"
+                name="name"
+                placeholder="Name"
+                value={formData.name}
+                onChange={handleChange}
+                className="h-11 w-full rounded-xl bg-[#F0F0F0] px-4 text-sm outline-none placeholder:text-black/40 focus:bg-white focus:ring-1 focus:ring-black/20"
+                required
+              />
+              <input
+                type="email"
+                name="email"
+                placeholder="Email"
+                value={formData.email}
+                onChange={handleChange}
+                className="h-11 w-full rounded-xl bg-[#F0F0F0] px-4 text-sm outline-none placeholder:text-black/40 focus:bg-white focus:ring-1 focus:ring-black/20"
+                required
+              />
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                 <input
-                  id="firstName"
-                  name="firstName"
                   type="text"
-                  value={form.firstName}
-                  onChange={updateField}
-                  placeholder="เช่น สมชาย"
-                  className={inputClasses}
+                  name="city"
+                  placeholder="City"
+                  value={formData.city}
+                  onChange={handleChange}
+                  className="h-11 rounded-xl bg-[#F0F0F0] px-4 text-sm outline-none placeholder:text-black/40 focus:bg-white focus:ring-1 focus:ring-black/20"
+                  required
                 />
-                {errors.firstName && <p className="mt-1 text-sm text-error">{errors.firstName}</p>}
-              </div>
-              <div>
-                <label htmlFor="lastName" className="mb-1.5 block text-sm font-medium">
-                  นามสกุล <span className="text-error">*</span>
-                </label>
                 <input
-                  id="lastName"
-                  name="lastName"
                   type="text"
-                  value={form.lastName}
-                  onChange={updateField}
-                  placeholder="เช่น ใจดี"
-                  className={inputClasses}
+                  name="state"
+                  placeholder="State"
+                  value={formData.state}
+                  onChange={handleChange}
+                  className="h-11 rounded-xl bg-[#F0F0F0] px-4 text-sm outline-none placeholder:text-black/40 focus:bg-white focus:ring-1 focus:ring-black/20"
+                  required
                 />
-                {errors.lastName && <p className="mt-1 text-sm text-error">{errors.lastName}</p>}
-              </div>
-              <div>
-                <label htmlFor="email" className="mb-1.5 block text-sm font-medium">
-                  อีเมล <span className="text-error">*</span>
-                </label>
                 <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  value={form.email}
-                  onChange={updateField}
-                  placeholder="example@email.com"
-                  className={inputClasses}
+                  type="text"
+                  name="zipCode"
+                  placeholder="Zip Code"
+                  value={formData.zipCode}
+                  onChange={handleChange}
+                  className="h-11 rounded-xl bg-[#F0F0F0] px-4 text-sm outline-none placeholder:text-black/40 focus:bg-white focus:ring-1 focus:ring-black/20"
+                  required
                 />
-                {errors.email && <p className="mt-1 text-sm text-error">{errors.email}</p>}
               </div>
-              <div>
-                <label htmlFor="phone" className="mb-1.5 block text-sm font-medium">
-                  เบอร์โทรศัพท์ <span className="text-error">*</span>
-                </label>
+              <input
+                type="text"
+                name="country"
+                placeholder="Country"
+                value={formData.country}
+                onChange={handleChange}
+                className="h-11 w-full rounded-xl bg-[#F0F0F0] px-4 text-sm outline-none placeholder:text-black/40 focus:bg-white focus:ring-1 focus:ring-black/20"
+                required
+              />
+              <input
+                type="text"
+                name="addressLine"
+                placeholder="Address Line"
+                value={formData.addressLine}
+                onChange={handleChange}
+                className="h-11 w-full rounded-xl bg-[#F0F0F0] px-4 text-sm outline-none placeholder:text-black/40 focus:bg-white focus:ring-1 focus:ring-black/20"
+                required
+              />
+              <input
+                type="text"
+                name="addressLine2"
+                placeholder="Address Line 2 (Optional)"
+                value={formData.addressLine2}
+                onChange={handleChange}
+                className="h-11 w-full rounded-xl bg-[#F0F0F0] px-4 text-sm outline-none placeholder:text-black/40 focus:bg-white focus:ring-1 focus:ring-black/20"
+              />
+            </div>
+          </section>
+
+          {/* Section 2: Delivery */}
+          <section className="rounded-[20px] border border-black/10 bg-white p-5 md:p-6">
+            <h2 className="text-lg md:text-xl font-bold text-black">Delivery</h2>
+            <div className="mt-4 flex flex-col gap-3">
+              <input
+                type="text"
+                name="deliveryName"
+                placeholder="Name"
+                disabled={useSameAddress}
+                value={useSameAddress ? formData.name : formData.deliveryName}
+                onChange={handleChange}
+                className="h-11 w-full rounded-xl bg-[#F0F0F0] px-4 text-sm outline-none disabled:opacity-50 focus:bg-white focus:ring-1 focus:ring-black/20"
+              />
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <input
-                  id="phone"
-                  name="phone"
-                  type="tel"
-                  value={form.phone}
-                  onChange={updateField}
-                  placeholder="0812345678"
-                  className={inputClasses}
+                  type="text"
+                  name="deliveryAddressLine"
+                  placeholder="Address Line"
+                  disabled={useSameAddress}
+                  value={useSameAddress ? formData.addressLine : formData.deliveryAddressLine}
+                  onChange={handleChange}
+                  className="h-11 rounded-xl bg-[#F0F0F0] px-4 text-sm outline-none disabled:opacity-50 focus:bg-white focus:ring-1 focus:ring-black/20"
                 />
-                {errors.phone && <p className="mt-1 text-sm text-error">{errors.phone}</p>}
+                <input
+                  type="text"
+                  name="deliveryAddressLine2"
+                  placeholder="Address Line 2"
+                  disabled={useSameAddress}
+                  value={useSameAddress ? formData.addressLine2 : formData.deliveryAddressLine2}
+                  onChange={handleChange}
+                  className="h-11 rounded-xl bg-[#F0F0F0] px-4 text-sm outline-none disabled:opacity-50 focus:bg-white focus:ring-1 focus:ring-black/20"
+                />
               </div>
-              <div className="sm:col-span-2">
-                <label htmlFor="address" className="mb-1.5 block text-sm font-medium">
-                  ที่อยู่จัดส่ง <span className="text-error">*</span>
-                </label>
-                <textarea
-                  id="address"
-                  name="address"
-                  rows="3"
-                  value={form.address}
-                  onChange={updateField}
-                  placeholder="บ้านเลขที่ ถนน แขวง/ตำบล เขต/อำเภอ จังหวัด รหัสไปรษณีย์"
-                  className="w-full rounded-btn bg-cream px-4 py-3 text-sm placeholder:text-muted focus:outline-2 focus:outline-offset-1 focus:outline-violet"
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                <input
+                  type="text"
+                  name="deliveryCity"
+                  placeholder="City"
+                  disabled={useSameAddress}
+                  value={useSameAddress ? formData.city : formData.deliveryCity}
+                  onChange={handleChange}
+                  className="h-11 rounded-xl bg-[#F0F0F0] px-4 text-sm outline-none disabled:opacity-50 focus:bg-white focus:ring-1 focus:ring-black/20"
                 />
-                {errors.address && <p className="mt-1 text-sm text-error">{errors.address}</p>}
+                <input
+                  type="text"
+                  name="deliveryState"
+                  placeholder="State"
+                  disabled={useSameAddress}
+                  value={useSameAddress ? formData.state : formData.deliveryState}
+                  onChange={handleChange}
+                  className="h-11 rounded-xl bg-[#F0F0F0] px-4 text-sm outline-none disabled:opacity-50 focus:bg-white focus:ring-1 focus:ring-black/20"
+                />
+                <input
+                  type="text"
+                  name="deliveryZipCode"
+                  placeholder="Zip Code"
+                  disabled={useSameAddress}
+                  value={useSameAddress ? formData.zipCode : formData.deliveryZipCode}
+                  onChange={handleChange}
+                  className="h-11 rounded-xl bg-[#F0F0F0] px-4 text-sm outline-none disabled:opacity-50 focus:bg-white focus:ring-1 focus:ring-black/20"
+                />
+              </div>
+
+              <div className="mt-2 flex items-center justify-between">
+                <span className="text-xs md:text-sm font-medium text-black/70">Use same contact address</span>
+                <button
+                  type="button"
+                  onClick={() => setUseSameAddress(!useSameAddress)}
+                  className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
+                    useSameAddress ? 'bg-black' : 'bg-gray-300'
+                  }`}
+                >
+                  <span
+                    className={`inline-block size-3.5 transform rounded-full bg-white transition-transform ${
+                      useSameAddress ? 'translate-x-4' : 'translate-x-0.5'
+                    }`}
+                  />
+                </button>
               </div>
             </div>
           </section>
 
-          {/* 3. ส่วนเลือกวิธีชำระเงิน (PromptPay, บัตรเครดิต, โอนธนาคาร, เก็บเงินปลายทาง) */}
-          <section className="rounded-card bg-white p-6 md:p-8" aria-label="เลือกวิธีการชำระเงิน">
-            <h2 className="text-lg font-bold">Payment Method</h2>
-            <p className="mt-1 text-sm text-muted">เลือกวิธีการชำระเงินสำหรับคำสั่งซื้อของคุณ</p>
-
-            <div className="mt-6 flex flex-col gap-3">
-              {PAYMENT_METHODS.map((method) => {
-                const Icon = paymentIcons[method.id];
-                const active = paymentMethod === method.id;
-                return (
-                  <label
-                    key={method.id}
-                    className={`flex cursor-pointer items-center gap-4 rounded-btn border-2 p-4 transition ${
-                      active ? 'border-violet bg-violet/5' : 'border-ink/10 bg-cream hover:border-ink/25'
-                    }`}
-                  >
-                    <input
-                      type="radio"
-                      name="paymentMethod"
-                      value={method.id}
-                      checked={active}
-                      onChange={() => setPaymentMethod(method.id)}
-                      className="size-4 accent-violet"
-                    />
-                    <Icon className="size-6 shrink-0 text-ink/70" aria-hidden="true" />
-                    <div>
-                      <p className="text-sm font-semibold">{method.label}</p>
-                      <p className="text-xs text-muted">{method.description}</p>
-                    </div>
-                  </label>
-                );
-              })}
-            </div>
-
-            {/* ช่องกรอกข้อมูลบัตรเครดิต (แสดงเฉพาะตอนเลือกชำระผ่านบัตร) */}
-            {paymentMethod === 'card' && (
-              <div className="mt-5 grid gap-4 rounded-btn bg-cream p-5 sm:grid-cols-2">
-                <div className="sm:col-span-2">
-                  <label htmlFor="cardNumber" className="mb-1.5 block text-sm font-medium">
-                    เลขบัตร <span className="text-error">*</span>
-                  </label>
-                  <input
-                    id="cardNumber"
-                    name="cardNumber"
-                    type="text"
-                    inputMode="numeric"
-                    value={cardFields.cardNumber}
-                    onChange={updateCardField}
-                    placeholder="1234 5678 9012 3456"
-                    maxLength="19"
-                    className={inputClasses}
-                  />
-                  {errors.cardNumber && (
-                    <p className="mt-1 text-sm text-error">{errors.cardNumber}</p>
-                  )}
-                </div>
-                <div className="sm:col-span-2">
-                  <label htmlFor="cardName" className="mb-1.5 block text-sm font-medium">
-                    ชื่อบนบัตร <span className="text-error">*</span>
-                  </label>
-                  <input
-                    id="cardName"
-                    name="cardName"
-                    type="text"
-                    value={cardFields.cardName}
-                    onChange={updateCardField}
-                    placeholder="NAME SURNAME"
-                    className={inputClasses}
-                  />
-                  {errors.cardName && <p className="mt-1 text-sm text-error">{errors.cardName}</p>}
-                </div>
-                <div>
-                  <label htmlFor="cardExpiry" className="mb-1.5 block text-sm font-medium">
-                    วันหมดอายุ <span className="text-error">*</span>
-                  </label>
-                  <input
-                    id="cardExpiry"
-                    name="cardExpiry"
-                    type="text"
-                    value={cardFields.cardExpiry}
-                    onChange={updateCardField}
-                    placeholder="MM/YY"
-                    maxLength="5"
-                    className={inputClasses}
-                  />
-                  {errors.cardExpiry && (
-                    <p className="mt-1 text-sm text-error">{errors.cardExpiry}</p>
-                  )}
-                </div>
-                <div>
-                  <label htmlFor="cardCvv" className="mb-1.5 block text-sm font-medium">
-                    CVV <span className="text-error">*</span>
-                  </label>
-                  <input
-                    id="cardCvv"
-                    name="cardCvv"
-                    type="password"
-                    inputMode="numeric"
-                    value={cardFields.cardCvv}
-                    onChange={updateCardField}
-                    placeholder="123"
-                    maxLength="3"
-                    className={inputClasses}
-                  />
-                  {errors.cardCvv && <p className="mt-1 text-sm text-error">{errors.cardCvv}</p>}
-                </div>
+          {/* Section 3: Payment */}
+          <section className="rounded-[20px] border border-black/10 bg-white p-5 md:p-6">
+            <h2 className="text-lg md:text-xl font-bold text-black">Payment details</h2>
+            <div className="mt-4 flex flex-col gap-3">
+              <input
+                type="text"
+                name="cardName"
+                placeholder="Cardholder Name"
+                value={formData.cardName}
+                onChange={handleChange}
+                className="h-11 w-full rounded-xl bg-[#F0F0F0] px-4 text-sm outline-none placeholder:text-black/40 focus:bg-white focus:ring-1 focus:ring-black/20"
+                required
+              />
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_110px_90px]">
+                <input
+                  type="text"
+                  name="cardNumber"
+                  placeholder="Card Number"
+                  value={formData.cardNumber}
+                  onChange={handleChange}
+                  className="h-11 rounded-xl bg-[#F0F0F0] px-4 text-sm outline-none placeholder:text-black/40 focus:bg-white focus:ring-1 focus:ring-black/20"
+                  required
+                />
+                <input
+                  type="text"
+                  name="expDate"
+                  placeholder="MM/YY"
+                  value={formData.expDate}
+                  onChange={handleChange}
+                  className="h-11 rounded-xl bg-[#F0F0F0] px-4 text-center text-sm outline-none placeholder:text-black/40 focus:bg-white focus:ring-1 focus:ring-black/20"
+                  required
+                />
+                <input
+                  type="text"
+                  name="cvc"
+                  placeholder="CVC"
+                  value={formData.cvc}
+                  onChange={handleChange}
+                  className="h-11 rounded-xl bg-[#F0F0F0] px-4 text-center text-sm outline-none placeholder:text-black/40 focus:bg-white focus:ring-1 focus:ring-black/20"
+                  required
+                />
               </div>
-            )}
+
+              <div className="mt-2 flex items-center justify-between">
+                <span className="text-xs md:text-sm font-medium text-black/70">Save this card as default payment method</span>
+                <button
+                  type="button"
+                  onClick={() => setSaveDefaultCard(!saveDefaultCard)}
+                  className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
+                    saveDefaultCard ? 'bg-black' : 'bg-gray-300'
+                  }`}
+                >
+                  <span
+                    className={`inline-block size-3.5 transform rounded-full bg-white transition-transform ${
+                      saveDefaultCard ? 'translate-x-4' : 'translate-x-0.5'
+                    }`}
+                  />
+                </button>
+              </div>
+            </div>
           </section>
         </div>
 
-        <aside className="rounded-card bg-white p-6 md:p-8" aria-label="สรุปคำสั่งซื้อ">
-          <h2 className="text-lg font-bold">Order Summary</h2>
+        {/* Right Column: Order Summary */}
+        <aside className="w-full lg:w-[440px] shrink-0 rounded-[20px] border border-black/10 bg-white p-5 md:p-6" aria-label="Order Summary">
+          <h2 className="text-lg md:text-xl font-bold text-black">Order Summary</h2>
 
-          <div className="mt-5 flex max-h-72 flex-col gap-3 overflow-y-auto pr-1">
+          {/* Mini Items List */}
+          <div className="mt-4 max-h-[220px] overflow-y-auto divide-y divide-black/10 pr-1">
             {items.map((item) => (
-              <div key={item.id} className="flex items-center gap-3">
-                <div className="size-14 shrink-0 overflow-hidden rounded-btn bg-cream">
-                  {item.image ? (
-                    <img
-                      src={item.image}
-                      alt={item.name}
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
-                    <div className="flex h-full items-center justify-center text-[10px] text-muted">
-                      -
-                    </div>
-                  )}
+              <div key={item.id} className="flex items-center gap-3 py-2.5">
+                <div className="size-12 shrink-0 overflow-hidden rounded-md bg-[#F0F0F0]">
+                  {item.image && <img src={item.image} alt={item.name} className="h-full w-full object-cover" />}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium">{item.name}</p>
-                  <p className="text-xs text-muted">
-                    {baht(item.price)} × {item.quantity}
-                  </p>
+                  <p className="truncate text-xs md:text-sm font-bold text-black">{item.name}</p>
+                  <p className="text-xs text-black/60">Qty: {item.quantity}</p>
                 </div>
-                <span className="text-sm font-semibold">{baht(item.price * item.quantity)}</span>
+                <p className="text-xs md:text-sm font-bold text-black">{formatCurrency(item.price * item.quantity)}</p>
               </div>
             ))}
           </div>
 
-          <dl className="mt-5 flex flex-col gap-3 border-t border-ink/10 pt-5 text-sm">
-            <div className="flex justify-between">
-              <dt className="text-muted">Subtotal</dt>
-              <dd className="font-semibold">{baht(cartTotal)}</dd>
+          <div className="my-4 border-t border-black/10" />
+
+          <dl className="flex flex-col gap-3 text-sm md:text-base">
+            <div className="flex justify-between items-center">
+              <dt className="text-black/60">Subtotal</dt>
+              <dd className="font-bold text-black">{formatCurrency(subtotal)}</dd>
             </div>
-            {promoRate > 0 && (
-              <div className="flex justify-between">
-                <dt className="text-muted">
-                  Promo ({promoCodeFromUrl}, -{promoRate * 100}%)
-                </dt>
-                <dd className="font-semibold text-error">-{baht(promoDiscount)}</dd>
+
+            {discountRate > 0 && (
+              <div className="flex justify-between items-center text-[#FF3333]">
+                <dt>Discount (-{Math.round(discountRate * 100)}%)</dt>
+                <dd className="font-bold">-{formatCurrency(discountAmount)}</dd>
               </div>
             )}
-            <div className="flex justify-between">
-              <dt className="text-muted">Delivery Fee</dt>
-              <dd className="font-semibold">{baht(DELIVERY_FEE)}</dd>
+
+            <div className="flex justify-between items-center">
+              <dt className="text-black/60">Delivery Fee</dt>
+              <dd className="font-bold text-black">{formatCurrency(deliveryFee)}</dd>
             </div>
           </dl>
 
-          <div className="mt-5 flex items-center justify-between rounded-btn bg-cream px-5 py-3.5">
-            <span className="font-bold">Total</span>
-            <span className="font-[Sarabun] text-xl font-bold">{baht(total)}</span>
+          <div className="my-4 border-t border-black/10" />
+
+          <div className="flex justify-between items-center text-base md:text-lg font-bold text-black">
+            <span>Total</span>
+            <span>{formatCurrency(total)}</span>
           </div>
 
-          <Button type="submit" variant="dark" size="lg" className="mt-6 w-full">
-            Place Order
-            <ArrowRight className="size-4" aria-hidden="true" />
-          </Button>
-
-          <p className="mt-3 text-center text-xs text-muted">
-            ชำระเงินแบบทดลอง (mock payment) — ไม่มีการเรียกเก็บเงินจริง
-          </p>
+          <button
+            type="submit"
+            className="mt-5 flex h-12 w-full items-center justify-center rounded-full bg-primary text-base font-semibold text-white transition hover:opacity-90"
+          >
+            Finish checkout
+          </button>
         </aside>
       </form>
     </Container>

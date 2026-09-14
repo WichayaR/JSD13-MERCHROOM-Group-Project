@@ -1,16 +1,12 @@
-// ไฟล์: client/src/context/CartContext.jsx
-// Context กลางสำหรับจัดการระบบตะกร้าสินค้า (เพิ่ม/ลด/ลบสินค้า และคำนวณยอดรวม)
-// เรียกมาจาก: App.jsx (นำ CartProvider ไปครอบ root เพื่อให้ทุกหน้าแชร์ state ร่วมกันได้)
-// แหล่งเก็บข้อมูล: localStorage (key: merchroom_cart) ซิงค์ข้อมูลข้ามแท็บและคงอยู่หลังรีเฟรช
-// ส่งออก Hook: useCart() สำหรับหน้า Navbar, Product, ProductDetail, Cart, Checkout
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
 const CartContext = createContext(null);
 
 const STORAGE_KEY = 'merchroom_cart';
+const DISCOUNT_STORAGE_KEY = 'promo_discount_rate';
 
 export function CartProvider({ children }) {
-  // โหลดของในตะกร้าจาก localStorage ตอนเริ่มต้น ถ้าไม่มีหรือพังให้ fallback เป็น array ว่าง
+  // โหลดของในตะกร้าจาก localStorage
   const [items, setItems] = useState(() => {
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
@@ -20,7 +16,17 @@ export function CartProvider({ children }) {
     }
   });
 
-  // ซิงค์ข้อมูลตะกร้าลง localStorage ทุกครั้งที่ items มีการเปลี่ยนแปลง
+  // โหลดค่า discountRate จาก localStorage ตอนเริ่มต้น
+  const [discountRate, setDiscountRate] = useState(() => {
+    try {
+      const storedRate = localStorage.getItem(DISCOUNT_STORAGE_KEY);
+      return storedRate ? Number(storedRate) : 0;
+    } catch {
+      return 0;
+    }
+  });
+
+  // ซิงค์ข้อมูลตะกร้าลง localStorage
   useEffect(() => {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
@@ -29,9 +35,22 @@ export function CartProvider({ children }) {
     }
   }, [items]);
 
-  // เพิ่มสินค้าเข้าตะกร้า: ถ้ามีอยู่แล้วให้บวกจำนวนเพิ่ม ถ้ายังไม่มีให้แทรกเข้าไปใหม่
+  // ซิงค์ค่า discountRate ลง localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem(DISCOUNT_STORAGE_KEY, discountRate.toString());
+    } catch {
+      // ดักเคส storage เต็ม
+    }
+  }, [discountRate]);
+
+  // ฟังก์ชันนำส่วนลดไปใช้
+  const applyDiscount = useCallback((rate) => {
+    setDiscountRate(rate);
+  }, []);
+
+  // เพิ่มสินค้าเข้าตะกร้า
   const addToCart = useCallback((product, quantity = 1) => {
-    // กันบั๊กคนส่ง onClick event เข้ามาตรงๆ (ต้องเป็น product object เท่านั้น)
     if (!product?.id) {
       console.warn('[cart] addToCart ต้องรับ product object ไม่ใช่ event');
       return;
@@ -55,7 +74,7 @@ export function CartProvider({ children }) {
     setItems((prev) => prev.filter((item) => item.id !== id));
   }, []);
 
-  // ปรับจำนวนชิ้น โดยล็อคขั้นต่ำไว้ที่ 1 ชิ้นเสมอ
+  // ปรับจำนวนชิ้น
   const updateQuantity = useCallback((id, quantity) => {
     setItems((prev) =>
       prev.map((item) =>
@@ -64,12 +83,14 @@ export function CartProvider({ children }) {
     );
   }, []);
 
-  // เคลียร์ตะกร้าว่างเปล่า (ใช้ตอน checkout สำเร็จ)
+  // เคลียร์ตะกร้าและส่วนลด (ใช้ตอน checkout สำเร็จ)
   const clearCart = useCallback(() => {
     setItems([]);
+    setDiscountRate(0);
+    localStorage.removeItem(DISCOUNT_STORAGE_KEY);
   }, []);
 
-  // คำนวณสรุปจำนวนชิ้นและราคารวม พร้อมแพ็ก context value ด้วย useMemo กัน re-render พร่ำเพรื่อ
+  // แพ็ก context value ด้วย useMemo
   const value = useMemo(() => {
     const cartCount = items.reduce((sum, item) => sum + item.quantity, 0);
     const cartTotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
@@ -78,17 +99,19 @@ export function CartProvider({ children }) {
       items,
       cartCount,
       cartTotal,
+      discountRate,
+      applyDiscount,
       addToCart,
       removeFromCart,
       updateQuantity,
       clearCart,
     };
-  }, [items, addToCart, removeFromCart, updateQuantity, clearCart]);
+  }, [items, discountRate, applyDiscount, addToCart, removeFromCart, updateQuantity, clearCart]);
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 }
 
-// Custom hook สะดวกๆ ให้ component อื่นเรียกใช้ context ได้เลย
+// Custom hook
 // eslint-disable-next-line react-refresh/only-export-components
 export function useCart() {
   const context = useContext(CartContext);
