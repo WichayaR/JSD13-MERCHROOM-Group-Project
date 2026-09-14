@@ -24,6 +24,12 @@ import User from '../pages/User';
 import UserDashboard from '../pages/UserDashboard';
 import AdminDashboard from '../pages/AdminDashboard';
 import ProtectedRoute from './components/auth/ProtectedRoute';
+import AccountLayout from '../pages/Account/AccountLayout';
+import ProfileSettings from '../pages/Account/ProfileSettings';
+import OrderHistory from '../pages/Account/OrderHistory';
+import OrderDetail from '../pages/Account/OrderDetail';
+import Wishlist from '../pages/Account/Wishlist';
+import PaymentMethods from '../pages/Account/PaymentMethods';
 
 // รวม Route ทั้งหมดของเว็บไว้ที่นี่
 export default function App() {
@@ -77,6 +83,23 @@ export default function App() {
                   </ProtectedRoute>
                 }
               />
+
+              {/* Account pages — ใช้ AccountLayout เป็น parent (มี Sidebar) */}
+              <Route
+                path="account"
+                element={
+                  <ProtectedRoute>
+                    <AccountLayout />
+                  </ProtectedRoute>
+                }
+              >
+                <Route index element={<ProfileSettings />} />
+                <Route path="profile" element={<ProfileSettings />} />
+                <Route path="orders" element={<OrderHistory />} />
+                <Route path="orders/:orderId" element={<OrderDetail />} />
+                <Route path="wishlist" element={<Wishlist />} />
+                <Route path="payment-methods" element={<PaymentMethods />} />
+              </Route>
             </Route>
 
             {/* หน้าระบบสมาชิกวางนอก Layout เป็นหน้าเต็มจอแบ่งซ้ายรูป/ขวาฟอร์มตาม figma จึงไม่มี Navbar/Footer */}
