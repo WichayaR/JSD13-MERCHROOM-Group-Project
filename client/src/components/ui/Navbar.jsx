@@ -1,10 +1,15 @@
 // ไฟล์: client/src/components/ui/Navbar.jsx
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useMemo } from 'react';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
-import { Key, LogOut, Search, ShoppingCart, User } from 'lucide-react';
+import { Key, LogOut, Search, ShoppingCart, User, X } from 'lucide-react';
+// - useCart: จัดการ state สินค้าในตะกร้า (cartItems, updateQuantity, removeItem, totalPrice ฯลฯ)
 import { useCart } from '../../context/CartContext';
+// - useAuth: ดึง user, isAuthenticated, logout สำหรับสลับเมนูโปรไฟล์/Login
 import { useAuth } from '../../context/AuthContext';
 import Logo from './Logo';
+
+// Import Named Export 'products' ตรงจากไฟล์ product.js
+import { products } from '../../data/product';
 
 const navLinks = [
   { label: 'Pop Culture', to: '/pop-culture' },
@@ -21,7 +26,28 @@ export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [query, setQuery] = useState('');
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+
   const userMenuRef = useRef(null);
+  const searchRef = useRef(null);
+
+  // กรองรายการสินค้าแบบ Real-time ทันทีที่พิมพ์ (ไม่ต้องกด Enter)
+  const searchResults = useMemo(() => {
+    const trimmed = query.trim().toLowerCase();
+    if (!trimmed) return [];
+
+    const list = Array.isArray(products) ? products : [];
+
+    return list
+      .filter((item) => {
+        const name = (item.name || '').toLowerCase();
+        const brand = (item.brand || '').toLowerCase();
+        const description = (item.description || '').toLowerCase();
+        
+        return name.includes(trimmed) || brand.includes(trimmed) || description.includes(trimmed);
+      })
+      .slice(0, 6);
+  }, [query]);
 
   // ตรวจจับการ Scroll หน้าจอ
   useEffect(() => {
@@ -36,6 +62,9 @@ export default function Navbar() {
     const handleClickOutside = (event) => {
       if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
         setIsUserMenuOpen(false);
+      }
+      if (searchRef.current && !searchRef.current.contains(event.target)) {
+        setIsSearchOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -91,25 +120,116 @@ export default function Navbar() {
 
         {/* ฝั่งขวา: Search Bar + Cart + User */}
         <div className="flex flex-1 items-center justify-end gap-6 xl:gap-19.5">
-          {/* ช่อง Search Bar ความสูง h-12 */}
-          <form
-            className="hidden h-12 w-full max-w-107.75 items-center gap-3 rounded-full bg-[#F0F0F0]/70 px-5 text-black sm:flex"
-            role="search"
-            onSubmit={(e) => {
-              e.preventDefault();
-              navigate(query.trim() ? `/products?q=${encodeURIComponent(query.trim())}` : '/products');
-            }}
-          >
-            <Search className="size-5 shrink-0 text-black/40" aria-hidden="true" />
-            <input
-              type="search"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search for products..."
-              aria-label="ค้นหาสินค้า"
-              className="w-full bg-transparent text-sm text-black placeholder:text-black/40 focus:outline-none"
-            />
-          </form>
+          
+          {/* ช่อง Search Bar ความสูง h-12 พร้อม Dropdown Real-time */}
+          <div className="relative hidden w-full max-w-107.75 sm:block" ref={searchRef}>
+            <form
+              className="flex h-12 w-full items-center gap-3 rounded-full bg-[#F0F0F0]/70 px-5 text-black"
+              role="search"
+              onSubmit={(e) => {
+                e.preventDefault();
+                setIsSearchOpen(false);
+                navigate(query.trim() ? `/products?q=${encodeURIComponent(query.trim())}` : '/products');
+              }}
+            >
+              <Search className="size-5 shrink-0 text-black/40" aria-hidden="true" />
+              <input
+                type="search"
+                value={query}
+                onFocus={() => setIsSearchOpen(true)}
+                onChange={(e) => {
+                  setQuery(e.target.value);
+                  setIsSearchOpen(true);
+                }}
+                placeholder="Search for products..."
+                aria-label="ค้นหาสินค้า"
+                /* ซ่อนปุ่มกากบาท default ของ browser ด้วย pseudo-element class */
+                className="w-full bg-transparent text-sm text-black placeholder:text-black/40 focus:outline-none [&::-webkit-search-cancel-button]:hidden [&::-webkit-search-decoration]:hidden"
+              />
+              {/* แสดงปุ่มลบเฉพาะเมื่อมีการพิมพ์ข้อความ */}
+              {query.trim() !== '' && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setQuery('');
+                    setIsSearchOpen(false);
+                  }}
+                  className="flex shrink-0 items-center justify-center p-1 text-black/40 hover:text-black"
+                  aria-label="Clear search"
+                >
+                  <X className="size-4" />
+                </button>
+              )}
+            </form>
+
+            {/* Dropdown ผลการค้นหา Real-time */}
+            {isSearchOpen && query.trim() !== '' && (
+              <div className="absolute top-14 left-0 z-50 w-full overflow-hidden rounded-3xl bg-white p-3 text-zinc-900 shadow-2xl ring-1 ring-black/5 animate-in fade-in zoom-in-95 duration-150">
+                {searchResults.length > 0 ? (
+                  <div>
+                    {/* รายการสินค้า */}
+                    <div className="flex flex-col gap-1 max-h-[360px] overflow-y-auto">
+                      {searchResults.map((item) => (
+                        <Link
+                          key={item.id}
+                          to={`/products/${item.id}`}
+                          onClick={() => setIsSearchOpen(false)}
+                          className="flex items-center justify-between gap-3 rounded-2xl p-2.5 transition hover:bg-zinc-100/80"
+                        >
+                          {/* รูปภาพ + ชื่อสินค้า + แบรนด์ */}
+                          <div className="flex items-center gap-3.5 min-w-0">
+                            {item.image && (
+                              <img
+                                src={item.image}
+                                alt={item.name}
+                                className="size-11 rounded-xl object-cover bg-zinc-100 shrink-0"
+                              />
+                            )}
+                            <div className="flex flex-col min-w-0">
+                              <span className="truncate text-sm font-bold text-zinc-800">
+                                {item.name}
+                              </span>
+                              {item.brand && (
+                                <span className="text-xs font-semibold uppercase tracking-wider text-zinc-400">
+                                  {item.brand}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* ราคา */}
+                          <div className="shrink-0 text-right">
+                            <span className="text-base font-bold text-[#FF5A36]">
+                              ฿{typeof item.price === 'number' ? item.price.toLocaleString('en-US', { minimumFractionDigits: item.price % 1 !== 0 ? 2 : 0 }) : item.price}
+                            </span>
+                          </div>
+                        </Link>
+                      ))}
+                    </div>
+
+                    {/* ปุ่มสำหรับไปดูผลลัพธ์ทั้งหมด */}
+                    <div className="mt-2 border-t border-zinc-100 pt-2 text-center">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsSearchOpen(false);
+                          navigate(`/products?q=${encodeURIComponent(query.trim())}`);
+                        }}
+                        className="inline-flex items-center justify-center gap-2 w-full py-2.5 text-sm font-semibold text-[#FF5A36] transition hover:bg-orange-50/50 rounded-2xl"
+                      >
+                        <Search className="size-4 stroke-[2.5]" />
+                        <span>ค้นหา "{query}" ทั้งหมด</span>
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-6 text-center text-sm font-medium text-zinc-400">
+                    ไม่พบสินค้าที่ตรงกับ "{query}"
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
 
           {/* กลุ่มไอคอน Actions */}
           <div className="flex shrink-0 items-center gap-5 md:gap-6">
