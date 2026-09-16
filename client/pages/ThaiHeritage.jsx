@@ -65,15 +65,26 @@ export default function ThaiHeritage() {
   const maxIndex = Math.max(0, heritageProducts.length - itemsPerPage);
 
   const [isStoryModalOpen, setIsStoryModalOpen] = useState(false);
+  const [selectedStoryImg, setSelectedStoryImg] = useState(bgAside);
+
+  const [isCommunityModalOpen, setIsCommunityModalOpen] = useState(false);
+  const [selectedCommunityImg, setSelectedCommunityImg] = useState(bg1);
 
   useEffect(() => {
-    if (!isStoryModalOpen) return;
+    if (!isStoryModalOpen && !isCommunityModalOpen) {
+      setSelectedStoryImg(bgAside);
+      setSelectedCommunityImg(bg1);
+      return;
+    }
     const handleKeyDown = (e) => {
-      if (e.key === 'Escape') setIsStoryModalOpen(false);
+      if (e.key === 'Escape') {
+        setIsStoryModalOpen(false);
+        setIsCommunityModalOpen(false);
+      }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isStoryModalOpen]);
+  }, [isStoryModalOpen, isCommunityModalOpen]);
 
   const handlePrev = () => {
     setSliderIndex((prev) => Math.max(0, prev - 1));
@@ -185,13 +196,14 @@ export default function ThaiHeritage() {
               &ldquo;We want our traditional patterns to become part of the lives of a new
               generation around the world.&rdquo;
             </p>
-            <Link
-              to="/products?cat=thai-heritage"
-              className="mt-6 inline-flex h-14 items-center justify-center gap-3 rounded-lg bg-primary px-10 text-lg md:text-xl font-medium text-white transition hover:bg-primary-deep shadow-sm"
+            <button
+              type="button"
+              onClick={() => setIsCommunityModalOpen(true)}
+              className="mt-6 inline-flex h-14 items-center justify-center gap-3 rounded-lg bg-primary px-10 text-lg md:text-xl font-medium text-white transition hover:bg-primary-deep shadow-sm cursor-pointer"
             >
               <span>Explore this community&apos;s story</span>
               <ArrowRight className="size-5" />
-            </Link>
+            </button>
           </div>
         </div>
       </section>
@@ -369,14 +381,62 @@ export default function ThaiHeritage() {
                 {/* Left Side: Image and 3 Thumbnails */}
                 <div>
                   <img
-                    src={bgAside}
+                    src={selectedStoryImg}
                     alt="Craft Story preview"
                     className="w-full h-56 sm:h-64 md:h-72 rounded-2xl object-cover shadow-sm"
                   />
                   <div className="grid grid-cols-3 gap-3 sm:gap-4 mt-4">
-                    <div className="h-20 sm:h-24 rounded-xl bg-[#D9D9D9]" />
-                    <div className="h-20 sm:h-24 rounded-xl bg-[#D9D9D9]" />
-                    <div className="h-20 sm:h-24 rounded-xl bg-[#D9D9D9]" />
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setSelectedStoryImg((prev) => (prev === bg1 ? bgAside : bg1))
+                      }
+                      className={`h-20 sm:h-24 rounded-xl overflow-hidden border-2 transition cursor-pointer ${
+                        selectedStoryImg === bg1
+                          ? 'border-primary shadow-sm'
+                          : 'border-transparent hover:opacity-90'
+                      }`}
+                    >
+                      <img
+                        src={bg1}
+                        alt="Craft Story detail 1"
+                        className="h-full w-full object-cover"
+                      />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setSelectedStoryImg((prev) => (prev === bg2 ? bgAside : bg2))
+                      }
+                      className={`h-20 sm:h-24 rounded-xl overflow-hidden border-2 transition cursor-pointer ${
+                        selectedStoryImg === bg2
+                          ? 'border-primary shadow-sm'
+                          : 'border-transparent hover:opacity-90'
+                      }`}
+                    >
+                      <img
+                        src={bg2}
+                        alt="Craft Story detail 2"
+                        className="h-full w-full object-cover"
+                      />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setSelectedStoryImg((prev) => (prev === bg3 ? bgAside : bg3))
+                      }
+                      className={`h-20 sm:h-24 rounded-xl overflow-hidden border-2 transition cursor-pointer ${
+                        selectedStoryImg === bg3
+                          ? 'border-primary shadow-sm'
+                          : 'border-transparent hover:opacity-90'
+                      }`}
+                    >
+                      <img
+                        src={bg3}
+                        alt="Craft Story detail 3"
+                        className="h-full w-full object-cover"
+                      />
+                    </button>
                   </div>
                 </div>
 
@@ -399,6 +459,136 @@ export default function ThaiHeritage() {
                       bibendum lorem. Morbi convallis convallis diam sit amet lacinia. Aliquam in
                       elementum tellus.
                     </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>,
+          document.body,
+        )}
+
+      {/* Community Story Modal */}
+      {isCommunityModalOpen &&
+        createPortal(
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 sm:p-6 backdrop-blur-xs animate-in fade-in duration-200"
+            onClick={() => setIsCommunityModalOpen(false)}
+          >
+            <div
+              className="relative w-full max-w-4xl rounded-[24px] bg-white p-6 sm:p-8 md:p-10 shadow-2xl overflow-hidden animate-in zoom-in-95 duration-150"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                type="button"
+                onClick={() => setIsCommunityModalOpen(false)}
+                aria-label="Close modal"
+                className="absolute top-4 right-4 sm:top-6 sm:right-6 flex size-9 items-center justify-center rounded-full text-black/50 hover:bg-black/5 hover:text-black transition cursor-pointer"
+              >
+                <X className="size-5" />
+              </button>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10 items-start">
+                {/* Left Side: Image and 3 Thumbnails */}
+                <div>
+                  <img
+                    src={selectedCommunityImg}
+                    alt="Ban Phon Community preview"
+                    className="w-full h-56 sm:h-64 md:h-72 rounded-2xl object-cover shadow-sm"
+                  />
+                  <div className="grid grid-cols-3 gap-3 sm:gap-4 mt-4">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setSelectedCommunityImg((prev) => (prev === bg1 ? bgThaiSilk : bg1))
+                      }
+                      className={`h-20 sm:h-24 rounded-xl overflow-hidden border-2 transition cursor-pointer ${
+                        selectedCommunityImg === bg1
+                          ? 'border-primary shadow-sm'
+                          : 'border-transparent hover:opacity-90'
+                      }`}
+                    >
+                      <img
+                        src={bg1}
+                        alt="Community artisan"
+                        className="h-full w-full object-cover"
+                      />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setSelectedCommunityImg((prev) => (prev === bg2 ? bgThaiSilk : bg2))
+                      }
+                      className={`h-20 sm:h-24 rounded-xl overflow-hidden border-2 transition cursor-pointer ${
+                        selectedCommunityImg === bg2
+                          ? 'border-primary shadow-sm'
+                          : 'border-transparent hover:opacity-90'
+                      }`}
+                    >
+                      <img
+                        src={bg2}
+                        alt="Thai silk pattern"
+                        className="h-full w-full object-cover"
+                      />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setSelectedCommunityImg((prev) => (prev === bg3 ? bgThaiSilk : bg3))
+                      }
+                      className={`h-20 sm:h-24 rounded-xl overflow-hidden border-2 transition cursor-pointer ${
+                        selectedCommunityImg === bg3
+                          ? 'border-primary shadow-sm'
+                          : 'border-transparent hover:opacity-90'
+                      }`}
+                    >
+                      <img
+                        src={bg3}
+                        alt="Woven fabric craft"
+                        className="h-full w-full object-cover"
+                      />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Right Side: Community Story Text */}
+                <div className="pt-2 md:pt-0">
+                  <p className="text-xs sm:text-sm font-bold uppercase tracking-wider text-primary">
+                    Artisan Community of the Month
+                  </p>
+                  <h3 className="mt-1 text-xl sm:text-2xl md:text-[26px] font-bold text-black leading-snug font-sans">
+                    Ban Phon Praewa Silk Weaving Group
+                  </h3>
+                  <p className="text-sm sm:text-base font-semibold text-black/60 mt-0.5">
+                    Kalasin, Thailand
+                  </p>
+
+                  <div className="mt-4 text-xs sm:text-sm md:text-base leading-relaxed text-black/80 space-y-3 font-normal">
+                    <p className="italic text-black/90 font-medium">
+                      &ldquo;We want our traditional patterns to become part of the lives of a new
+                      generation around the world.&rdquo;
+                    </p>
+                    <p>
+                      Located in Kalasin province, the artisan collective of Ban Phon is
+                      renowned for Phraewa silk, often hailed as the Queen of Thai Silk. Every
+                      pattern embodies intricate geometric motifs woven entirely by hand using
+                      centuries-old heritage techniques.
+                    </p>
+                    <p>
+                      Through Merchroom, each piece sold returns direct, fair earnings to the
+                      weavers, ensuring that this living cultural legacy thrives for generations
+                      to come.
+                    </p>
+                  </div>
+
+                  <div className="mt-6">
+                    <Link
+                      to="/products?cat=thai-heritage"
+                      onClick={() => setIsCommunityModalOpen(false)}
+                      className="inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-primary px-6 text-sm sm:text-base font-medium text-white transition hover:bg-primary-deep shadow-sm"
+                    >
+                      <span>Shop Phraewa Collection</span>
+                      <ArrowRight className="size-4" />
+                    </Link>
                   </div>
                 </div>
               </div>
