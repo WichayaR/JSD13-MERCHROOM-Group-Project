@@ -43,11 +43,10 @@ const MEDIUM_OPTIONS = ['All', 'T-Shirt', 'Vinyl', 'Accessories', 'Home & Living
 const SORT_OPTIONS = ['Famous', 'Price: Low to High', 'Price: High to Low'];
 
 
-/* =========================================================================
-   Component ย่อย: Dropdown (ปุ่มเมนูเลือกตัวเลือก)
+/* Component ย่อย: Dropdown (ปุ่มเมนูเลือกตัวเลือก)
    - หน้าที่: รับตัวเลือก (options) และค่าปัจจุบัน (value) แล้วแสดงเมนูแบบยืดขยายได้
    - การเชื่อมโยง: เมื่อเลือกตัวเลือก จะส่งค่านั้นกลับไปที่ Component หลักผ่าน onChange()
-   ========================================================================= */
+*/
 function Dropdown({ label, value, options, onChange }) {
   // สร้าง State ควบคุมการเปิด-ปิด ตัวเมนู
   const [open, setOpen] = useState(false);
@@ -115,9 +114,7 @@ function Dropdown({ label, value, options, onChange }) {
 }
 
 
-/* =========================================================================
-   Component หลัก: Products (หน้าแสดงสินค้าและระบบกรองทั้งหมด)
-   ========================================================================= */
+/* Component หลัก: Products (หน้าแสดงสินค้าและระบบกรองทั้งหมด) */
 export default function Products() {
   // ดึงฟังก์ชันเพิ่มสินค้าเข้าตะกร้าจาก Context กลาง
   const { addToCart } = useCart();
@@ -127,11 +124,12 @@ export default function Products() {
   const cat = searchParams.get('cat');
   const q = searchParams.get('q') ?? '';
 
-  /* -----------------------------------------------------------------------
-     กลุ่ม State (กล่องเก็บข้อมูล): ทำหน้าที่เก็บสถานะปัจจุบันของการกรองทั้งหมด
-     ----------------------------------------------------------------------- */
+  // แปลงค่า cat จาก URL มาเป็นชื่อหมวดหมู่ทันทีตั้งแต่ตอนเริ่มโหลดหน้าเว็บ
+  const initialCategory = cat ? (categoryFilter[cat]?.label ?? 'All') : 'All';
+
+  /* กลุ่ม State (กล่องเก็บข้อมูล): ทำหน้าที่เก็บสถานะปัจจุบันของการกรองทั้งหมด */
   const [query, setQuery] = useState(q);            // ข้อความค้นหา
-  const [category, setCategory] = useState('All');    // หมวดหมู่
+  const [category, setCategory] = useState(initialCategory); // หมวดหมู่ (ตั้งค่าตาม URL ทันที)
   const [price, setPrice] = useState('All');        // ช่วงราคา
   const [size, setSize] = useState('All');          // ไซส์
   const [status, setStatus] = useState('All');      // สถานะสินค้า
@@ -146,27 +144,20 @@ export default function Products() {
   const [sort, setSort] = useState('Famous');       // การเรียงลำดับ (น้อย-มาก)
   const [page, setPage] = useState(1);              // หน้า Pagination ปัจจุบัน
 
-  /* -----------------------------------------------------------------------
-     การซิงค์ข้อมูลเมื่อ URL เปลี่ยนแปลง (เช่น ผู้ใช้กดลิงก์มาจากหน้าอื่น)
-     ----------------------------------------------------------------------- */
-  const [prevCat, setPrevCat] = useState(cat);
-  if (cat !== prevCat) {
-    setPrevCat(cat);
-    setCategory(cat ? (categoryFilter[cat]?.label ?? 'All') : 'All');
-    setPage(1); // รีเซ็ตไปที่หน้า 1
-  }
+  /* การซิงค์ข้อมูลเมื่อ URL เปลี่ยนแปลง (เช่น ผู้ใช้กดลิงก์มาจาก Navbar หรือหมวดหมู่อื่น) */
+  useEffect(() => {
+    const newCategory = cat ? (categoryFilter[cat]?.label ?? 'All') : 'All';
+    setCategory(newCategory);
+    setPage(1);
+  }, [cat]);
 
-  const [prevQ, setPrevQ] = useState(q);
-  if (q !== prevQ) {
-    setPrevQ(q);
+  useEffect(() => {
     setQuery(q);
-    setPage(1); // รีเซ็ตไปที่หน้า 1
-  }
+    setPage(1);
+  }, [q]);
 
-  /* -----------------------------------------------------------------------
-     หัวใจหลักของการกรองสินค้า (Filtering Engine):
-     - useMemo จะทำงานคำนวณใหม่เฉพาะเมื่อ State ตัวกรองตัวใดตัวหนึ่งเปลี่ยน
-     ----------------------------------------------------------------------- */
+  /* หัวใจหลักของการกรองสินค้า (Filtering Engine):
+     - useMemo จะทำงานคำนวณใหม่เฉพาะเมื่อ State ตัวกรองตัวใดตัวหนึ่งเปลี่ยน */
   const filtered = useMemo(() => {
     const suffix = category !== 'All' ? CATEGORY_SUFFIX[category] : null;
 
@@ -196,18 +187,26 @@ export default function Products() {
     return result;
   }, [category, thaiOnly, artist, price, size, query, sort]);
 
-  /* -----------------------------------------------------------------------
-     คำนวณการแบ่งหน้า (Pagination)
-     ----------------------------------------------------------------------- */
+  /* คำนวณการแบ่งหน้า (Pagination) */
   const totalPages = Math.max(1, Math.ceil(filtered.length / PER_PAGE));
   // ดึงเฉพาะสินค้าของ "หน้าที่กำลังดูอยู่" ออกมาแสดง
   const pageItems = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE);
 
-  /* -----------------------------------------------------------------------
-     ระบบ Filter Chips (ป้ายแท็กสีดำเตือนความจำว่าเลือกอะไรไปบ้าง)
-     ----------------------------------------------------------------------- */
+  /* ระบบ Filter Chips (ป้ายแท็กสีดำเตือนความจำว่าเลือกอะไรไปบ้าง) */
   const chips = [];
-  if (category !== 'All') chips.push({ label: category, clear: () => setCategory('All') });
+  if (category !== 'All') {
+    chips.push({
+      label: category,
+      clear: () => {
+        setCategory('All');
+        setSearchParams((prev) => {
+          const next = new URLSearchParams(prev);
+          next.delete('cat');
+          return next;
+        });
+      },
+    });
+  }
   if (price !== 'All') chips.push({ label: price, clear: () => setPrice('All') });
   if (size !== 'All') chips.push({ label: `Size: ${size}`, clear: () => setSize('All') });
   if (status !== 'All') chips.push({ label: status, clear: () => setStatus('All') });
@@ -233,16 +232,14 @@ export default function Products() {
     setQuery('');
     setSort('Famous');
     setPage(1);
-    if (cat) setSearchParams({});
+    setSearchParams({});
   };
 
   const filterLabel = cat ? (categoryFilter[cat]?.label ?? 'Search') : 'Search';
   const searchRef = useRef(null);
   const [showSuggestions, setShowSuggestions] = useState(false);
 
-  /* -----------------------------------------------------------------------
-     คำนวณคำแนะนำการค้นหาอัตโนมัติ (Search Auto-suggestions)
-     ----------------------------------------------------------------------- */
+  /* คำนวณคำแนะนำการค้นหาอัตโนมัติ (Search Auto-suggestions) */
   const suggestions = useMemo(() => {
     if (!query.trim()) return [];
     const q = query.toLowerCase();
@@ -279,9 +276,7 @@ export default function Products() {
     };
   }, [showSuggestions]);
 
-  /* -----------------------------------------------------------------------
-     ส่วนการแสดงผล giao diện (JSX)
-     ----------------------------------------------------------------------- */
+  /* ส่วนการแสดงผล */
   return (
     <Container className="py-8">
       {/* แถบนิวอิเกตบอกตำแหน่งหน้าปัจจุบัน */}
@@ -350,13 +345,34 @@ export default function Products() {
         </div>
       </div>
 
-      {/* 2. กล่องควบคุม Filter Panel (ความสูงปุ่ม 54px) */}
+      {/* 2. กล่องควบคุม Filter Panel */}
       <div className="relative mt-6 rounded-[18px] border border-[#A5A5A5] bg-white px-[80px] py-[40px] shadow-none">
         {/* แถวที่ 1: หมวดสินค้าทั่วไป */}
         <div className="relative z-20">
           <p className="text-xs font-normal text-muted">Sort by Product</p>
           <div className="mt-3 flex flex-wrap gap-[10px]">
-            <Dropdown label="Category" value={category} options={CATEGORY_OPTIONS} onChange={(v) => { setCategory(v); setPage(1); }} />
+            <Dropdown
+              label="Category"
+              value={category}
+              options={CATEGORY_OPTIONS}
+              onChange={(v) => {
+                setCategory(v);
+                setPage(1);
+                setSearchParams((prev) => {
+                  const next = new URLSearchParams(prev);
+                  if (v === 'All') {
+                    next.delete('cat');
+                  } else {
+                    const foundKey = Object.keys(categoryFilter).find(
+                      (key) => categoryFilter[key].label === v
+                    );
+                    if (foundKey) next.set('cat', foundKey);
+                    else next.delete('cat');
+                  }
+                  return next;
+                });
+              }}
+            />
             <Dropdown label="Price" value={price} options={PRICE_OPTIONS} onChange={(v) => { setPrice(v); setPage(1); }} />
             <Dropdown label="Size" value={size} options={SIZE_OPTIONS} onChange={(v) => { setSize(v); setPage(1); }} />
             <Dropdown label="Status" value={status} options={STATUS_OPTIONS} onChange={(v) => { setStatus(v); setPage(1); }} />

@@ -1,7 +1,7 @@
 // ไฟล์: client/src/components/ui/Navbar.jsx
 import { useEffect, useRef, useState, useMemo } from 'react';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
-import { Key, LogOut, Search, ShoppingCart, User, X } from 'lucide-react';
+import { Key, LogOut, Package, Search, ShoppingCart, User, X } from 'lucide-react';
 // - useCart: จัดการ state สินค้าในตะกร้า (cartItems, updateQuantity, removeItem, totalPrice ฯลฯ)
 import { useCart } from '../../context/CartContext';
 // - useAuth: ดึง user, isAuthenticated, logout สำหรับสลับเมนูโปรไฟล์/Login
@@ -12,7 +12,7 @@ import Logo from './Logo';
 import { products } from '../../data/product';
 
 const navLinks = [
-  { label: 'Pop Culture', to: '/pop-culture' },
+  { label: 'Pop Culture', to: '/products?cat=pop-culture' },
   { label: 'Thai Heritage', to: '/thai-heritage' },
   { label: 'About Us', to: '/about' },
 ];
@@ -20,7 +20,8 @@ const navLinks = [
 export default function Navbar() {
   const { cartCount } = useCart();
   const { user, isAuthenticated, logout } = useAuth();
-  const { pathname } = useLocation();
+  const location = useLocation();
+  const { pathname } = location;
   const navigate = useNavigate();
 
   const [scrolled, setScrolled] = useState(false);
@@ -95,26 +96,43 @@ export default function Navbar() {
         <div className="flex items-center gap-6 xl:gap-19.5">
           <Link to="/" className="flex shrink-0 items-center">
             <div className="w-35 shrink-0 md:w-38.75">
-              <Logo />
-            </div>
+            <Logo />
+          </div>
           </Link>
 
           <nav className="hidden items-center gap-6 text-sm font-medium md:flex">
-            {navLinks.map((link) => (
-              <NavLink
-                key={link.to}
-                to={link.to}
-                className={({ isActive }) =>
-                  `whitespace-nowrap transition hover:text-highlight hover:underline hover:decoration-highlight hover:decoration-[3px] hover:underline-offset-8 ${
-                    isActive
-                      ? 'font-semibold text-highlight underline decoration-highlight decoration-[3px] underline-offset-8'
-                      : 'text-white'
-                  }`
+            {navLinks.map((link) => {
+              const isMatch = (() => {
+                if (link.to.includes('?')) {
+                  const [targetPath, targetSearch] = link.to.split('?');
+                  const targetParams = new URLSearchParams(targetSearch);
+                  const currentParams = new URLSearchParams(location.search);
+                  return (
+                    location.pathname === targetPath &&
+                    Array.from(targetParams.entries()).every(
+                      ([k, v]) => currentParams.get(k) === v
+                    )
+                  );
                 }
-              >
-                {link.label}
-              </NavLink>
-            ))}
+                return location.pathname === link.to;
+              })();
+
+              return (
+                <NavLink
+                  key={link.to}
+                  to={link.to}
+                  className={() =>
+                    `whitespace-nowrap transition hover:text-highlight hover:underline hover:decoration-highlight hover:decoration-[3px] hover:underline-offset-8 ${
+                      isMatch
+                        ? 'font-semibold text-highlight underline decoration-highlight decoration-[3px] underline-offset-8'
+                        : 'text-white'
+                    }`
+                  }
+                >
+                  {link.label}
+                </NavLink>
+              );
+            })}
           </nav>
         </div>
 
@@ -279,26 +297,52 @@ export default function Navbar() {
                     </div>
                   ) : (
                     <div className="divide-y divide-zinc-100">
-                      <Link
-                        to={user?.role === 'admin' ? '/admin/dashboard' : '/user/dashboard'}
-                        onClick={handleCloseMenu}
-                        className="flex items-center gap-3 px-4 py-3 text-xs font-semibold text-zinc-600 transition hover:bg-zinc-50 hover:text-zinc-900 md:text-sm"
-                      >
-                        <User className="size-4 text-zinc-500" />
-                        <span>Dashboard ({user?.name || 'Account'})</span>
-                      </Link>
+                      <div className="py-1">
+                        {user?.role === 'admin' ? (
+                          <Link
+                            to="/admin/dashboard"
+                            onClick={handleCloseMenu}
+                            className="flex items-center gap-3 px-4 py-2.5 text-xs font-semibold text-zinc-600 transition hover:bg-zinc-50 hover:text-zinc-900 md:text-sm"
+                          >
+                            <User className="size-4 text-zinc-500" />
+                            <span>Admin Dashboard</span>
+                          </Link>
+                        ) : (
+                          <>
+                            <Link
+                              to="/account/profile"
+                              onClick={handleCloseMenu}
+                              className="flex items-center gap-3 px-4 py-2.5 text-xs font-semibold text-zinc-600 transition hover:bg-zinc-50 hover:text-zinc-900 md:text-sm"
+                            >
+                              <User className="size-4 text-zinc-500" />
+                              <span>My Account ({user?.name || user?.firstName || 'Profile'})</span>
+                            </Link>
 
-                      <button
-                        type="button"
-                        onClick={() => {
-                          logout?.();
-                          handleCloseMenu();
-                        }}
-                        className="flex w-full items-center gap-3 px-4 py-3 text-left text-xs font-semibold text-red-600 transition hover:bg-red-50 md:text-sm"
-                      >
-                        <LogOut className="size-4 text-red-500" />
-                        <span>Log out</span>
-                      </button>
+                            <Link
+                              to="/order-history"
+                              onClick={handleCloseMenu}
+                              className="flex items-center gap-3 px-4 py-2.5 text-xs font-semibold text-zinc-600 transition hover:bg-zinc-50 hover:text-zinc-900 md:text-sm"
+                            >
+                              <Package className="size-4 text-zinc-500" />
+                              <span>Order History</span>
+                            </Link>
+                          </>
+                        )}
+                      </div>
+
+                      <div className="py-1">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            logout?.();
+                            handleCloseMenu();
+                          }}
+                          className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-xs font-semibold text-red-600 transition hover:bg-red-50 md:text-sm cursor-pointer"
+                        >
+                          <LogOut className="size-4 text-red-500" />
+                          <span>Log out</span>
+                        </button>
+                      </div>
                     </div>
                   )}
                 </div>
