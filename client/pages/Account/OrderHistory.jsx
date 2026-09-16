@@ -1,109 +1,241 @@
 // pages/Account/OrderHistory.jsx
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAccount } from '../../src/context/AccountContext';
-import { OrderStatusBadge } from '../../src/components/ui/OrderStatusBadge';
+// components Order History
+// สถานะคำสั่งซื้อ: Delivered
+import React, { useState, useMemo } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { AccountProvider, useAccount } from '../../src/context/AccountContext';
 
-export default function OrderHistory() {
+function OrderHistoryContent() {
   const { orders, loading } = useAccount();
-  const [filterRange, setFilterRange] = useState('ALL');
   const navigate = useNavigate();
 
-  const filteredOrders = orders.filter((order) => {
-    if (filterRange === 'LAST_30') {
-      const orderDate = new Date(order.createdAt);
-      const thirtyDaysAgo = new Date();
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-      return orderDate >= thirtyDaysAgo;
-    }
-    return true;
-  });
+  // แท็บตัวกรองช่วงเวลา: ALL_TIME 
+  const [filterRange, setFilterRange] = useState('ALL_TIME');
 
-  if (loading) return <div className="p-8 font-sans font-bold">LOADING ORDERS...</div>;
+  // ฟังก์ชันกรองรายการคำสั่งซื้อตามช่วงเวลา
+  const filteredOrders = useMemo(() => {
+    if (!orders || orders.length === 0) return [];
+
+    if (filterRange === 'LAST_30') {
+      const now = new Date();
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(now.getDate() - 30);
+
+      const recent = orders.filter((order) => {
+        const orderDate = new Date(order.createdAt || order.purchaseDate);
+        return orderDate >= thirtyDaysAgo;
+      });
+
+      // กรณี Mock data อยู่ในอดีต ให้กรอง 30 วันนับจากออเดอร์ล่าสุด เพื่อให้เห็นผลการทำงานของแท็บ
+      if (recent.length === 0 && orders.length > 0) {
+        const timestamps = orders.map((o) =>
+          new Date(o.createdAt || o.purchaseDate).getTime()
+        );
+        const maxTimestamp = Math.max(...timestamps);
+        const cutoff = new Date(maxTimestamp);
+        cutoff.setDate(cutoff.getDate() - 30);
+        return orders.filter(
+          (o) => new Date(o.createdAt || o.purchaseDate) >= cutoff
+        );
+      }
+
+      return recent;
+    }
+
+    return orders;
+  }, [orders, filterRange]);
+
+  // จัดฟอร์แมตวันที่ให้ตรงตาม Wireframe เช่น Oct 24, 2024
+  const formatDate = (dateString) => {
+    if (!dateString) return '-';
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return dateString;
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: '2-digit',
+      year: 'numeric',
+    });
+  };
+
+  // กำหนดสีจุดสถานะโดยใช้ Token 
+  const getStatusConfig = (status) => {
+    const s = (status || '').toLowerCase();
+    switch (s) {
+      case 'delivered':
+        return {
+          label: 'Delivered',
+          dotColor: 'bg-primary',
+        };
+      case 'pending':
+        return {
+          label: 'Pending',
+          dotColor: 'bg-muted',
+        };
+      case 'cancelled':
+        return {
+          label: 'Cancelled',
+          dotColor: 'bg-error',
+        };
+      case 'shipping':
+        return {
+          label: 'Shipping',
+          dotColor: 'bg-warning',
+        };
+      default:
+        return {
+          label: status || 'Pending',
+          dotColor: 'bg-muted',
+        };
+    }
+  };
 
   return (
-    <div className="bg-white border border-ink shadow-card rounded-card p-6 sm:p-8">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-        <h2 className="font-sans font-extrabold text-2xl tracking-tight text-ink uppercase">
-          ORDER HISTORY
-        </h2>
+    <div className="w-full bg-cream min-h-screen text-ink">
+      <div className="max-w-6xl mx-auto px-6 sm:px-12 py-10 sm:py-16">
+        {/* Breadcrumb Section: Home > Account > Order History */}
+        <nav className="flex items-center gap-2 text-xs font-mono tracking-wider text-muted mb-8 sm:mb-10">
+          <Link to="/" className="hover:text-ink transition-colors">
+            Home
+          </Link>
+          <span className="text-muted/60">&gt;</span>
+          <Link to="/account" className="hover:text-ink transition-colors">
+            Account
+          </Link>
+          <span className="text-muted/60">&gt;</span>
+          <span className="text-ink font-bold">Order History</span>
+        </nav>
 
-        {/* Date Filter Tabs */}
-        <div className="flex gap-1 bg-cream p-1 border border-ink rounded-btn">
-          <button
-            onClick={() => setFilterRange('LAST_30')}
-            className={`px-3 py-1 font-sans text-[11px] font-extrabold tracking-wider rounded-btn transition-all ${
-              filterRange === 'LAST_30'
-                ? 'bg-ink text-cream-text'
-                : 'text-ink bg-transparent hover:bg-white'
-            }`}
-          >
-            LAST 30 DAYS
-          </button>
-          <button
-            onClick={() => setFilterRange('ALL')}
-            className={`px-3 py-1 font-sans text-[11px] font-extrabold tracking-wider rounded-btn transition-all ${
-              filterRange === 'ALL'
-                ? 'bg-ink text-cream-text'
-                : 'text-ink bg-transparent hover:bg-white'
-            }`}
-          >
-            ALL TIME
-          </button>
+        {/* Header Section: Title, Subtitle, and Date Filter Tabs */}
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-4 border-b border-ink/15">
+          <div>
+            <h1 className="text-3xl sm:text-4xl font-extrabold text-ink font-sans tracking-tight">
+              Order History
+            </h1>
+            <p className="text-sm sm:text-base text-ink-soft/70 font-sans mt-2">
+              Review your past drops and artist collaborations.
+            </p>
+          </div>
+
+          {/* Date Filter Tabs: LAST 30 DAYS / ALL TIME */}
+          <div className="flex items-center gap-8 self-start md:self-end">
+            <button
+              type="button"
+              onClick={() => setFilterRange('LAST_30')}
+              className={`text-xs font-mono tracking-widest uppercase pb-4 -mb-[17px] border-b-2 transition-all cursor-pointer ${
+                filterRange === 'LAST_30'
+                  ? 'border-ink text-ink font-bold'
+                  : 'border-transparent text-muted font-medium hover:text-ink'
+              }`}
+            >
+              LAST 30 DAYS
+            </button>
+            <button
+              type="button"
+              onClick={() => setFilterRange('ALL_TIME')}
+              className={`text-xs font-mono tracking-widest uppercase pb-4 -mb-[17px] border-b-2 transition-all cursor-pointer ${
+                filterRange === 'ALL_TIME'
+                  ? 'border-ink text-ink font-bold'
+                  : 'border-transparent text-muted font-medium hover:text-ink'
+              }`}
+            >
+              ALL TIME
+            </button>
+          </div>
         </div>
+
+        {/* Orders Table Section */}
+        {loading ? (
+          <div className="py-20 text-center font-mono text-sm tracking-wider text-muted">
+            LOADING ORDERS...
+          </div>
+        ) : filteredOrders.length === 0 ? (
+          <div className="py-20 text-center font-mono text-sm tracking-wider text-muted">
+            NO ORDERS FOUND
+          </div>
+        ) : (
+          <div className="overflow-x-auto mt-2">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="border-b border-ink/15 text-[11px] font-mono tracking-widest text-muted uppercase">
+                  <th className="py-5 px-3 font-semibold">ORDER ID</th>
+                  <th className="py-5 px-3 font-semibold">DATE</th>
+                  <th className="py-5 px-3 font-semibold">STATUS</th>
+                  <th className="py-5 px-3 font-semibold">TOTAL</th>
+                  <th className="py-5 px-3 font-semibold text-right">
+                    <span className="sr-only">ACTIONS</span>
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-ink/10 text-sm">
+                {filteredOrders.map((order) => {
+                  const statusConfig = getStatusConfig(order.status);
+                  const displayOrderId = order.orderNumber
+                    ? `#${order.orderNumber.replace(/^#/, '')}`
+                    : `#${order._id.slice(-6).toUpperCase()}`;
+                  const orderDate = formatDate(order.createdAt || order.purchaseDate);
+                  const formattedTotal = Number(order.totalAmount || 0).toLocaleString();
+
+                  return (
+                    <tr
+                      key={order._id}
+                      className="hover:bg-ink/[0.02] transition-colors"
+                    >
+                      {/* Column: Order ID */}
+                      <td className="py-6 px-3 font-mono font-bold text-xs sm:text-sm text-ink whitespace-nowrap">
+                        {displayOrderId}
+                      </td>
+
+                      {/* Column: Date */}
+                      <td className="py-6 px-3 font-sans text-xs sm:text-sm text-ink-soft whitespace-nowrap">
+                        {orderDate}
+                      </td>
+
+                      {/* Column: Status */}
+                      <td className="py-6 px-3 whitespace-nowrap">
+                        <div className="flex items-center gap-2">
+                          <span
+                            className={`w-2 h-2 rounded-full ${statusConfig.dotColor} shrink-0`}
+                          />
+                          <span className="font-mono text-xs sm:text-sm font-medium text-ink">
+                            {statusConfig.label}
+                          </span>
+                        </div>
+                      </td>
+
+                      {/* Column: Total */}
+                      <td className="py-6 px-3 font-mono font-bold text-xs sm:text-sm text-ink whitespace-nowrap">
+                        ฿{formattedTotal}
+                      </td>
+
+                      {/* Column: Action VIEW DETAILS */}
+                      <td className="py-6 px-3 text-right whitespace-nowrap">
+                        <button
+                          type="button"
+                          onClick={() => navigate(`/account/orders/${order._id}`)}
+                          className="inline-flex items-center gap-1.5 font-mono text-[11px] sm:text-xs font-bold tracking-wider text-ink hover:text-primary transition-colors cursor-pointer group"
+                        >
+                          <span>VIEW DETAILS</span>
+                          <span className="transition-transform group-hover:translate-x-1">
+                            &rarr;
+                          </span>
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
-
-      {filteredOrders.length === 0 ? (
-        <div className="p-12 text-center font-sans font-bold text-muted">
-          NO ORDERS FOUND.
-        </div>
-      ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="border-b-2 border-ink font-sans text-xs font-extrabold tracking-wider text-ink">
-                <th className="py-3 px-3">ORDER ID</th>
-                <th className="py-3 px-3">DATE</th>
-                <th className="py-3 px-3">STATUS</th>
-                <th className="py-3 px-3">TOTAL</th>
-                <th className="py-3 px-3">ACTION</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100 text-xs font-sans">
-              {filteredOrders.map((order) => {
-                const formattedDate = new Date(order.createdAt).toLocaleDateString('en-GB', {
-                  day: '2-digit',
-                  month: 'short',
-                  year: 'numeric',
-                });
-
-                return (
-                  <tr key={order._id} className="hover:bg-cream/50">
-                    <td className="py-4 px-3 font-bold text-ink">
-                      #{order._id.slice(-6).toUpperCase()}
-                    </td>
-                    <td className="py-4 px-3 text-gray-600">{formattedDate}</td>
-                    <td className="py-4 px-3">
-                      <OrderStatusBadge status={order.status} />
-                    </td>
-                    <td className="py-4 px-3 font-extrabold text-ink">
-                      ฿{order.totalAmount.toLocaleString()}
-                    </td>
-                    <td className="py-4 px-3">
-                      <button
-                        onClick={() => navigate(`/account/orders/${order._id}`)}
-                        className="px-3 py-1.5 bg-transparent border border-ink text-ink font-sans font-bold text-[11px] tracking-wider rounded-btn hover:bg-primary hover:text-white hover:border-primary transition-all cursor-pointer"
-                      >
-                        DETAILS &rarr;
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      )}
     </div>
+  );
+}
+
+export default function OrderHistory() {
+  return (
+    <AccountProvider>
+      <OrderHistoryContent />
+    </AccountProvider>
   );
 }

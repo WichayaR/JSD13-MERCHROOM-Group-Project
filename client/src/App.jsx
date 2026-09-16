@@ -51,7 +51,14 @@ export default function App() {
               <Route path="productDetail/:productId" element={<ProductDetail />} />
 
               <Route path="cart" element={<Cart />} />
-              <Route path="checkout" element={<Checkout />} />
+              <Route
+                path="checkout"
+                element={
+                  <ProtectedRoute>
+                    <Checkout />
+                  </ProtectedRoute>
+                }
+              />
 
               {/* Dynamic route: รับ orderId เพื่อดึงใบเสร็จคำสั่งซื้อมาแสดง */}
               <Route path="order-confirmation/:orderId" element={<OrderConfirmation />} />
@@ -84,6 +91,11 @@ export default function App() {
                 }
               />
 
+              {/* หน้าประวัติคำสั่งซื้อ (Order History)*/}
+              <Route path="order-history" element={<OrderHistory />} />
+              <Route path="account/orders" element={<OrderHistory />} />
+              <Route path="account/orders/:orderId" element={<OrderDetail />} />
+
               {/* Account pages — ใช้ AccountLayout เป็น parent (มี Sidebar) */}
               <Route
                 path="account"
@@ -95,14 +107,12 @@ export default function App() {
               >
                 <Route index element={<ProfileSettings />} />
                 <Route path="profile" element={<ProfileSettings />} />
-                <Route path="orders" element={<OrderHistory />} />
-                <Route path="orders/:orderId" element={<OrderDetail />} />
                 <Route path="wishlist" element={<Wishlist />} />
                 <Route path="payment-methods" element={<PaymentMethods />} />
               </Route>
             </Route>
 
-            {/* หน้าระบบสมาชิกวางนอก Layout เป็นหน้าเต็มจอแบ่งซ้ายรูป/ขวาฟอร์มตาม figma จึงไม่มี Navbar/Footer */}
+            {/* หน้าระบบสมาชิกวางนอก Layout */}
             <Route path="login" element={<Login />} />
             <Route path="register" element={<Register />} />
             <Route path="forgot-password" element={<ForgetPassword />} />
