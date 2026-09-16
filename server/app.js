@@ -1,13 +1,27 @@
 // Entry point หลักของ backend (Node.js / Express server)
 // จัดการเชื่อมต่อฐานข้อมูล MongoDB และเปิด API routes สำหรับระบบ Merchroom
+
+//----------โหลดค่าจาก server/.env ใช้ MONGO_URI สำหรับ MongoDB และ JWT_SECRET สำหรับ JWT ------------*
+
 require('dotenv').config();
 
 const express = require('express');
-const cors = require('cors');
+
+//-------อนุญาต frontend ที่ localhost:5173, 5174, 5175 
+// credentials: true ทำให้ browser ส่ง httpOnly cookie accessToken ไปกับ API ได้ --------*
+const cors = require('cors'); 
+
+// middleware จากแพ็กเกจ cookie-parser ที่เรา import เอง:
 const cookieParser = require('cookie-parser');
 
 const connectDB = require('./db');
 const authRoutes = require('./routes/auth.routes');
+
+//เพิ่ม routes ฝั่ง admin 
+const adminRoutes = require('./routes/admin.routes');
+const productRoutes = require('./routes/product.routes');
+const orderRoutes = require('./routes/order.routes');
+const userRoutes = require('./routes/user.routes');
 
 const app = express();
 
@@ -19,6 +33,7 @@ app.use(
   }),
 );
 
+//แล้วลงทะเบียนด้วย 
 app.use(cookieParser());
 app.use(express.json());
 
