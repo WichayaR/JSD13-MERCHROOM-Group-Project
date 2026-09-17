@@ -90,12 +90,32 @@ export default function ProductDetail() {
     );
   }
 
-  // เตรียมรูปในแกลเลอรี โดยดึงสินค้าร่วมแบรนด์เดียวกันมาแสดงเป็นภาพย่อย
-  const sameBrand = products.filter((item) => item.brand === product.brand);
-  const gallery = [product, ...sameBrand.filter((item) => item.id !== product.id)].slice(0, 3);
-  const mainImage = gallery[galleryIndex]?.image || product.image;
+  // เตรียมรูปภาพของสินค้า (รองรับทั้ง images array และรูปเดี่ยว image/imageUrl)
+  const productImages = Array.isArray(product.images) && product.images.length > 0
+    ? product.images
+    : [product.image || product.imageUrl].filter(Boolean);
+  const hasMultipleImages = productImages.length > 1;
+  const mainImage = productImages[galleryIndex] || productImages[0] || '';
+
+  // ตรวจสอบว่าสินค้าเป็นเครื่องแต่งกายที่ต้องเลือกไซซ์หรือไม่
+  const isApparel = (() => {
+    if (Array.isArray(product.sizes) && product.sizes.length > 0) return true;
+    const name = (product.name || '').toLowerCase();
+    const desc = (product.description || '').toLowerCase();
+    const keywords = ['tee', 't-shirt', 'shirt', 'crewneck', 'sweatshirt', 'hoodie', 'cropped', 'เสื้อ'];
+    return keywords.some((kw) => name.includes(kw) || desc.includes(kw));
+  })();
+
+  const availableSizes = Array.isArray(product.sizes) && product.sizes.length > 0
+    ? product.sizes
+    : SIZES;
+
+  const availableColors = Array.isArray(product.colors) && product.colors.length > 0
+    ? product.colors
+    : null;
 
   // แนะนำสินค้าที่เกี่ยวข้อง: เรียงจากแบรนด์เดียวกันก่อน แล้วตามด้วยหมวดหมู่เดียวกัน
+  const sameBrand = products.filter((item) => item.brand === product.brand);
   const related = [
     ...sameBrand.filter((item) => item.id !== product.id),
     ...products.filter(
@@ -115,27 +135,26 @@ export default function ProductDetail() {
       />
 
       <div className="mt-6 grid items-start gap-10 lg:grid-cols-2">
-        {/* แกลเลอรีรูปภาพ: คลิกรูปย่อยซ้ายมือเพื่อสลับรูปหลัก */}
+        {/* แกลเลอรีรูปภาพ: หากมีหลายรูปจะแสดงแถบ Thumbnails ด้านข้าง */}
         <div className="flex gap-4">
-          {/* Thumbnails สลับรูปหลักเมื่อคลิก */}
-          <div className="flex flex-col gap-3">
-            {gallery.map((item, idx) => (
-              <button
-                key={item.id}
-                type="button"
-                onClick={() => setGalleryIndex(idx)}
-                aria-label={`ดูรูป ${item.name}`}
-                aria-pressed={idx === galleryIndex}
-                className={`size-20 overflow-hidden rounded-btn border-2 bg-white transition ${
-                  idx === galleryIndex ? 'border-ink' : 'border-transparent hover:border-ink/20'
-                }`}
-              >
-                {item.image && (
-                  <img src={item.image} alt="" className="h-full w-full object-cover" />
-                )}
-              </button>
-            ))}
-          </div>
+          {hasMultipleImages && (
+            <div className="flex flex-col gap-3">
+              {productImages.map((imgSrc, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => setGalleryIndex(idx)}
+                  aria-label={`ดูรูปสินค้าที่ ${idx + 1}`}
+                  aria-pressed={idx === galleryIndex}
+                  className={`size-20 overflow-hidden rounded-btn border-2 bg-white transition cursor-pointer ${
+                    idx === galleryIndex ? 'border-ink' : 'border-transparent hover:border-ink/20'
+                  }`}
+                >
+                  <img src={imgSrc} alt="" className="h-full w-full object-cover" />
+                </button>
+              ))}
+            </div>
+          )}
 
           {/* กรอบรูปภาพใหญ่ของสินค้า */}
           <div className="flex-1 overflow-hidden rounded-btn bg-white">
@@ -169,48 +188,52 @@ export default function ProductDetail() {
             {product.description}
           </p>
 
-          {/* เลือกสีสินค้า */}
-          <div className="mt-6">
-            <p className="text-sm font-semibold">Choose Colors</p>
-            <div className="mt-3 flex gap-3">
-              {COLORS.map((option) => (
-                <button
-                  key={option.id}
-                  type="button"
-                  onClick={() => setColor(option.id)}
-                  aria-label={option.label}
-                  aria-pressed={color === option.id}
-                  className={`grid size-7 place-items-center rounded-pill transition ${
-                    color === option.id ? 'ring-2 ring-ink ring-offset-2' : 'hover:ring-2 hover:ring-ink/30 hover:ring-offset-2'
-                  } ${option.className}`}
-                >
-                  {color === option.id && <Check className="size-4 text-white" aria-hidden="true" />}
-                </button>
-              ))}
+          {/* เลือกสีสินค้า (แสดงเฉพาะเมื่อมีตัวเลือกสีระบุไว้จริง) */}
+          {availableColors && (
+            <div className="mt-6">
+              <p className="text-sm font-semibold">Choose Colors</p>
+              <div className="mt-3 flex gap-3">
+                {availableColors.map((option) => (
+                  <button
+                    key={option.id}
+                    type="button"
+                    onClick={() => setColor(option.id)}
+                    aria-label={option.label}
+                    aria-pressed={color === option.id}
+                    className={`grid size-7 place-items-center rounded-pill transition cursor-pointer ${
+                      color === option.id ? 'ring-2 ring-ink ring-offset-2' : 'hover:ring-2 hover:ring-ink/30 hover:ring-offset-2'
+                    } ${option.className}`}
+                  >
+                    {color === option.id && <Check className="size-4 text-white" aria-hidden="true" />}
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
-          {/* เลือกไซซ์สินค้า */}
-          <div className="mt-6">
-            <p className="text-sm font-semibold">Choose Size</p>
-            <div className="mt-3 flex flex-wrap gap-3">
-              {SIZES.map((option) => (
-                <button
-                  key={option}
-                  type="button"
-                  onClick={() => setSize(option)}
-                  aria-pressed={size === option}
-                  className={`h-10 rounded-pill border px-6 text-sm transition ${
-                    size === option
-                      ? 'border-primary bg-primary font-medium text-white'
-                      : 'border-ink/20 text-ink hover:border-ink'
-                  }`}
-                >
-                  {option}
-                </button>
-              ))}
+          {/* เลือกไซซ์สินค้า (แสดงเฉพาะสินค้าประเภทเครื่องแต่งกาย) */}
+          {isApparel && (
+            <div className="mt-6">
+              <p className="text-sm font-semibold">Choose Size</p>
+              <div className="mt-3 flex flex-wrap gap-3">
+                {availableSizes.map((option) => (
+                  <button
+                    key={option}
+                    type="button"
+                    onClick={() => setSize(option)}
+                    aria-pressed={size === option}
+                    className={`h-10 rounded-pill border px-6 text-sm transition cursor-pointer ${
+                      size === option
+                        ? 'border-primary bg-primary font-medium text-white'
+                        : 'border-ink/20 text-ink hover:border-ink'
+                    }`}
+                  >
+                    {option}
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* ตัวปรับจำนวนสินค้า (+/- ล็อคขั้นต่ำ 1 ชิ้น) และปุ่มกดใส่ตะกร้า */}
           <div className="mt-8 flex flex-col gap-4 sm:flex-row">

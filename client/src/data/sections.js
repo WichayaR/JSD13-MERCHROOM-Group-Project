@@ -15,6 +15,11 @@ function img(fileName) {
   return match ? images[match] : '';
 }
 
+import coverThaiBand from '../../assets/source-Image/thai band.png';
+import coverMovie from '../../assets/source-Image/spider-villains-header.jpg';
+import coverThaiHeritage from '../../assets/source-Image/thai heritage.jpeg';
+import coverArtist from '../../assets/source-Image/arttist.jpg';
+
 function prod(id) {
   return products.find((p) => p.id === id) || null;
 }
@@ -31,26 +36,26 @@ export const categories = [
   {
     id: 'thai-band',
     title: 'Thai Band',
-    cover: img('6.JACKET_20th_SpicyDisc.png'),
+    cover: coverThaiBand,
     description: 'Authentic licensed merchandise from the artist to support the artist.',
   },
   {
     id: 'pop-culture',
     title: 'Movie',
-    cover: img('16.Billie-Eilish_World Tour Pullover Hoodie.PNG'),
-    description: 'Merch จากหนัง ซีรีส์ และคอนเทนต์ระดับโลก',
+    cover: coverMovie,
+    description: 'Merch from movies, series, and global pop culture content.',
   },
   {
     id: 'thai-heritage',
     title: 'Thai Heritage',
-    cover: img('2.กระเป๋าสานผักตบ_รุ่นฟลอร่า_M_คละสี.png'),
-    description: 'งานหัตถกรรมไทยจากช่างฝีมือทั่วประเทศ',
+    cover: coverThaiHeritage,
+    description: 'Thai handicrafts from skilled artisans across the country.',
   },
   {
     id: 'artist',
     title: 'Artist',
-    cover: img('1.CD_Parkinson.png'),
-    description: 'ผลงานโดยตรงจากศิลปินอิสระ',
+    cover: coverArtist,
+    description: 'Original works directly from independent artists.',
   },
 ];
 
