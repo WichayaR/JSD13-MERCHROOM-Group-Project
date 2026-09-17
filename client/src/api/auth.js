@@ -4,7 +4,7 @@
 // รองรับ: สมัครสมาชิก (Register), เข้าสู่ระบบ (Login), ออกจากระบบ (Logout), และตรวจสอบ Session (Check Auth)
 // มีการส่ง credentials: 'include' เพื่อส่ง HttpOnly Cookie (JWT Token) ไป-กลับกับเซิร์ฟเวอร์โดยอัตโนมัติ
 
-const API_URL = 'http://localhost:3001/api/auth';
+const API_URL = `${import.meta.env.VITE_API_BASE_URL || '/api'}/auth`;
 
 // ฟังก์ชันกลางสำหรับส่ง HTTP Request ไปยัง Auth API พร้อมแปลงผลลัพธ์เป็น JSON
 async function request(path, options = {}) {

@@ -23,10 +23,15 @@ import ForgetPassword from '../pages/ForgetPassword';
 import RenewPassword from '../pages/RenewPassword';
 import User from '../pages/User';
 import UserDashboard from '../pages/UserDashboard';
-import AdminDashboard from '../pages/AdminDashboard';
-import AdminLogin from '../pages/admin/AdminLogin';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import AdminRoute from './components/auth/AdminRoute';
+import AdminLayout from './components/admin/AdminLayout';
+import AdminLogin from '../pages/admin/AdminLogin';
+import AdminDashboard from '../pages/admin/AdminDashboard';
+import ProductManagement from '../pages/admin/ProductMangement';
+import OrdersAdmin from '../pages/admin/OrdersAdmin';
+import CustomerUserList from '../pages/admin/Customer-User-List';
+import SettingsAdmin from '../pages/admin/SettingsAdmin';
 import AccountLayout from '../pages/Account/AccountLayout';
 import ProfileSettings from '../pages/Account/ProfileSettings';
 import OrderHistory from '../pages/Account/OrderHistory';
@@ -85,10 +90,6 @@ export default function App() {
                   </ProtectedRoute>
                 }
               />
-              <Route element={<AdminRoute />}>
-                <Route path="admin/dashboard" element={<AdminDashboard />} />
-              </Route>
-
               {/* Account pages — ใช้ AccountLayout เป็น parent (มี Sidebar) */}
               <Route
                 path="account"
@@ -123,6 +124,16 @@ export default function App() {
             <Route path="register" element={<Register />} />
             <Route path="forgot-password" element={<ForgetPassword />} />
             <Route path="renew-password" element={<RenewPassword />} />
+            <Route path="admin" element={<AdminRoute />}>
+              <Route element={<AdminLayout />}>
+                <Route index element={<AdminDashboard />} />
+                <Route path="dashboard" element={<AdminDashboard />} />
+                <Route path="products" element={<ProductManagement />} />
+                <Route path="orders" element={<OrdersAdmin />} />
+                <Route path="customers" element={<CustomerUserList />} />
+                <Route path="settings" element={<SettingsAdmin />} />
+              </Route>
+            </Route>
           </Routes>
         </BrowserRouter>
       </CartProvider>
