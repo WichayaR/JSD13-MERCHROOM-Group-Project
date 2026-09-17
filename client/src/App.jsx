@@ -24,7 +24,9 @@ import RenewPassword from '../pages/RenewPassword';
 import User from '../pages/User';
 import UserDashboard from '../pages/UserDashboard';
 import AdminDashboard from '../pages/AdminDashboard';
+import AdminLogin from '../pages/admin/AdminLogin';
 import ProtectedRoute from './components/auth/ProtectedRoute';
+import AdminRoute from './components/auth/AdminRoute';
 import AccountLayout from '../pages/Account/AccountLayout';
 import ProfileSettings from '../pages/Account/ProfileSettings';
 import OrderHistory from '../pages/Account/OrderHistory';
@@ -83,14 +85,9 @@ export default function App() {
                   </ProtectedRoute>
                 }
               />
-              <Route
-                path="admin/dashboard"
-                element={
-                  <ProtectedRoute>
-                    <AdminDashboard />
-                  </ProtectedRoute>
-                }
-              />
+              <Route element={<AdminRoute />}>
+                <Route path="admin/dashboard" element={<AdminDashboard />} />
+              </Route>
 
               {/* Account pages — ใช้ AccountLayout เป็น parent (มี Sidebar) */}
               <Route
@@ -122,6 +119,7 @@ export default function App() {
 
             {/* หน้าระบบสมาชิกวางนอก Layout */}
             <Route path="login" element={<Login />} />
+            <Route path="admin/login" element={<AdminLogin />} />
             <Route path="register" element={<Register />} />
             <Route path="forgot-password" element={<ForgetPassword />} />
             <Route path="renew-password" element={<RenewPassword />} />
