@@ -11,11 +11,14 @@ import { useCart } from '../src/context/CartContext';
 import Container from '../src/components/ui/Container';
 import Breadcrumb from '../src/components/ui/Breadcrumb';
 
-// ค่าจัดส่งแบบคงที่ ($15)
+// ค่าจัดส่งแบบคงที่
 const DELIVERY_FEE = 15;
 
-// Helper Function: แปลงตัวเลขเป็นฟอร์แมตสกุลเงินดอลลาร์ ($XX)
-const formatCurrency = (val) => `$${val.toLocaleString('en-US', { minimumFractionDigits: 0 })}`;
+const formatCurrency = (val) =>
+  `฿${Number(val || 0).toLocaleString('th-TH', {
+    minimumFractionDigits: Number(val || 0) % 1 !== 0 ? 2 : 0,
+    maximumFractionDigits: 2,
+  })}`;
 
 export default function Checkout() {
   // Navigation Hook สำหรับย้ายหน้าหลังทำรายการสำเร็จหรือถูกส่งกลับ

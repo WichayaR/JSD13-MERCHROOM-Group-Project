@@ -64,4 +64,48 @@
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
+
+  .nav-link {
+    color: #ffffff;
+    text-decoration: none;
+    transition: color 0.15s ease, text-decoration-color 0.15s ease;
+  }
+
+  .nav-link:hover {
+    color: var(--color-highlight, #daff02) !important;
+    text-decoration: underline !important;
+    text-decoration-color: var(--color-highlight, #daff02) !important;
+    text-decoration-thickness: 3px !important;
+    text-underline-offset: 8px !important;
+  }
+
+  .nav-link.active {
+    color: var(--color-highlight, #daff02) !important;
+    font-weight: 600;
+    text-decoration: underline !important;
+    text-decoration-color: var(--color-highlight, #daff02) !important;
+    text-decoration-thickness: 3px !important;
+    text-underline-offset: 8px !important;
+  }
+
+  .nav-icon-link {
+    color: #ffffff;
+    transition: opacity 0.15s ease, transform 0.15s ease;
+  }
+
+  .nav-icon-link:hover {
+    opacity: 0.8;
+    transform: scale(1.08);
+  }
+
+  .mobile-nav-link {
+    color: #ffffff;
+    transition: background-color 0.15s ease, color 0.15s ease;
+  }
+
+  .mobile-nav-link:hover {
+    background-color: rgba(255, 255, 255, 0.12);
+    color: var(--color-highlight, #daff02);
+  }
 }
+

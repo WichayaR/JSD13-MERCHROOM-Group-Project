@@ -47,29 +47,30 @@ export default function Home() {
       {/* Hero Section: แบนเนอร์หลักพร้อมหมุด Hotspot ลอยบนรูปให้กดดูของได้เลย */}
       <section className="relative -mt-navbar bg-brand-gradient">
         <div
-          className="relative flex h-202.5 items-end justify-center pb-52"
+          className="relative flex min-h-[60vh] items-end justify-center pb-16 md:min-h-[80vh] md:pb-52"
           style={{
             backgroundImage: `url(${heroBanner})`,
-            backgroundSize: '1441px 810px',
+            backgroundSize: 'cover',
             backgroundPosition: 'center top',
             backgroundRepeat: 'no-repeat',
           }}
         >
           <h1 className="sr-only">MERCHROOM — Rooted in Culture</h1>
 
-          {/* วางหมุด Hotspot ตามพิกัด x, y ที่ระบุไว้ใน sections.js */}
-          {heroHotspots.map((spot) => (
-            <div key={spot.id} className={`absolute ${spot.x} ${spot.y}`}>
-              <Hotspot product={findProduct(spot.productId)} size={spot.size} />
-            </div>
-          ))}
+          {/* hotspot ซ่อนบนจอเล็กเพราะใช้ตำแหน่ง pixel ตายตัว */}
+          <div className="hidden lg:block">
+            {heroHotspots.map((spot) => (
+              <div key={spot.id} className={`absolute ${spot.x} ${spot.y}`}>
+                <Hotspot product={findProduct(spot.productId)} size={spot.size} />
+              </div>
+            ))}
+          </div>
 
-          {/* ปุ่ม CTA พาวิ่งไปหน้ารวมสินค้าทั้งหมด */}
           <Button
             to="/products"
             variant="highlight"
             size="lg"
-            className="w-100 font-semibold lg:translate-x-19.5"
+            className="w-60 font-semibold md:w-100 lg:translate-x-19.5"
           >
             Support Thai Artist
           </Button>
@@ -114,13 +115,13 @@ export default function Home() {
           {/* แถวการ์ดสินค้าแนวนอน (Horizontal Scroll + Snap) */}
           <div
             ref={scrollRef}
-            className="scrollbar-hide mt-10 flex gap-5 overflow-x-auto pb-2 snap-x snap-mandatory"
+            className="scrollbar-hide mt-8 sm:mt-10 flex gap-3 sm:gap-5 overflow-x-auto pb-2 snap-x snap-mandatory"
             role="tabpanel"
           >
             {visibleProducts.map((product) => (
               <div
                 key={product.id}
-                className="flex w-[85%] shrink-0 snap-start sm:w-[calc(50%-10px)] lg:w-[calc(25%-15px)]"
+                className="flex w-[55%] sm:w-[calc(50%-10px)] lg:w-[calc(25%-15px)] shrink-0 snap-start"
               >
                 <ProductCard product={product} onAddToCart={addToCart} fluid />
               </div>

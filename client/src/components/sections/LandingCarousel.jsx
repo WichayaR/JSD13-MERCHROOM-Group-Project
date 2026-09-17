@@ -35,12 +35,12 @@ export default function LandingCarousel() {
       </Container>
 
       {/* แถวแสดงการ์ดโปสเตอร์ 5 ใบเรียงกัน: ซ้ายสุด ซ้าย กลาง(เด่นสุด) ขวา ขวาสุด */}
-      <div className="mt-12 flex w-full items-center justify-center gap-3">
-        <PosterCard item={itemAt(-2)} size="sm" />
+      <div className="mt-12 flex w-full items-center justify-center gap-2 px-4 md:gap-3 md:px-0">
+        <div className="hidden lg:block"><PosterCard item={itemAt(-2)} size="sm" /></div>
         <PosterCard item={itemAt(-1)} size="sm" onClick={() => go(-1)} ariaLabel="ก่อนหน้า" />
         <PosterCard item={current} size="lg" onClick={current.eventDetails ? () => setActiveEvent(current) : undefined} ariaLabel={`ดูรายละเอียด ${current.title}`} />
         <PosterCard item={itemAt(1)} size="sm" onClick={() => go(1)} ariaLabel="ถัดไป" />
-        <PosterCard item={itemAt(2)} size="sm" />
+        <div className="hidden lg:block"><PosterCard item={itemAt(2)} size="sm" /></div>
       </div>
 
       <Container>
@@ -110,7 +110,7 @@ function PosterCard({ item, size, onClick, ariaLabel }) {
       tabIndex={onClick ? 0 : undefined}
       aria-label={ariaLabel}
       onKeyDown={onClick ? (e) => (e.key === 'Enter' || e.key === ' ') && onClick() : undefined}
-      className={`shrink overflow-hidden rounded-card shadow-card ${isLg ? 'basis-[28%]' : 'basis-[20%]'} ${
+      className={`shrink overflow-hidden rounded-card shadow-card ${isLg ? 'basis-[50%] md:basis-[28%]' : 'basis-[25%] md:basis-[20%]'} ${
         onClick ? 'cursor-pointer transition hover:brightness-90' : ''
       }`}
       style={{ aspectRatio: isLg ? '470 / 612' : '394 / 513' }}
