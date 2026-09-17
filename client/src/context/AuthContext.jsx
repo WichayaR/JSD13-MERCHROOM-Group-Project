@@ -102,6 +102,12 @@ export function AuthProvider({ children }) {
     }
   }, []);
 
+  const updateCurrentUser = useCallback((updatedUser) => {
+    if (!updatedUser) return;
+    saveSession(updatedUser);
+    setUser(updatedUser);
+  }, []);
+
   // รวม state และ helper สำหรับเช็คสิทธิ์ (Admin / Customer) ให้เรียกใช้ง่ายๆ
   // isLoggedIn = ชื่อเรียกตรงตัวสำหรับ ProtectedRoute (ค่าเดียวกับ isAuthenticated)
   const value = useMemo(
@@ -118,8 +124,9 @@ export function AuthProvider({ children }) {
       logout,
       resetPassword,
       refreshUser,
+      updateCurrentUser,
     }),
-    [user, booting, login, register, logout, resetPassword, refreshUser],
+    [user, booting, login, register, logout, resetPassword, refreshUser, updateCurrentUser],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
