@@ -8,6 +8,7 @@ import {
   authenticate,
   getUsers,
   getUserById,
+  saveRegisteredUser,
 } from '../data/mockup/mockUsers';
 import {
   saveSession,
@@ -79,6 +80,17 @@ export function AuthProvider({ children }) {
 
   // ฟังก์ชัน register: สมัครสมาชิกผ่าน backend API (ถ้าไม่มี backend ให้ fallback บันทึกลง session)
   const register = useCallback(async ({ username, email, password, phone }) => {
+    const newUserWithPassword = {
+      _id: `usr-${Date.now()}`,
+      email,
+      password,
+      firstName: username || 'User',
+      lastName: '',
+      phone: phone || '',
+      role: 'customer',
+      memberSince: new Date().toISOString().split('T')[0],
+    };
+
     try {
       const apiResult = await registerApi({
         email,
@@ -87,6 +99,10 @@ export function AuthProvider({ children }) {
         phone: phone || '',
       });
       if (apiResult.success) {
+        saveRegisteredUser({
+          ...newUserWithPassword,
+          _id: apiResult.user?._id || newUserWithPassword._id,
+        });
         return apiResult;
       }
       if (apiResult.status && apiResult.status !== 404 && apiResult.message) {
@@ -96,18 +112,11 @@ export function AuthProvider({ children }) {
       // fallback
     }
 
-    const newUser = {
-      _id: `usr-${Date.now()}`,
-      email,
-      firstName: username || 'User',
-      lastName: '',
-      phone: phone || '',
-      role: 'customer',
-      memberSince: new Date().toISOString().split('T')[0],
-    };
-    saveSession(newUser);
-    setUser(newUser);
-    return { success: true, message: 'Registration successful', user: newUser };
+    saveRegisteredUser(newUserWithPassword);
+    const { password: _pw, ...safeUser } = newUserWithPassword;
+    saveSession(safeUser);
+    setUser(safeUser);
+    return { success: true, message: 'Registration successful', user: safeUser };
   }, []);
 
   // ฟังก์ชัน logout: แจ้ง backend และล้าง session ในเครื่อง
