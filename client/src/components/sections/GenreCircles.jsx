@@ -26,7 +26,7 @@ export default function GenreCircles() {
             <li key={g.id} className="flex w-39 flex-col items-center gap-3">
               {/* ลิงก์กดแล้วส่ง query param ?cat=id ไปที่หน้า /products */}
               <Link
-                to={`/products?cat=${g.id}`}
+                to={`/products?q=${encodeURIComponent(g.label)}`}
                 className="grid size-39 place-items-center overflow-hidden rounded-pill bg-white transition hover:scale-105"
                 aria-label={g.label}
               >
