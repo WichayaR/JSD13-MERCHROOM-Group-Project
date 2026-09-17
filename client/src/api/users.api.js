@@ -1,4 +1,4 @@
-const BASE = `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api'}/users`;
+const BASE = `${import.meta.env.VITE_API_BASE_URL || '/api'}/users`;
 async function request(path = '', options = {}) { const response = await fetch(`${BASE}${path}`, { credentials: 'include', headers: { 'Content-Type': 'application/json' }, ...options }); const data = await response.json().catch(() => ({})); if (!response.ok) throw new Error(data.message || 'Request failed'); return data; }
 export const getCustomers = () => request();
 export const getMyProfile = () => request('/profile');
