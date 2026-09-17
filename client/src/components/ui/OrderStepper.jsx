@@ -1,20 +1,18 @@
 // src/components/ui/OrderStepper.jsx
-import React from 'react';
-
 export const OrderStepper = ({ currentStatus }) => {
   const steps = [
     { id: 'pending', label: 'PENDING' },
     { id: 'processing', label: 'PROCESSING' },
-    { id: 'shipping', label: 'SHIPPING' },
-    { id: 'delivered', label: 'DELIVERED' },
+    { id: 'shipped', label: 'SHIPPED' },
+    { id: 'completed', label: 'COMPLETED' },
   ];
 
   const getStepIndex = (status) => {
     switch (status) {
       case 'pending': return 0;
       case 'processing': return 1;
-      case 'shipping': return 2;
-      case 'delivered': return 3;
+      case 'shipped': return 2;
+      case 'completed': return 3;
       default: return 0;
     }
   };

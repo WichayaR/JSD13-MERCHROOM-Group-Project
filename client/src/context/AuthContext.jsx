@@ -1,14 +1,4 @@
-// ไฟล์: client/src/context/AuthContext.jsx
-// Context จัดการสถานะ Authentication และสิทธิ์ผู้ใช้งาน (Admin / Customer)
-// เรียกมาจาก: App.jsx (นำ AuthProvider ไปครอบทั้งแอป)
-// แหล่งข้อมูลผู้ใช้: รองรับทั้ง backend API (/api/auth) และ fallback ระบบ mockup (src/data/mockup/mockUsers.js)
-// ส่งออก Hook: useAuth() สำหรับหน้า Login, Register, Navbar, UserDashboard, AdminDashboard
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import {
-  authenticate,
-  getUsers,
-  getUserById,
-} from '../data/mockup/mockUsers';
 import {
   saveSession,
   getSession,
@@ -33,16 +23,20 @@ export function AuthProvider({ children }) {
         if (result.success && result.user) {
           saveSession(result.user);
           setUser(result.user);
+        } else {
+          clearSession();
+          setUser(null);
         }
       })
       .catch(() => {
-        // ออฟไลน์หรือยังไม่ต่อ backend ให้ใช้ session เดิม
+        // Do not trust a stale browser session when the server cannot validate its cookie.
+        clearSession();
+        setUser(null);
       })
       .finally(() => setBooting(false));
   }, []);
 
-  // ฟังก์ชัน login: พยายามต่อ backend API ก่อน ถ้าต่อไม่ติดหรือ fallback ให้เช็คกับ mockup database
-  // คืน { success, message?, user? } เสมอ เพื่อให้ฟอร์มอ่าน result.success / result.message ได้ตรงกันทั้งสองเส้นทาง
+  // Authentication must come from the API so protected data always passes server middleware.
   const login = useCallback(async (email, password) => {
     try {
       const apiResult = await loginApi(email, password);
@@ -52,17 +46,8 @@ export function AuthProvider({ children }) {
       }
       return apiResult;
     } catch {
-      // ถ้า backend ไม่ตอบสนอง ให้ fallback ไปเช็ค mockUsers
+      return { success: false, message: 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้ในขณะนี้' };
     }
-
-    const authed = authenticate(email, password);
-    if (authed) {
-      const { password: _pw, ...safeUser } = authed;
-      saveSession(safeUser);
-      setUser(safeUser);
-      return { success: true, message: 'Login successful', user: safeUser };
-    }
-    return { success: false, message: 'Invalid email or password' };
   }, []);
 
   // ฟังก์ชัน register: สมัครสมาชิกผ่าน backend API
@@ -87,19 +72,13 @@ export function AuthProvider({ children }) {
   }, []);
 
   // ฟังก์ชันรีเซ็ตรหัสผ่าน (mock endpoint)
-  const resetPassword = useCallback((email, newPassword) => {
+  const resetPassword = useCallback(() => {
     return { success: true, message: 'Password updated successfully' };
   }, []);
 
-  // ฟังก์ชัน refresh ข้อมูล user
-  const refreshUser = useCallback((userId) => {
-    const fresh = getUserById(userId);
-    if (fresh) {
-      const safeUser = { ...fresh };
-      delete safeUser.password;
-      saveSession(safeUser);
-      setUser(safeUser);
-    }
+  const updateCurrentUser = useCallback((updatedUser) => {
+    saveSession(updatedUser);
+    setUser(updatedUser);
   }, []);
 
   // รวม state และ helper สำหรับเช็คสิทธิ์ (Admin / Customer) ให้เรียกใช้ง่ายๆ
@@ -112,14 +91,13 @@ export function AuthProvider({ children }) {
       isAuthenticated: Boolean(user),
       isAdmin: Boolean(user && user.role === 'admin'),
       isCustomer: Boolean(user && user.role === 'customer'),
-      users: getUsers(),
       login,
       register,
       logout,
       resetPassword,
-      refreshUser,
+      updateCurrentUser,
     }),
-    [user, booting, login, register, logout, resetPassword, refreshUser],
+    [user, booting, login, register, logout, resetPassword, updateCurrentUser],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

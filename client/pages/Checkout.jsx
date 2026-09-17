@@ -10,6 +10,7 @@ import { useNavigate } from 'react-router-dom';
 import { useCart } from '../src/context/CartContext';
 import Container from '../src/components/ui/Container';
 import Breadcrumb from '../src/components/ui/Breadcrumb';
+import { createOrder } from '../src/api/orders.api';
 
 // ค่าจัดส่งแบบคงที่ ($15)
 const DELIVERY_FEE = 15;
@@ -54,6 +55,8 @@ export default function Checkout() {
 
   // State สำหรับเลือกประเภทช่องทางการชำระเงิน ('card' | 'promptpay' | 'truemoney' | 'bank')
   const [paymentMethod, setPaymentMethod] = useState('card');
+  const [submitError, setSubmitError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
   // State สำหรับเก็บข้อมูลในแบบฟอร์ม (ผู้ติดต่อ, ที่อยู่จัดส่ง, ข้อมูลการชำระเงิน)
   const [formData, setFormData] = useState({
@@ -76,34 +79,34 @@ export default function Checkout() {
   // - บันทึกลง localStorage ('my_orders') สำหรับจำลองระบบสั่งซื้อ
   // - ล้างข้อมูลตะกร้าสินค้า (clearCart) และเปลี่ยนหน้าไปยัง /orders
   // ----------------------------------------------------------------------
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setSubmitError('');
+    setSubmitting(true);
+    const shippingAddress = [
+      useSameAddress ? formData.name : formData.deliveryName,
+      useSameAddress ? formData.addressLine : formData.deliveryAddressLine,
+      useSameAddress ? formData.addressLine2 : formData.deliveryAddressLine2,
+      useSameAddress ? formData.city : formData.deliveryCity,
+      useSameAddress ? formData.state : formData.deliveryState,
+      useSameAddress ? formData.zipCode : formData.deliveryZipCode,
+      useSameAddress ? formData.country : formData.deliveryCountry,
+    ].filter(Boolean).join(', ');
 
-    // สร้างข้อมูลคำสั่งซื้อใหม่ (Mock Order Data)
-    const newOrder = {
-      id: `ORD-${Date.now().toString().slice(-6)}`,
-      date: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
-      status: 'Processing',
-      total: total,
-      paymentMethod: paymentMethod,
-      items: items.map((item) => ({
-        id: item.id,
-        name: item.name,
-        size: item.size || 'M',
-        color: item.color || 'Standard',
-        price: item.price,
-        quantity: item.quantity,
-        image: item.image || '',
-      })),
-    };
-
-    // บันทึกคำสั่งซื้อลงใน LocalStorage
-    const existingOrders = JSON.parse(localStorage.getItem('my_orders') || '[]');
-    localStorage.setItem('my_orders', JSON.stringify([newOrder, ...existingOrders]));
-
-    // ล้างตะกร้าสินค้าและนำทางไปหน้าประวัติการสั่งซื้อ (/orders)
-    if (clearCart) clearCart();
-    navigate('/orders');
+    try {
+      // The backend calculates the authoritative price and decrements stock.
+      const { order } = await createOrder({
+        items: items.map((item) => ({ productId: item.productId || item._id || item.id, quantity: item.quantity })),
+        shippingAddress,
+        paymentMethod,
+      });
+      clearCart();
+      navigate(`/order-confirmation/${order._id}`);
+    } catch (error) {
+      setSubmitError(error.message || 'ไม่สามารถสร้างคำสั่งซื้อได้');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -492,6 +495,8 @@ export default function Checkout() {
 
           <div className="my-4 border-t border-black/10" />
 
+          {submitError && <p className="mb-3 text-sm text-error">{submitError}</p>}
+
           {/* ตารางแสดงสรุปราคา (Subtotal, Discount, Delivery Fee) */}
           <dl className="flex flex-col gap-3 text-sm md:text-base">
             <div className="flex justify-between items-center">
@@ -524,9 +529,10 @@ export default function Checkout() {
           {/* ปุ่มยืนยันการสั่งซื้อ */}
           <button
             type="submit"
+            disabled={submitting}
             className="mt-5 flex h-12 w-full items-center justify-center rounded-full bg-primary text-base font-semibold text-white transition hover:opacity-90"
           >
-            Finish checkout
+            {submitting ? 'กำลังสร้างคำสั่งซื้อ…' : 'Finish checkout'}
           </button>
         </aside>
       </form>

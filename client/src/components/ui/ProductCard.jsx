@@ -15,6 +15,9 @@ export default function ProductCard({
   compact = false, // ซ่อนปุ่ม Add to Cart (เหมาะกับหน้าแสดงแบบกระชับ)
 }) {
   if (!product) return null;
+  const productId = product._id || product.id;
+  const image = product.imageUrl || product.image;
+  const brand = product.artist?.name || product.brand;
 
   return (
     <div
@@ -23,12 +26,12 @@ export default function ProductCard({
       }`}
     >
       <Link
-        to={`/productDetail/${product.id}`}
+        to={`/productDetail/${productId}`}
         className="relative block aspect-square w-full overflow-hidden rounded-btn bg-cream"
       >
-        {product.image ? (
+        {image ? (
           <img
-            src={product.image}
+            src={image}
             alt={product.name}
             loading="lazy"
             className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
@@ -41,13 +44,13 @@ export default function ProductCard({
       </Link>
 
       <div className="mt-3 flex flex-1 flex-col">
-        {product.brand && (
+        {brand && (
           <p className="text-xs font-semibold uppercase tracking-wider text-primary">
-            {product.brand}
+            {brand}
           </p>
         )}
         <Link
-          to={`/productDetail/${product.id}`}
+          to={`/productDetail/${productId}`}
           className="mt-1 line-clamp-2 text-sm font-semibold text-ink transition hover:text-primary"
           title={product.name}
         >

@@ -1,54 +1,94 @@
 // Entry point หลักของ backend (Node.js / Express server)
 // จัดการเชื่อมต่อฐานข้อมูล MongoDB และเปิด API routes สำหรับระบบ Merchroom
-
-//----------โหลดค่าจาก server/.env ใช้ MONGO_URI สำหรับ MongoDB และ JWT_SECRET สำหรับ JWT ------------*
-
 require('dotenv').config();
 
 const express = require('express');
-
-//-------อนุญาต frontend ที่ localhost:5173, 5174, 5175 
-// credentials: true ทำให้ browser ส่ง httpOnly cookie accessToken ไปกับ API ได้ --------*
-const cors = require('cors'); 
-
-// middleware จากแพ็กเกจ cookie-parser ที่เรา import เอง:
+const cors = require('cors');
 const cookieParser = require('cookie-parser');
 
 const connectDB = require('./db');
-const authRoutes = require('./routes/auth.routes');
+const errorHandler = require('./middleware/errorHandler');
 
-//เพิ่ม routes ฝั่ง admin 
+// นำเข้า Routes ทั้งหมด
+const authRoutes = require('./routes/auth.routes');
 const adminRoutes = require('./routes/admin.routes');
 const productRoutes = require('./routes/product.routes');
 const orderRoutes = require('./routes/order.routes');
+const promoRoutes = require('./routes/promo.routes');
+const reviewRoutes = require('./routes/review.routes');
 const userRoutes = require('./routes/user.routes');
+const categoryRoutes = require('./routes/category.routes');
 
 const app = express();
 
+// ตั้งค่า CORS สำหรับเชื่อมต่อกับ Frontend (Vite)
 app.use(
   cors({
-    // Vite ปกติใช้ 5173 แต่ถ้า port ชนจะเด้งไป 5174 อัตโนมัติ จึงอนุญาตทั้งสอง port
-    origin: ['http://localhost:5173', 'http://localhost:5174'],
+    origin: [
+      'http://localhost:5173',
+      'http://localhost:5174',
+      'http://localhost:5175',
+      'http://127.0.0.1:5173',
+      'http://127.0.0.1:5174',
+      'http://127.0.0.1:5175',
+    ],
     credentials: true,
-  }),
+  })
 );
 
-//แล้วลงทะเบียนด้วย 
 app.use(cookieParser());
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-// Routes
+// Request Logger (Development helper)
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.originalUrl}`);
+  next();
+});
+
+// API Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/products', productRoutes);
+app.use('/api/orders', orderRoutes);
+app.use('/api/promos', promoRoutes);
+app.use('/api/reviews', reviewRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/categories', categoryRoutes);
 
+// Health Check Endpoint
 app.get('/', (req, res) => {
-  res.json({ success: true, message: 'Merchroom server is running' });
+  res.json({
+    success: true,
+    message: 'Merchroom API Server is running 🚀',
+    categories: {
+      ThaiHeritage: '/api/products?mainCategory=ThaiHeritage',
+      PopCulture_Thailand: '/api/products?mainCategory=PopCulture&subCategory=Thailand',
+      PopCulture_International: '/api/products?mainCategory=PopCulture&subCategory=International',
+    },
+    endpoints: [
+      '/api/auth',
+      '/api/admin',
+      '/api/products',
+      '/api/orders',
+      '/api/promos',
+      '/api/reviews',
+      '/api/users',
+      '/api/categories',
+    ],
+  });
 });
 
-// Global error handler
-app.use((err, req, res, next) => {
-  console.error('[server error]', err.message);
-  return res.status(500).json({ success: false, message: 'Something went wrong on the server' });
+// 404 Handler สำหรับ Route ที่ไม่มีอยู่
+app.use((req, res) => {
+  res.status(404).json({
+    success: false,
+    message: `API Route not found: ${req.method} ${req.originalUrl}`,
+  });
 });
+
+// Global Error Handler
+app.use(errorHandler);
 
 const PORT = process.env.PORT || 3001;
 

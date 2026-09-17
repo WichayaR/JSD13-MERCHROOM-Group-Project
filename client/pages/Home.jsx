@@ -3,10 +3,10 @@
 // เรียกมาจาก: App.jsx ผ่าน Route path="/"
 // แหล่งข้อมูลสินค้า: src/data/product.js และ src/data/sections.js
 // ส่วนประกอบย่อยในหน้านี้: Hotspot, ProductCard, CategoriesGrid, StoryCollage, GenreCircles, LandingCarousel, RoadToThaiArtist
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { products } from '../src/data/product';
-import { bestSellerIds, heroHotspots, prod as findProduct } from '../src/data/sections';
+import { heroHotspots, prod as findProduct } from '../src/data/sections';
+import { getPublicProducts } from '../src/api/products.api';
 import { useCart } from '../src/context/CartContext';
 import Button from '../src/components/ui/Button';
 import Container from '../src/components/ui/Container';
@@ -30,12 +30,18 @@ export default function Home() {
   // ref สำหรับคุมการเลื่อน scroll แนวนอนของการ์ดสินค้า
   const scrollRef = useRef(null);
   const [activeTab, setActiveTab] = useState('best');
+  const [products, setProducts] = useState([]);
+
+  useEffect(() => {
+    let active = true;
+    getPublicProducts({ limit: 12 })
+      .then(({ products: result }) => { if (active) setProducts(result || []); })
+      .catch(() => { /* Product page exposes the full request error; keep landing page usable. */ });
+    return () => { active = false; };
+  }, []);
 
   // สลับแสดงสินค้าตามแท็บ: Best Sellers (ดึงตาม id ที่กำหนด) หรือ New Arrival (สินค้าฝั่งสากล)
-  const visibleProducts =
-    activeTab === 'best'
-      ? bestSellerIds.map((id) => findProduct(id)).filter(Boolean)
-      : products.filter((product) => product.id.endsWith('en'));
+  const visibleProducts = activeTab === 'best' ? products.slice(0, 6) : products.slice(6, 12);
 
   // ฟังก์ชันเลื่อนการ์ดสินค้าในแนวนอนตามความกว้างของการ์ด (379px รวม gap)
   const scrollByCard = (direction) => {
@@ -119,7 +125,7 @@ export default function Home() {
           >
             {visibleProducts.map((product) => (
               <div
-                key={product.id}
+                key={product._id || product.id}
                 className="flex w-[85%] shrink-0 snap-start sm:w-[calc(50%-10px)] lg:w-[calc(25%-15px)]"
               >
                 <ProductCard product={product} onAddToCart={addToCart} fluid />

@@ -1,12 +1,12 @@
 // pages/Account/OrderHistory.jsx
 // components Order History
 // สถานะคำสั่งซื้อ: Delivered
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AccountProvider, useAccount } from '../../src/context/AccountContext';
 
 function OrderHistoryContent() {
-  const { orders, loading } = useAccount();
+  const { orders, loading, error } = useAccount();
   const navigate = useNavigate();
 
   // แท็บตัวกรองช่วงเวลา: ALL_TIME 
@@ -61,9 +61,9 @@ function OrderHistoryContent() {
   const getStatusConfig = (status) => {
     const s = (status || '').toLowerCase();
     switch (s) {
-      case 'delivered':
+      case 'completed':
         return {
-          label: 'Delivered',
+          label: 'Completed',
           dotColor: 'bg-primary',
         };
       case 'pending':
@@ -76,9 +76,9 @@ function OrderHistoryContent() {
           label: 'Cancelled',
           dotColor: 'bg-error',
         };
-      case 'shipping':
+      case 'shipped':
         return {
-          label: 'Shipping',
+          label: 'Shipped',
           dotColor: 'bg-warning',
         };
       default:
@@ -142,6 +142,8 @@ function OrderHistoryContent() {
             </button>
           </div>
         </div>
+
+        {error && <p className="mt-4 text-sm text-error">{error}</p>}
 
         {/* Orders Table Section */}
         {loading ? (

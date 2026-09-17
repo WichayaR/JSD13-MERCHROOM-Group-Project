@@ -2,7 +2,7 @@
 // หน้าแสดงรายละเอียดสินค้า (Product Detail Page)
 // เรียกมาจาก: App.jsx ผ่าน Route path="/productDetail/:id"
 // แหล่งข้อมูล: ค้นหาข้อมูลสินค้าตาม id จาก src/data/product.js และดึงรีวิวจาก src/data/reviews.js
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   BadgeCheck,
@@ -13,7 +13,6 @@ import {
   Plus,
   Star,
 } from 'lucide-react';
-import { products } from '../src/data/product';
 import { mockReviews } from '../src/data/reviews';
 import { categoryFilter } from '../src/data/sections';
 import { useCart } from '../src/context/CartContext';
@@ -21,8 +20,9 @@ import Button from '../src/components/ui/Button';
 import Container from '../src/components/ui/Container';
 import ProductCard from '../src/components/ui/ProductCard';
 import Breadcrumb from '../src/components/ui/Breadcrumb';
+import { getPublicProduct, getPublicProducts } from '../src/api/products.api';
 
-const SIZES = ['Small', 'Medium', 'Large', 'X-large'];
+const FALLBACK_SIZES = ['S', 'M', 'L', 'XL'];
 
 const COLORS = [
   { id: 'black', label: 'Black', className: 'bg-ink' },
@@ -60,66 +60,66 @@ export default function ProductDetail() {
   const navigate = useNavigate();
   const { addToCart } = useCart();
 
-  // ค้นหาสินค้าจาก data array ตาม id
-  const product = products.find((item) => String(item.id) === String(productId));
+  const [product, setProduct] = useState(null);
+  const [relatedProducts, setRelatedProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
+
+  useEffect(() => {
+    let active = true;
+    Promise.all([getPublicProduct(productId), getPublicProducts({ limit: 20 })])
+      .then(([productData, listData]) => {
+        if (!active) return;
+        setProduct(productData.product);
+        setRelatedProducts(listData.products || []);
+      })
+      .catch((error) => {
+        if (active) setLoadError(error.message || 'ไม่สามารถโหลดสินค้าได้');
+      })
+      .finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
+  }, [productId]);
 
   // แมป category ย้อนกลับจาก suffix รหัสสินค้าเพื่อทำ Breadcrumb ลิงก์กลับหน้าเดิม
   const backToCat = (() => {
     if (!product) return null;
-    if (product.id.endsWith('th')) return 'thai-band';
-    if (product.id.endsWith('en')) return 'pop-culture';
-    if (product.id.endsWith('hr')) return 'thai-heritage';
+    if (product.category?.slug === 'thai-heritage') return 'thai-heritage';
+    if (product.category?.slug) return 'artist';
     return null;
   })();
   const backTo = backToCat ? `/products?cat=${backToCat}` : '/products';
   const categoryLabel = backToCat ? categoryFilter[backToCat]?.label : 'Products';
 
-  const [size, setSize] = useState('Large');
+  const [size, setSize] = useState('M');
   const [color, setColor] = useState('black');
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState('reviews');
   const [galleryIndex, setGalleryIndex] = useState(0);
 
   // ดักกรณีพิมพ์ id มั่วแล้วหาของไม่เจอ แสดงหน้าแจ้งเตือนพร้อมปุ่มพากลับ
+  if (loading) return <Container className="py-20 text-center">กำลังโหลดสินค้า…</Container>;
+
   if (!product) {
     return (
       <Container className="py-20 text-center">
-        <h1 className="mb-6 text-xl font-semibold text-error">ไม่พบสินค้าที่คุณค้นหา</h1>
+        <h1 className="mb-6 text-xl font-semibold text-error">{loadError || 'ไม่พบสินค้าที่คุณค้นหา'}</h1>
         <Button onClick={() => navigate('/products')}>กลับไปหน้าสินค้า</Button>
       </Container>
     );
   }
 
-  // เตรียมรูปภาพของสินค้า (รองรับทั้ง images array และรูปเดี่ยว image/imageUrl)
-  const productImages = Array.isArray(product.images) && product.images.length > 0
-    ? product.images
-    : [product.image || product.imageUrl].filter(Boolean);
-  const hasMultipleImages = productImages.length > 1;
-  const mainImage = productImages[galleryIndex] || productImages[0] || '';
-
-  // ตรวจสอบว่าสินค้าเป็นเครื่องแต่งกายที่ต้องเลือกไซซ์หรือไม่
-  const isApparel = (() => {
-    if (Array.isArray(product.sizes) && product.sizes.length > 0) return true;
-    const name = (product.name || '').toLowerCase();
-    const desc = (product.description || '').toLowerCase();
-    const keywords = ['tee', 't-shirt', 'shirt', 'crewneck', 'sweatshirt', 'hoodie', 'cropped', 'เสื้อ'];
-    return keywords.some((kw) => name.includes(kw) || desc.includes(kw));
-  })();
-
-  const availableSizes = Array.isArray(product.sizes) && product.sizes.length > 0
-    ? product.sizes
-    : SIZES;
-
-  const availableColors = Array.isArray(product.colors) && product.colors.length > 0
-    ? product.colors
-    : null;
+  // เตรียมรูปในแกลเลอรี โดยดึงสินค้าร่วมแบรนด์เดียวกันมาแสดงเป็นภาพย่อย
+  const brand = product.artist?.name || product.brand || '';
+  const sizeOptions = product.sizes?.length ? product.sizes : FALLBACK_SIZES;
+  const sameBrand = relatedProducts.filter((item) => (item.artist?.name || item.brand || '') === brand);
+  const gallery = [product, ...sameBrand.filter((item) => item._id !== product._id)].slice(0, 3);
+  const mainImage = gallery[galleryIndex]?.imageUrl || gallery[galleryIndex]?.image || product.imageUrl || product.image;
 
   // แนะนำสินค้าที่เกี่ยวข้อง: เรียงจากแบรนด์เดียวกันก่อน แล้วตามด้วยหมวดหมู่เดียวกัน
-  const sameBrand = products.filter((item) => item.brand === product.brand);
   const related = [
-    ...sameBrand.filter((item) => item.id !== product.id),
-    ...products.filter(
-      (item) => item.id !== product.id && item.brand !== product.brand && item.id.endsWith(product.id.slice(-2)),
+    ...sameBrand.filter((item) => item._id !== product._id),
+    ...relatedProducts.filter(
+      (item) => item._id !== product._id && (item.artist?.name || item.brand || '') !== brand && item.category?._id === product.category?._id,
     ),
   ].slice(0, 4);
 
@@ -135,26 +135,27 @@ export default function ProductDetail() {
       />
 
       <div className="mt-6 grid items-start gap-10 lg:grid-cols-2">
-        {/* แกลเลอรีรูปภาพ: หากมีหลายรูปจะแสดงแถบ Thumbnails ด้านข้าง */}
+        {/* แกลเลอรีรูปภาพ: คลิกรูปย่อยซ้ายมือเพื่อสลับรูปหลัก */}
         <div className="flex gap-4">
-          {hasMultipleImages && (
-            <div className="flex flex-col gap-3">
-              {productImages.map((imgSrc, idx) => (
-                <button
-                  key={idx}
-                  type="button"
-                  onClick={() => setGalleryIndex(idx)}
-                  aria-label={`ดูรูปสินค้าที่ ${idx + 1}`}
-                  aria-pressed={idx === galleryIndex}
-                  className={`size-20 overflow-hidden rounded-btn border-2 bg-white transition cursor-pointer ${
-                    idx === galleryIndex ? 'border-ink' : 'border-transparent hover:border-ink/20'
-                  }`}
-                >
-                  <img src={imgSrc} alt="" className="h-full w-full object-cover" />
-                </button>
-              ))}
-            </div>
-          )}
+          {/* Thumbnails สลับรูปหลักเมื่อคลิก */}
+          <div className="flex flex-col gap-3">
+            {gallery.map((item, idx) => (
+              <button
+                key={item._id || item.id}
+                type="button"
+                onClick={() => setGalleryIndex(idx)}
+                aria-label={`ดูรูป ${item.name}`}
+                aria-pressed={idx === galleryIndex}
+                className={`size-20 overflow-hidden rounded-btn border-2 bg-white transition ${
+                  idx === galleryIndex ? 'border-ink' : 'border-transparent hover:border-ink/20'
+                }`}
+              >
+                {(item.imageUrl || item.image) && (
+                  <img src={item.imageUrl || item.image} alt="" className="h-full w-full object-cover" />
+                )}
+              </button>
+            ))}
+          </div>
 
           {/* กรอบรูปภาพใหญ่ของสินค้า */}
           <div className="flex-1 overflow-hidden rounded-btn bg-white">
@@ -174,8 +175,8 @@ export default function ProductDetail() {
 
         {/* ข้อมูลสินค้า: ชื่อ ราคา คำบรรยาย ตัวเลือกขนาด สี และปุ่มหยิบใส่ตะกร้า */}
         <div>
-          {product.brand && (
-            <p className="text-base font-semibold uppercase text-primary">{product.brand}</p>
+          {brand && (
+            <p className="text-base font-semibold uppercase text-primary">{brand}</p>
           )}
 
           <h1 className="mt-2 text-2xl font-bold leading-snug md:text-[28px]">{product.name}</h1>
@@ -188,52 +189,48 @@ export default function ProductDetail() {
             {product.description}
           </p>
 
-          {/* เลือกสีสินค้า (แสดงเฉพาะเมื่อมีตัวเลือกสีระบุไว้จริง) */}
-          {availableColors && (
-            <div className="mt-6">
-              <p className="text-sm font-semibold">Choose Colors</p>
-              <div className="mt-3 flex gap-3">
-                {availableColors.map((option) => (
-                  <button
-                    key={option.id}
-                    type="button"
-                    onClick={() => setColor(option.id)}
-                    aria-label={option.label}
-                    aria-pressed={color === option.id}
-                    className={`grid size-7 place-items-center rounded-pill transition cursor-pointer ${
-                      color === option.id ? 'ring-2 ring-ink ring-offset-2' : 'hover:ring-2 hover:ring-ink/30 hover:ring-offset-2'
-                    } ${option.className}`}
-                  >
-                    {color === option.id && <Check className="size-4 text-white" aria-hidden="true" />}
-                  </button>
-                ))}
-              </div>
+          {/* เลือกสีสินค้า */}
+          <div className="mt-6">
+            <p className="text-sm font-semibold">Choose Colors</p>
+            <div className="mt-3 flex gap-3">
+              {COLORS.map((option) => (
+                <button
+                  key={option.id}
+                  type="button"
+                  onClick={() => setColor(option.id)}
+                  aria-label={option.label}
+                  aria-pressed={color === option.id}
+                  className={`grid size-7 place-items-center rounded-pill transition ${
+                    color === option.id ? 'ring-2 ring-ink ring-offset-2' : 'hover:ring-2 hover:ring-ink/30 hover:ring-offset-2'
+                  } ${option.className}`}
+                >
+                  {color === option.id && <Check className="size-4 text-white" aria-hidden="true" />}
+                </button>
+              ))}
             </div>
-          )}
+          </div>
 
-          {/* เลือกไซซ์สินค้า (แสดงเฉพาะสินค้าประเภทเครื่องแต่งกาย) */}
-          {isApparel && (
-            <div className="mt-6">
-              <p className="text-sm font-semibold">Choose Size</p>
-              <div className="mt-3 flex flex-wrap gap-3">
-                {availableSizes.map((option) => (
-                  <button
-                    key={option}
-                    type="button"
-                    onClick={() => setSize(option)}
-                    aria-pressed={size === option}
-                    className={`h-10 rounded-pill border px-6 text-sm transition cursor-pointer ${
-                      size === option
-                        ? 'border-primary bg-primary font-medium text-white'
-                        : 'border-ink/20 text-ink hover:border-ink'
-                    }`}
-                  >
-                    {option}
-                  </button>
-                ))}
-              </div>
+          {/* เลือกไซซ์สินค้า */}
+          <div className="mt-6">
+            <p className="text-sm font-semibold">Choose Size</p>
+            <div className="mt-3 flex flex-wrap gap-3">
+              {sizeOptions.map((option) => (
+                <button
+                  key={option}
+                  type="button"
+                  onClick={() => setSize(option)}
+                  aria-pressed={size === option}
+                  className={`h-10 rounded-pill border px-6 text-sm transition ${
+                    size === option
+                      ? 'border-primary bg-primary font-medium text-white'
+                      : 'border-ink/20 text-ink hover:border-ink'
+                  }`}
+                >
+                  {option}
+                </button>
+              ))}
             </div>
-          )}
+          </div>
 
           {/* ตัวปรับจำนวนสินค้า (+/- ล็อคขั้นต่ำ 1 ชิ้น) และปุ่มกดใส่ตะกร้า */}
           <div className="mt-8 flex flex-col gap-4 sm:flex-row">
@@ -260,7 +257,7 @@ export default function ProductDetail() {
             <Button
               size="lg"
               className="flex-1"
-              onClick={() => addToCart(product, quantity)}
+              onClick={() => addToCart({ ...product, size, color }, quantity)}
               aria-label={`เพิ่ม ${product.name} จำนวน ${quantity} ชิ้นลงตะกร้า`}
             >
               Add to Cart
@@ -297,7 +294,7 @@ export default function ProductDetail() {
         <div className="mt-10 max-w-3xl">
           <p className="leading-relaxed text-black/70">{product.description}</p>
           <p className="mt-4 text-sm text-muted">
-            หมวด: {categoryLabel} · แบรนด์: {product.brand}
+            หมวด: {categoryLabel} · แบรนด์: {brand || '—'}
           </p>
         </div>
       )}
@@ -373,7 +370,7 @@ export default function ProductDetail() {
 
           <div className="mt-10 grid grid-cols-2 gap-6 lg:grid-cols-4">
             {related.map((item) => (
-              <ProductCard key={item.id} product={item} compact />
+              <ProductCard key={item._id || item.id} product={item} compact />
             ))}
           </div>
         </section>
