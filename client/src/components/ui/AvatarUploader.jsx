@@ -1,5 +1,6 @@
 // src/components/ui/AvatarUploader.jsx
-import React, { useRef } from 'react';
+// คอมโพเนนต์อัปโหลดรูปโปรไฟล์ — ดีไซน์ Rounded 2xl minimal ตามแบบ UI
+import { useRef } from 'react';
 
 export const AvatarUploader = ({ currentAvatar, onUpload }) => {
   const fileInputRef = useRef(null);
@@ -10,15 +11,19 @@ export const AvatarUploader = ({ currentAvatar, onUpload }) => {
   };
 
   return (
-    <div className="flex items-center gap-6 p-5 bg-cream border border-ink rounded-btn">
-      <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-ink shrink-0 bg-white">
+    <div className="flex items-center gap-6 p-4 rounded-2xl border border-gray-100 bg-gray-50/70">
+      <div className="w-20 h-20 rounded-2xl overflow-hidden border border-gray-200 shrink-0 bg-white shadow-sm">
         <img
           src={currentAvatar || 'https://via.placeholder.com/150'}
           alt="Avatar Preview"
           className="w-full h-full object-cover"
         />
       </div>
-      <div className="flex flex-col gap-2 items-start">
+      <div className="flex flex-col gap-1 items-start">
+        <h3 className="font-sans font-semibold text-sm text-gray-900">Avatar</h3>
+        <span className="text-xs text-gray-500">
+          Recommended size: 500x500px.
+        </span>
         <input
           type="file"
           ref={fileInputRef}
@@ -29,13 +34,10 @@ export const AvatarUploader = ({ currentAvatar, onUpload }) => {
         <button
           type="button"
           onClick={() => fileInputRef.current?.click()}
-          className="bg-ink text-cream-text font-sans font-bold text-xs tracking-wider px-4 py-2 rounded-btn hover:bg-primary hover:text-white transition-all transform hover:-translate-y-0.5 cursor-pointer"
+          className="mt-2 px-4 py-2 border border-gray-200 bg-white text-gray-700 font-sans font-medium text-xs rounded-xl hover:bg-gray-100 shadow-sm transition-all cursor-pointer"
         >
-          UPLOAD NEW
+          Upload New
         </button>
-        <span className="text-[11px] font-medium text-muted tracking-wide">
-          RECOMMENDED: 400x400PX (PNG, JPG UP TO 2MB)
-        </span>
       </div>
     </div>
   );

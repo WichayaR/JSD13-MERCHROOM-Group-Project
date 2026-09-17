@@ -1,37 +1,29 @@
 // src/context/AccountContext.jsx
-import { createContext, useContext, useState, useEffect, useMemo } from 'react';
-import { getMyProfile, updateMyProfileDetails } from '../api/users.api';
-import { getMyOrders } from '../api/orders.api';
-import { useAuth } from './AuthContext';
+import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
+import { getUserProfile, updateUserProfileData, uploadUserAvatar } from '../data/user';
+import { getOrders } from '../data/orders';
 
 const AccountContext = createContext(null);
 
 export const AccountProvider = ({ children }) => {
-  const { user, booting, updateCurrentUser } = useAuth();
   const [profile, setProfile] = useState(null);
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
 
   useEffect(() => {
     let isMounted = true;
-    if (booting) return () => { isMounted = false; };
-    if (!user) {
-      return () => { isMounted = false; };
-    }
     async function loadAccountData() {
       try {
         const [userData, ordersData] = await Promise.all([
-          getMyProfile(),
-          getMyOrders(),
+          getUserProfile(),
+          getOrders(),
         ]);
         if (isMounted) {
-          setProfile(userData.user);
-          setOrders(ordersData.orders || []);
-          setError('');
+          setProfile(userData);
+          setOrders(ordersData);
         }
       } catch (err) {
-        if (isMounted) setError(err.message || 'ไม่สามารถโหลดข้อมูลบัญชีได้');
+        console.error('Failed to load account context data:', err);
       } finally {
         if (isMounted) setLoading(false);
       }
@@ -40,25 +32,25 @@ export const AccountProvider = ({ children }) => {
     return () => {
       isMounted = false;
     };
-  }, [user, booting]);
+  }, []);
 
   const updateProfile = async (fields) => {
-    const { user: updated } = await updateMyProfileDetails(fields);
+    const updated = await updateUserProfileData(fields);
     setProfile(updated);
-    updateCurrentUser(updated);
     return updated;
   };
 
-  const uploadAvatar = async () => {
-    // The backend accepts a URL only; binary upload has no server endpoint yet.
-    throw new Error('ระบบอัปโหลดรูปโปรไฟล์ยังไม่มี endpoint บน server');
+  const uploadAvatar = async (file) => {
+    const res = await uploadUserAvatar(file);
+    setProfile((prev) => ({ ...prev, profilePicture: res.profilePicture }));
+    return res.profilePicture;
   };
 
   const orderCount = useMemo(() => orders.length, [orders]);
 
   const totalSpent = useMemo(() => {
     return orders
-      .filter((order) => order.status === 'completed')
+      .filter((order) => order.status === 'delivered')
       .reduce((sum, order) => sum + order.totalAmount, 0);
   }, [orders]);
 
@@ -68,7 +60,6 @@ export const AccountProvider = ({ children }) => {
         profile,
         orders,
         loading,
-        error,
         updateProfile,
         uploadAvatar,
         orderCount,
@@ -80,7 +71,6 @@ export const AccountProvider = ({ children }) => {
   );
 };
 
-// eslint-disable-next-line react-refresh/only-export-components
 export const useAccount = () => {
   const context = useContext(AccountContext);
   if (!context) {

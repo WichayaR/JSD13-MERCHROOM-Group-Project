@@ -2,7 +2,7 @@
 // หน้าแสดงรายละเอียดสินค้า (Product Detail Page)
 // เรียกมาจาก: App.jsx ผ่าน Route path="/productDetail/:id"
 // แหล่งข้อมูล: ค้นหาข้อมูลสินค้าตาม id จาก src/data/product.js และดึงรีวิวจาก src/data/reviews.js
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   BadgeCheck,
@@ -13,6 +13,7 @@ import {
   Plus,
   Star,
 } from 'lucide-react';
+import { products } from '../src/data/product';
 import { mockReviews } from '../src/data/reviews';
 import { categoryFilter } from '../src/data/sections';
 import { useCart } from '../src/context/CartContext';
@@ -20,9 +21,8 @@ import Button from '../src/components/ui/Button';
 import Container from '../src/components/ui/Container';
 import ProductCard from '../src/components/ui/ProductCard';
 import Breadcrumb from '../src/components/ui/Breadcrumb';
-import { getPublicProduct, getPublicProducts } from '../src/api/products.api';
 
-const FALLBACK_SIZES = ['S', 'M', 'L', 'XL'];
+const SIZES = ['Small', 'Medium', 'Large', 'X-large'];
 
 const COLORS = [
   { id: 'black', label: 'Black', className: 'bg-ink' },
@@ -60,66 +60,46 @@ export default function ProductDetail() {
   const navigate = useNavigate();
   const { addToCart } = useCart();
 
-  const [product, setProduct] = useState(null);
-  const [relatedProducts, setRelatedProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [loadError, setLoadError] = useState('');
-
-  useEffect(() => {
-    let active = true;
-    Promise.all([getPublicProduct(productId), getPublicProducts({ limit: 20 })])
-      .then(([productData, listData]) => {
-        if (!active) return;
-        setProduct(productData.product);
-        setRelatedProducts(listData.products || []);
-      })
-      .catch((error) => {
-        if (active) setLoadError(error.message || 'ไม่สามารถโหลดสินค้าได้');
-      })
-      .finally(() => { if (active) setLoading(false); });
-    return () => { active = false; };
-  }, [productId]);
+  // ค้นหาสินค้าจาก data array ตาม id
+  const product = products.find((item) => String(item.id) === String(productId));
 
   // แมป category ย้อนกลับจาก suffix รหัสสินค้าเพื่อทำ Breadcrumb ลิงก์กลับหน้าเดิม
   const backToCat = (() => {
     if (!product) return null;
-    if (product.category?.slug === 'thai-heritage') return 'thai-heritage';
-    if (product.category?.slug) return 'artist';
+    if (product.id.endsWith('th')) return 'thai-band';
+    if (product.id.endsWith('en')) return 'pop-culture';
+    if (product.id.endsWith('hr')) return 'thai-heritage';
     return null;
   })();
   const backTo = backToCat ? `/products?cat=${backToCat}` : '/products';
   const categoryLabel = backToCat ? categoryFilter[backToCat]?.label : 'Products';
 
-  const [size, setSize] = useState('M');
+  const [size, setSize] = useState('Large');
   const [color, setColor] = useState('black');
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState('reviews');
   const [galleryIndex, setGalleryIndex] = useState(0);
 
   // ดักกรณีพิมพ์ id มั่วแล้วหาของไม่เจอ แสดงหน้าแจ้งเตือนพร้อมปุ่มพากลับ
-  if (loading) return <Container className="py-20 text-center">กำลังโหลดสินค้า…</Container>;
-
   if (!product) {
     return (
       <Container className="py-20 text-center">
-        <h1 className="mb-6 text-xl font-semibold text-error">{loadError || 'ไม่พบสินค้าที่คุณค้นหา'}</h1>
+        <h1 className="mb-6 text-xl font-semibold text-error">ไม่พบสินค้าที่คุณค้นหา</h1>
         <Button onClick={() => navigate('/products')}>กลับไปหน้าสินค้า</Button>
       </Container>
     );
   }
 
   // เตรียมรูปในแกลเลอรี โดยดึงสินค้าร่วมแบรนด์เดียวกันมาแสดงเป็นภาพย่อย
-  const brand = product.artist?.name || product.brand || '';
-  const sizeOptions = product.sizes?.length ? product.sizes : FALLBACK_SIZES;
-  const sameBrand = relatedProducts.filter((item) => (item.artist?.name || item.brand || '') === brand);
-  const gallery = [product, ...sameBrand.filter((item) => item._id !== product._id)].slice(0, 3);
-  const mainImage = gallery[galleryIndex]?.imageUrl || gallery[galleryIndex]?.image || product.imageUrl || product.image;
+  const sameBrand = products.filter((item) => item.brand === product.brand);
+  const gallery = [product, ...sameBrand.filter((item) => item.id !== product.id)].slice(0, 3);
+  const mainImage = gallery[galleryIndex]?.image || product.image;
 
   // แนะนำสินค้าที่เกี่ยวข้อง: เรียงจากแบรนด์เดียวกันก่อน แล้วตามด้วยหมวดหมู่เดียวกัน
   const related = [
-    ...sameBrand.filter((item) => item._id !== product._id),
-    ...relatedProducts.filter(
-      (item) => item._id !== product._id && (item.artist?.name || item.brand || '') !== brand && item.category?._id === product.category?._id,
+    ...sameBrand.filter((item) => item.id !== product.id),
+    ...products.filter(
+      (item) => item.id !== product.id && item.brand !== product.brand && item.id.endsWith(product.id.slice(-2)),
     ),
   ].slice(0, 4);
 
@@ -141,7 +121,7 @@ export default function ProductDetail() {
           <div className="flex flex-col gap-3">
             {gallery.map((item, idx) => (
               <button
-                key={item._id || item.id}
+                key={item.id}
                 type="button"
                 onClick={() => setGalleryIndex(idx)}
                 aria-label={`ดูรูป ${item.name}`}
@@ -150,8 +130,8 @@ export default function ProductDetail() {
                   idx === galleryIndex ? 'border-ink' : 'border-transparent hover:border-ink/20'
                 }`}
               >
-                {(item.imageUrl || item.image) && (
-                  <img src={item.imageUrl || item.image} alt="" className="h-full w-full object-cover" />
+                {item.image && (
+                  <img src={item.image} alt="" className="h-full w-full object-cover" />
                 )}
               </button>
             ))}
@@ -175,8 +155,8 @@ export default function ProductDetail() {
 
         {/* ข้อมูลสินค้า: ชื่อ ราคา คำบรรยาย ตัวเลือกขนาด สี และปุ่มหยิบใส่ตะกร้า */}
         <div>
-          {brand && (
-            <p className="text-base font-semibold uppercase text-primary">{brand}</p>
+          {product.brand && (
+            <p className="text-base font-semibold uppercase text-primary">{product.brand}</p>
           )}
 
           <h1 className="mt-2 text-2xl font-bold leading-snug md:text-[28px]">{product.name}</h1>
@@ -214,7 +194,7 @@ export default function ProductDetail() {
           <div className="mt-6">
             <p className="text-sm font-semibold">Choose Size</p>
             <div className="mt-3 flex flex-wrap gap-3">
-              {sizeOptions.map((option) => (
+              {SIZES.map((option) => (
                 <button
                   key={option}
                   type="button"
@@ -257,7 +237,7 @@ export default function ProductDetail() {
             <Button
               size="lg"
               className="flex-1"
-              onClick={() => addToCart({ ...product, size, color }, quantity)}
+              onClick={() => addToCart(product, quantity)}
               aria-label={`เพิ่ม ${product.name} จำนวน ${quantity} ชิ้นลงตะกร้า`}
             >
               Add to Cart
@@ -294,7 +274,7 @@ export default function ProductDetail() {
         <div className="mt-10 max-w-3xl">
           <p className="leading-relaxed text-black/70">{product.description}</p>
           <p className="mt-4 text-sm text-muted">
-            หมวด: {categoryLabel} · แบรนด์: {brand || '—'}
+            หมวด: {categoryLabel} · แบรนด์: {product.brand}
           </p>
         </div>
       )}
@@ -370,7 +350,7 @@ export default function ProductDetail() {
 
           <div className="mt-10 grid grid-cols-2 gap-6 lg:grid-cols-4">
             {related.map((item) => (
-              <ProductCard key={item._id || item.id} product={item} compact />
+              <ProductCard key={item.id} product={item} compact />
             ))}
           </div>
         </section>

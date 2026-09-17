@@ -10,7 +10,6 @@ import { useNavigate } from 'react-router-dom';
 import { useCart } from '../src/context/CartContext';
 import Container from '../src/components/ui/Container';
 import Breadcrumb from '../src/components/ui/Breadcrumb';
-import { createOrder } from '../src/api/orders.api';
 
 // ค่าจัดส่งแบบคงที่ ($15)
 const DELIVERY_FEE = 15;
@@ -55,8 +54,6 @@ export default function Checkout() {
 
   // State สำหรับเลือกประเภทช่องทางการชำระเงิน ('card' | 'promptpay' | 'truemoney' | 'bank')
   const [paymentMethod, setPaymentMethod] = useState('card');
-  const [submitError, setSubmitError] = useState('');
-  const [submitting, setSubmitting] = useState(false);
 
   // State สำหรับเก็บข้อมูลในแบบฟอร์ม (ผู้ติดต่อ, ที่อยู่จัดส่ง, ข้อมูลการชำระเงิน)
   const [formData, setFormData] = useState({
@@ -79,34 +76,34 @@ export default function Checkout() {
   // - บันทึกลง localStorage ('my_orders') สำหรับจำลองระบบสั่งซื้อ
   // - ล้างข้อมูลตะกร้าสินค้า (clearCart) และเปลี่ยนหน้าไปยัง /orders
   // ----------------------------------------------------------------------
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    setSubmitError('');
-    setSubmitting(true);
-    const shippingAddress = [
-      useSameAddress ? formData.name : formData.deliveryName,
-      useSameAddress ? formData.addressLine : formData.deliveryAddressLine,
-      useSameAddress ? formData.addressLine2 : formData.deliveryAddressLine2,
-      useSameAddress ? formData.city : formData.deliveryCity,
-      useSameAddress ? formData.state : formData.deliveryState,
-      useSameAddress ? formData.zipCode : formData.deliveryZipCode,
-      useSameAddress ? formData.country : formData.deliveryCountry,
-    ].filter(Boolean).join(', ');
 
-    try {
-      // The backend calculates the authoritative price and decrements stock.
-      const { order } = await createOrder({
-        items: items.map((item) => ({ productId: item.productId || item._id || item.id, quantity: item.quantity })),
-        shippingAddress,
-        paymentMethod,
-      });
-      clearCart();
-      navigate(`/order-confirmation/${order._id}`);
-    } catch (error) {
-      setSubmitError(error.message || 'ไม่สามารถสร้างคำสั่งซื้อได้');
-    } finally {
-      setSubmitting(false);
-    }
+    // สร้างข้อมูลคำสั่งซื้อใหม่ (Mock Order Data)
+    const newOrder = {
+      id: `ORD-${Date.now().toString().slice(-6)}`,
+      date: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
+      status: 'Processing',
+      total: total,
+      paymentMethod: paymentMethod,
+      items: items.map((item) => ({
+        id: item.id,
+        name: item.name,
+        size: item.size || 'M',
+        color: item.color || 'Standard',
+        price: item.price,
+        quantity: item.quantity,
+        image: item.image || '',
+      })),
+    };
+
+    // บันทึกคำสั่งซื้อลงใน LocalStorage
+    const existingOrders = JSON.parse(localStorage.getItem('my_orders') || '[]');
+    localStorage.setItem('my_orders', JSON.stringify([newOrder, ...existingOrders]));
+
+    // ล้างตะกร้าสินค้าและนำทางไปหน้าประวัติการสั่งซื้อ (/orders)
+    if (clearCart) clearCart();
+    navigate('/orders');
   };
 
   return (
@@ -409,24 +406,24 @@ export default function Checkout() {
 
               {/* 2. QR PromptPay (Mock) */}
               {paymentMethod === 'promptpay' && (
-                <div className="flex flex-col items-center justify-center rounded-xl bg-[#F0F0F0] p-6 text-center">
+                <div className="flex flex-col items-center justify-center rounded-2xl bg-[#F0F0F0] p-6 text-center">
                   <p className="text-sm font-bold text-black">Scan QR Code to Pay</p>
                   <p className="mt-1 text-xs text-black/60">รองรับ Mobile Banking ทุกธนาคาร</p>
-                  <div className="mt-4 flex size-44 items-center justify-center rounded-xl border border-black/10 bg-white p-2 shadow-sm">
+                  <div className="mt-4 flex size-44 items-center justify-center rounded-2xl border border-black/10 bg-white p-2 shadow-xs">
                     <img
                       src={`https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=PROMPTPAY_MOCK_TOTAL_${total}`}
                       alt="PromptPay QR Code"
                       className="size-full object-contain"
                     />
                   </div>
-                  <p className="mt-3 text-xs font-semibold text-black/70">ยอดชำระสุทธิ: {formatCurrency(total)}</p>
+                  <p className="mt-4 text-xs font-bold text-black/80">ยอดชำระสุทธิ: {formatCurrency(total)}</p>
                 </div>
               )}
 
               {/* 3. TrueMoney Wallet */}
               {paymentMethod === 'truemoney' && (
-                <div className="flex flex-col gap-3 rounded-xl bg-[#F0F0F0] p-4">
-                  <p className="text-xs font-bold text-black/70">ชำระผ่าน TrueMoney Wallet</p>
+                <div className="flex flex-col gap-3 rounded-2xl bg-[#F0F0F0] p-5 md:p-6">
+                  <p className="text-xs font-bold text-black/80">ชำระผ่าน TrueMoney Wallet</p>
                   <input
                     type="tel"
                     name="truemoneyPhone"
@@ -442,8 +439,8 @@ export default function Checkout() {
 
               {/* 4. Thai Bank Account Direct Link */}
               {paymentMethod === 'bank' && (
-                <div className="flex flex-col gap-3 rounded-xl bg-[#F0F0F0] p-4">
-                  <p className="text-xs font-bold text-black/70">ผูกบัญชีธนาคาร (Direct Bank Debit)</p>
+                <div className="flex flex-col gap-3 rounded-2xl bg-[#F0F0F0] p-5 md:p-6">
+                  <p className="text-xs font-bold text-black/80">ผูกบัญชีธนาคาร (Direct Bank Debit)</p>
                   <select
                     name="selectedBank"
                     value={formData.selectedBank}
@@ -495,8 +492,6 @@ export default function Checkout() {
 
           <div className="my-4 border-t border-black/10" />
 
-          {submitError && <p className="mb-3 text-sm text-error">{submitError}</p>}
-
           {/* ตารางแสดงสรุปราคา (Subtotal, Discount, Delivery Fee) */}
           <dl className="flex flex-col gap-3 text-sm md:text-base">
             <div className="flex justify-between items-center">
@@ -529,10 +524,9 @@ export default function Checkout() {
           {/* ปุ่มยืนยันการสั่งซื้อ */}
           <button
             type="submit"
-            disabled={submitting}
             className="mt-5 flex h-12 w-full items-center justify-center rounded-full bg-primary text-base font-semibold text-white transition hover:opacity-90"
           >
-            {submitting ? 'กำลังสร้างคำสั่งซื้อ…' : 'Finish checkout'}
+            Finish checkout
           </button>
         </aside>
       </form>

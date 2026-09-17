@@ -1,6 +1,5 @@
 // ไฟล์: client/pages/OrderConfirmation.jsx
-import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams } from 'react';
 import {
   BadgeCheck,
   CheckCircle2,
@@ -10,7 +9,8 @@ import {
   PackageSearch,
   Truck,
 } from 'lucide-react';
-import { getOrderById } from '../src/api/orders.api';
+import { getOrderById as getLocalOrderById } from '../src/utils/orderStorage';
+import { getOrderById as getMockOrderById } from '../src/data/mockup/mockOrders';
 import Button from '../src/components/ui/Button';
 import Container from '../src/components/ui/Container';
 import Breadcrumb from '../src/components/ui/Breadcrumb';
@@ -50,20 +50,7 @@ function StatusPill({ order }) {
 
 export default function OrderConfirmation() {
   const { orderId } = useParams();
-  const [order, setOrder] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-
-  useEffect(() => {
-    let active = true;
-    getOrderById(orderId)
-      .then(({ order: result }) => { if (active) setOrder(result); })
-      .catch((requestError) => { if (active) setError(requestError.message || 'ไม่พบคำสั่งซื้อ'); })
-      .finally(() => { if (active) setLoading(false); });
-    return () => { active = false; };
-  }, [orderId]);
-
-  if (loading) return <Container className="py-20 text-center">กำลังโหลดคำสั่งซื้อ…</Container>;
+  const order = getLocalOrderById(orderId) || getMockOrderById(orderId);
 
   if (!order) {
     return (
@@ -71,7 +58,7 @@ export default function OrderConfirmation() {
         <Breadcrumb items={[{ label: 'Home', to: '/' }, { label: 'Order Status' }]} />
         <div className="mt-6 flex flex-col items-center gap-6 rounded-card border border-black/10 bg-white p-12 text-center">
           <p className="text-xl font-bold text-black">Order Not Found</p>
-          <p className="text-sm text-black/60">{error || "We couldn't find the order you are looking for."}</p>
+          <p className="text-sm text-black/60">We couldn't find the order you are looking for.</p>
           <Button to="/products" className="rounded-full bg-primary px-8 text-white hover:opacity-90" size="lg">
             Start Shopping
           </Button>
@@ -80,14 +67,8 @@ export default function OrderConfirmation() {
     );
   }
 
-  const displayOrder = {
-    ...order,
-    paymentStatus: order.payment?.status || 'pending',
-    deliveryStatus: ({ shipped: 'in_transit', completed: 'delivered' })[order.status] || order.status,
-  };
-
-  const deliveryIndex = DELIVERY_STEPS.findIndex((step) => step.key === displayOrder.deliveryStatus);
-  const isCancelled = displayOrder.deliveryStatus === 'cancelled';
+  const deliveryIndex = DELIVERY_STEPS.findIndex((step) => step.key === order.deliveryStatus);
+  const isCancelled = order.deliveryStatus === 'cancelled';
   const orderIdDisplay = order._id || order.id;
 
   return (
@@ -99,7 +80,7 @@ export default function OrderConfirmation() {
           <h1 className="text-3xl font-extrabold uppercase tracking-tight md:text-[40px] leading-none text-black font-integral">
             ORDER CONFIRMED
           </h1>
-          <StatusPill order={displayOrder} />
+          <StatusPill order={order} />
         </div>
         <p className="text-sm text-black/60">
           Order ID: <span className="font-semibold text-black">{orderIdDisplay}</span> · Date:{' '}

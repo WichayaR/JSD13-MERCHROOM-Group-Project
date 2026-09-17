@@ -1,8 +1,14 @@
 // src/data/orders.js
+import { products } from './product';
 
 /**
- * Mock Order Data Source - อิงจาก Order.js Mongoose Schema
+ * Mock Order Data Source - อิงจากรายการสินค้าใน Database (src/data/product.js)
  */
+const p1 = products.find((p) => p.id === '01th') || products[0];
+const p2 = products.find((p) => p.id === '04th') || products[3];
+const p3 = products.find((p) => p.id === '02th') || products[1];
+const p4 = products.find((p) => p.id === '05th') || products[4];
+
 const MOCK_ORDERS = [
   {
     _id: 'ord_65f1b99201a2b3c4d5e6f7a8',
@@ -11,20 +17,22 @@ const MOCK_ORDERS = [
     items: [
       {
         _id: 'itm_01',
-        productId: 'prod_101',
-        name: 'MERCHROOM x THAI HERITAGE OVERSIZED TEE',
-        price: 1290,
+        productId: p1.id,
+        name: p1.name,
+        price: p1.price,
         quantity: 1,
+        image: p1.image,
       },
       {
         _id: 'itm_02',
-        productId: 'prod_102',
-        name: 'NEON YAK VINYL FIGURE (LIMITED EDITION)',
-        price: 3210,
+        productId: p3.id,
+        name: p3.name,
+        price: p3.price,
         quantity: 1,
+        image: p3.image,
       },
     ],
-    totalAmount: 4500,
+    totalAmount: p1.price + p3.price,
     status: 'delivered', // pending | processing | shipping | delivered | cancelled
     shippingProvider: 'KERRY EXPRESS',
     shippingAddress: '99/9 ถ.สุขุมวิท แขวงคลองเตย เขตคลองเตย กรุงเทพมหานคร 10110',
@@ -38,13 +46,14 @@ const MOCK_ORDERS = [
     items: [
       {
         _id: 'itm_03',
-        productId: 'prod_103',
-        name: 'CYBERPUNK TUK-TUK POSTER SET (A2)',
-        price: 4000,
-        quantity: 3,
+        productId: p4.id,
+        name: p4.name,
+        price: p4.price,
+        quantity: 2,
+        image: p4.image,
       },
     ],
-    totalAmount: 12000,
+    totalAmount: p4.price * 2,
     status: 'pending',
     shippingProvider: 'FLASH EXPRESS',
     shippingAddress: '99/9 ถ.สุขุมวิท แขวงคลองเตย เขตคลองเตย กรุงเทพมหานคร 10110',
@@ -58,13 +67,14 @@ const MOCK_ORDERS = [
     items: [
       {
         _id: 'itm_04',
-        productId: 'prod_104',
-        name: 'BANGKOK NIGHTS HOODIE - BLACK',
-        price: 2200,
+        productId: p2.id,
+        name: p2.name,
+        price: p2.price,
         quantity: 1,
+        image: p2.image,
       },
     ],
-    totalAmount: 2200,
+    totalAmount: p2.price,
     status: 'cancelled',
     shippingProvider: '-',
     shippingAddress: '99/9 ถ.สุขุมวิท แขวงคลองเตย เขตคลองเตย กรุงเทพมหานคร 10110',

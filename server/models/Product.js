@@ -2,15 +2,12 @@
 const mongoose = require('mongoose');
 
 const ProductSchema = new mongoose.Schema({
-    code: { type: String, unique: true, sparse: true, trim: true },
     name: { type: String, required: true },
     description: String,
     price: { type: Number, required: true },
     quantity: { type: Number, default: 0 },
     date: Date,
     tags: [String],
-    sizes: [{ type: String, enum: ['S', 'M', 'L', 'XL'] }],
-    featured: { type: Boolean, default: false },
     // เชื่อม relation ไปยัง Category และ Artist ผ่าน ObjectId
     category: { type: mongoose.Schema.Types.ObjectId, ref: 'Category', required: true },
     artist: { type: mongoose.Schema.Types.ObjectId, ref: 'Artist' },

@@ -14,9 +14,9 @@ import { useSearchParams } from 'react-router-dom';
 import { ChevronDown, Flag, Search, X } from 'lucide-react';
 
 // นำเข้าข้อมูล Mock Data สินค้า และตัวเชื่อม Context ตระกร้าสินค้า
+import { products } from '../src/data/product';
 import { categoryFilter } from '../src/data/sections';
 import { useCart } from '../src/context/CartContext';
-import { getPublicProducts } from '../src/api/products.api';
 
 // นำเข้า Components ย่อยมาประกอบกัน
 import Container from '../src/components/ui/Container';
@@ -35,6 +35,8 @@ const STATUS_OPTIONS = ['All', 'In stock', 'Pre-order', 'Limited'];
 const COLLECTION_OPTIONS = ['All', 'Concert', 'Album', 'Character', 'Handicraft'];
 
 // ดึงรายชื่อแบรนด์ทั้งหมดจากรายการสินค้าโดยไม่ให้ซ้ำกัน
+const BRANDS = [...new Set(products.map((product) => product.brand).filter(Boolean))];
+const ARTIST_OPTIONS = ['All', ...BRANDS];
 const NATIONAL_OPTIONS = ['All', 'Thailand', 'International'];
 const STYLE_OPTIONS = ['All', 'Illustration', 'Photo', 'Typography'];
 const MEDIUM_OPTIONS = ['All', 'T-Shirt', 'Vinyl', 'Accessories', 'Home & Living'];
@@ -116,39 +118,18 @@ function Dropdown({ label, value, options, onChange }) {
 export default function Products() {
   // ดึงฟังก์ชันเพิ่มสินค้าเข้าตะกร้าจาก Context กลาง
   const { addToCart } = useCart();
-  const [products, setProducts] = useState([]);
-  const [apiError, setApiError] = useState('');
-  const [isLoadingProducts, setIsLoadingProducts] = useState(true);
-
-  useEffect(() => {
-    let active = true;
-    getPublicProducts({ limit: 100 })
-      .then(({ products: result }) => {
-        if (active) setProducts(result || []);
-      })
-      .catch((error) => {
-        if (active) setApiError(error.message || 'ไม่สามารถโหลดสินค้าได้');
-      })
-      .finally(() => {
-        if (active) setIsLoadingProducts(false);
-      });
-    return () => { active = false; };
-  }, []);
 
   // อ่าน Query Parameter จาก URL (เช่น ?cat=... หรือ ?q=...)
   const [searchParams, setSearchParams] = useSearchParams();
   const cat = searchParams.get('cat');
   const q = searchParams.get('q') ?? '';
 
-  // แปลงค่า cat จาก URL มาเป็นชื่อหมวดหมู่
-  const urlCategory = cat ? (categoryFilter[cat]?.label ?? 'All') : 'All';
+  // แปลงค่า cat จาก URL มาเป็นชื่อหมวดหมู่ทันทีตั้งแต่ตอนเริ่มโหลดหน้าเว็บ
+  const initialCategory = cat ? (categoryFilter[cat]?.label ?? 'All') : 'All';
 
   /* กลุ่ม State (กล่องเก็บข้อมูล): ทำหน้าที่เก็บสถานะปัจจุบันของการกรองทั้งหมด */
-  const [queryState, setQueryState] = useState(q);            // ข้อความค้นหา (Local)
-  const [prevQ, setPrevQ] = useState(q);                     // บันทึกค่า URL q เพื่อเช็กสภาวะเปลี่ยนผ่าน
-  const [categoryState, setCategoryState] = useState(urlCategory); // หมวดหมู่ (Local)
-  const [prevCat, setPrevCat] = useState(cat);               // บันทึกค่า URL cat เพื่อเช็กสภาวะเปลี่ยนผ่าน
-
+  const [query, setQuery] = useState(q);            // ข้อความค้นหา
+  const [category, setCategory] = useState(initialCategory); // หมวดหมู่ (ตั้งค่าตาม URL ทันที)
   const [price, setPrice] = useState('All');        // ช่วงราคา
   const [size, setSize] = useState('All');          // ไซส์
   const [status, setStatus] = useState('All');      // สถานะสินค้า
@@ -163,27 +144,17 @@ export default function Products() {
   const [sort, setSort] = useState('Famous');       // การเรียงลำดับ (น้อย-มาก)
   const [page, setPage] = useState(1);              // หน้า Pagination ปัจจุบัน
 
-  /* การซิงค์ข้อมูลเมื่อ URL เปลี่ยนแปลง (Derived State pattern ที่ถูกต้องตามหลัก React) */
-  if (cat !== prevCat) {
-    setPrevCat(cat);
-    setCategoryState(urlCategory);
+  /* การซิงค์ข้อมูลเมื่อ URL เปลี่ยนแปลง (เช่น ผู้ใช้กดลิงก์มาจาก Navbar หรือหมวดหมู่อื่น) */
+  useEffect(() => {
+    const newCategory = cat ? (categoryFilter[cat]?.label ?? 'All') : 'All';
+    setCategory(newCategory);
     setPage(1);
-  }
+  }, [cat]);
 
-  if (q !== prevQ) {
-    setPrevQ(q);
-    setQueryState(q);
+  useEffect(() => {
+    setQuery(q);
     setPage(1);
-  }
-
-  const category = categoryState;
-  const query = queryState;
-  const setQuery = setQueryState;
-  const setCategory = setCategoryState;
-  const artistOptions = useMemo(
-    () => ['All', ...new Set(products.map((product) => product.artist?.name || product.brand).filter(Boolean))],
-    [products],
-  );
+  }, [q]);
 
   /* หัวใจหลักของการกรองสินค้า (Filtering Engine):
      - useMemo จะทำงานคำนวณใหม่เฉพาะเมื่อ State ตัวกรองตัวใดตัวหนึ่งเปลี่ยน */
@@ -192,11 +163,9 @@ export default function Products() {
 
     // นำ Array สินค้าทั้งหมดมาผ่านฟังก์ชัน .filter() ตามเงื่อนไขทุกข้อ
     let result = products.filter((product) => {
-      // Legacy category suffix and nationality are not fields in the current DB schema.
-      // Keep the remaining DB-backed filters working instead of guessing a mapping.
-      void suffix;
-      void thaiOnly;
-      if (artist !== 'All' && (product.artist?.name || product.brand) !== artist) return false;
+      if (suffix && !product.id.endsWith(suffix)) return false;
+      if (thaiOnly && !product.id.endsWith('th')) return false;
+      if (artist !== 'All' && product.brand !== artist) return false;
       if (price === '< ฿1,000' && product.price >= 1000) return false;
       if (price === '฿1,000 - ฿3,000' && (product.price < 1000 || product.price > 3000)) return false;
       if (price === '> ฿3,000' && product.price <= 3000) return false;
@@ -205,7 +174,7 @@ export default function Products() {
       if (size !== 'All' && Array.isArray(product.sizes) && !product.sizes.includes(size)) return false;
 
       // ค้นหาคำจาก ชื่อ, แบรนด์, คำอธิบาย
-      const text = `${product.name} ${product.artist?.name || product.brand || ''} ${product.description || ''}`.toLowerCase();
+      const text = `${product.name} ${product.brand} ${product.description}`.toLowerCase();
       if (query && !text.includes(query.toLowerCase())) return false;
       
       return true; // ถ้าผ่านทุกเงื่อนไข จะเก็บสินค้านี้ไว้
@@ -216,7 +185,7 @@ export default function Products() {
     if (sort === 'Price: High to Low') result = [...result].sort((a, b) => b.price - a.price);
     
     return result;
-  }, [category, thaiOnly, artist, price, size, query, sort, products]);
+  }, [category, thaiOnly, artist, price, size, query, sort]);
 
   /* คำนวณการแบ่งหน้า (Pagination) */
   const totalPages = Math.max(1, Math.ceil(filtered.length / PER_PAGE));
@@ -273,23 +242,22 @@ export default function Products() {
   /* คำนวณคำแนะนำการค้นหาอัตโนมัติ (Search Auto-suggestions) */
   const suggestions = useMemo(() => {
     if (!query.trim()) return [];
-    const qText = query.toLowerCase();
+    const q = query.toLowerCase();
     const seen = new Set();
     const results = [];
     for (const p of products) {
-      const brand = p.artist?.name || p.brand || '';
-      const text = `${p.name} ${brand} ${p.description || ''}`.toLowerCase();
-      if (text.includes(qText)) {
+      const text = `${p.name} ${p.brand} ${p.description}`.toLowerCase();
+      if (text.includes(q)) {
         const key = p.name;
         if (!seen.has(key)) {
           seen.add(key);
-          results.push({ name: p.name, brand });
+          results.push({ name: p.name, brand: p.brand });
         }
       }
       if (results.length >= 6) break; // เอาสูงสุดแค่ 6 รายการ
     }
     return results;
-  }, [query, products]);
+  }, [query]);
 
   // ปิดช่อง Suggestion เมื่อคลิกที่อื่นบนหน้าจอ
   useEffect(() => {
@@ -315,8 +283,6 @@ export default function Products() {
       <Breadcrumb
         items={[{ label: 'Home', to: '/' }, { label: 'Shop', to: '/products' }, { label: filterLabel }]}
       />
-      {isLoadingProducts && <p className="mt-6 text-sm text-muted">กำลังโหลดสินค้าจากระบบ…</p>}
-      {apiError && <p className="mt-6 text-sm text-error">{apiError}</p>}
 
       {/* 1. ช่องค้นหา (Search Bar) สูง 64px ทรง แคปซูล */}
       <div ref={searchRef} className="relative mt-6">
@@ -418,7 +384,7 @@ export default function Products() {
         <div className="relative z-10 mt-[25px]">
           <p className="text-xs font-normal text-muted">Sort By Artist and Culture</p>
           <div className="mt-3 flex flex-wrap items-center gap-[10px]">
-            <Dropdown label="Artist/Company" value={artist} options={artistOptions} onChange={(v) => { setArtist(v); setPage(1); }} />
+            <Dropdown label="Artist/Company" value={artist} options={ARTIST_OPTIONS} onChange={(v) => { setArtist(v); setPage(1); }} />
             <Dropdown label="National" value={national} options={NATIONAL_OPTIONS} onChange={(v) => { setNational(v); setPage(1); }} />
             <Dropdown label="Style" value={style} options={STYLE_OPTIONS} onChange={(v) => { setStyle(v); setPage(1); }} />
             <Dropdown label="Medium" value={medium} options={MEDIUM_OPTIONS} onChange={(v) => { setMedium(v); setPage(1); }} />
@@ -482,7 +448,7 @@ export default function Products() {
       <div className="mt-8 grid grid-cols-2 gap-5 lg:grid-cols-4">
         {/* วนลูปนำรายการสินค้าจาก pageItems มาแสดงผลทีละชิ้นผ่าน ProductCard */}
         {pageItems.map((product) => (
-          <ProductCard key={product._id || product.id} product={product} onAddToCart={addToCart} fluid />
+          <ProductCard key={product.id} product={product} onAddToCart={addToCart} fluid />
         ))}
         
         {/* กรณีค้นหาแล้วไม่พบสินค้าเลย */}

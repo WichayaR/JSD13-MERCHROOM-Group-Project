@@ -51,31 +51,21 @@ export function CartProvider({ children }) {
 
   // เพิ่มสินค้าเข้าตะกร้า
   const addToCart = useCallback((product, quantity = 1) => {
-    const productId = product?.productId || product?._id || product?.id;
-    if (!productId) {
+    if (!product?.id) {
       console.warn('[cart] addToCart ต้องรับ product object ไม่ใช่ event');
       return;
     }
 
-    // Normalise both the legacy mock shape and the MongoDB API shape.
-    const cartProduct = {
-      ...product,
-      id: productId,
-      productId,
-      image: product.image || product.imageUrl || '',
-      brand: product.brand || product.artist?.name || '',
-    };
-
     setItems((prev) => {
-      const existing = prev.find((item) => item.id === productId);
+      const existing = prev.find((item) => item.id === product.id);
 
       if (existing) {
         return prev.map((item) =>
-          item.id === productId ? { ...item, quantity: item.quantity + quantity } : item,
+          item.id === product.id ? { ...item, quantity: item.quantity + quantity } : item,
         );
       }
 
-      return [...prev, { ...cartProduct, quantity }];
+      return [...prev, { ...product, quantity }];
     });
   }, []);
 

@@ -1,34 +1,56 @@
 // pages/Account/Wishlist.jsx
-import React from 'react';
+// หน้ารายการสินค้าที่ถูกใจ — อ้างอิงดีไซน์การ์ดสินค้าปุ่มส้มแบบในรูปตัวอย่าง
+import { products } from '../../src/data/product';
+import { useCart } from '../../src/context/CartContext';
 
 export default function Wishlist() {
+  const { addToCart } = useCart();
+
   const wishlistItems = [
-    {
-      id: 'prod_1',
-      title: 'THAILAND POP-HERITAGE ART TOY',
-      price: 2990,
-      imageUrl: 'https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?auto=format&fit=crop&w=400&q=80',
+    products[0] || {
+      id: '01th',
+      name: 'VINYL: THE PARKINSON',
+      price: 2200,
+      image: 'https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?auto=format&fit=crop&w=400&q=80',
     },
   ];
 
   return (
-    <div className="bg-white border border-ink shadow-card rounded-card p-6 sm:p-8">
-      <h2 className="font-sans font-extrabold text-2xl tracking-tight text-ink uppercase mb-6">
-        MY WISHLIST
+    <div className="bg-white rounded-2xl border border-gray-200/80 p-6 sm:p-8 shadow-sm">
+      <h2 className="font-sans font-bold text-xl text-gray-900 mb-6 pb-4 border-b border-gray-100">
+        My Wishlist
       </h2>
 
       {wishlistItems.length === 0 ? (
-        <p className="font-sans font-bold text-muted text-center py-8">YOUR WISHLIST IS EMPTY.</p>
+        <p className="font-sans text-sm text-gray-500 text-center py-16">Your wishlist is empty.</p>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {wishlistItems.map((prod) => (
-            <div key={prod.id} className="border border-ink bg-cream rounded-card overflow-hidden flex flex-col">
-              <img src={prod.imageUrl} alt={prod.title} className="w-full h-44 object-cover mix-blend-multiply" />
-              <div className="p-4 flex flex-col gap-2 flex-1">
-                <h4 className="font-sans font-extrabold text-xs text-ink">{prod.title}</h4>
-                <div className="font-sans font-extrabold text-sm text-ink">฿{prod.price.toLocaleString()}</div>
-                <button className="mt-auto bg-primary text-white border border-ink font-sans font-extrabold text-xs py-2 rounded-btn hover:bg-primary-deep transition-all transform hover:-translate-y-0.5 cursor-pointer">
-                  ADD TO CART
+            <div
+              key={prod.id}
+              className="bg-white rounded-2xl border border-gray-200/80 p-4 shadow-sm flex flex-col gap-3 hover:border-gray-300 transition-all"
+            >
+              <img
+                src={prod.image}
+                alt={prod.name}
+                className="w-full h-44 object-cover rounded-xl border border-gray-100 bg-gray-50"
+              />
+              <div className="flex flex-col gap-1.5 flex-1">
+                {/* Small Orange Tag — อ้างอิงแท็ก SACIT สีส้มในรูปตัวอย่าง */}
+                <span className="text-[10px] font-bold text-[#ff5b30] uppercase tracking-wider">
+                  MERCHROOM
+                </span>
+                <h4 className="font-sans font-bold text-sm text-gray-900 line-clamp-2">{prod.name}</h4>
+                <div className="font-sans font-bold text-base text-gray-900 mt-auto pt-2">
+                  ฿{prod.price.toLocaleString()}
+                </div>
+                {/* Primary Orange Button — อ้างอิงปุ่ม Add to Cart สีส้มในรูปตัวอย่าง */}
+                <button
+                  type="button"
+                  onClick={() => addToCart(prod, 1)}
+                  className="w-full mt-2 bg-[#ff5b30] hover:bg-[#e04820] text-white font-sans font-semibold text-xs py-3 rounded-xl shadow-sm transition-all cursor-pointer active:scale-95"
+                >
+                  Add to Cart
                 </button>
               </div>
             </div>
