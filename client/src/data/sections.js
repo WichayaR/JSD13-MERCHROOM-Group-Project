@@ -4,7 +4,7 @@
 import { products } from './product';
 export { products };
 
-const images = import.meta.glob('../../assets/{Thai,Eng,Heritage}/*.{png,PNG,PNG,PNG}', {
+const images = import.meta.glob('../../assets/{Thai,Eng,Heritage}/*.{png,PNG,jpg,JPG,jpeg,JPEG}', {
   eager: true,
   query: '?url',
   import: 'default',
@@ -65,11 +65,69 @@ export const genres = [
 ];
 
 export const landingItems = [
-  { id: 'l1', title: 'Maroon 5 มาแสดงคอนเสิร์ตที่ไทย 9 กุมภาพันธ์ 2027', image: img('11.Nont-Tanont_Vinyl.png') },
-  { id: 'l2', title: 'Limited Drop — T-Pop Live Tour', image: img('12.Whal&Dolph_Poster.png') },
-  { id: 'l3', title: 'Featured — Uncle Ben Album', image: img('18.Uncle-Ben_Album.png') },
-  { id: 'l4', title: 'New Arrival — Whal&Dolph', image: img('14.Whal&Dolph_long-T-shirt.png') },
-  { id: 'l5', title: 'Coming Soon — SpicyDisc 20th', image: img('6.JACKET_20th_SpicyDisc.png') },
+  {
+    id: 'l1',
+    title: 'Maroon 5 Asia Tour 2027',
+    image: img('maroon-5-asia-tour-2027.png'),
+    eventDetails: {
+      heading: 'Maroon 5 ประกาศทัวร์เอเชีย 2027 เตรียมกลับมาเจอแฟนชาวไทย!',
+      description: 'Maroon 5 ประกาศ Maroon 5 Asia Tour 2027 พร้อมกลับมาเปิดคอนเสิร์ตในประเทศไทย 9 กุมภาพันธ์ 2027 ที่ อิมแพ็ค อารีน่า จัดโดย Live Nation Tero หลังจากเดินหน้าทัวร์ Love Is Like เพื่อโปรโมตอัลบั้มใหม่ทั่วสหรัฐฯ พร้อมโชว์ที่ขายบัตรหมดอย่างรวดเร็วทั้ง Madison Square Garden และ The Forum วงยังมีกำหนดขึ้นเฮดไลน์ Hyde Park ที่ลอนดอน และ Rock in Rio ที่บราซิลในเดือนกันยายนนี้',
+      ticketInfo: 'จำหน่ายบัตรทาง Ticketmaster Thailand',
+      dateVenue: '9 ก.พ. 2027 | อิมแพ็ค อารีน่า',
+    },
+  },
+  {
+    id: 'l6',
+    title: 'Zara Larsson Midnight Sun Tour in Bangkok',
+    image: img('zara-larsson-midnight-sun-tour-2026.jpg'),
+    eventDetails: {
+      heading: 'Zara Larsson ประกาศทัวร์ “Midnight Sun Tour” เตรียมมาเจอแฟนชาวไทย!',
+      description: 'Zara Larsson ป๊อปสตาร์สาวจากสวีเดน เตรียมระเบิดความสนุกกับ “Zara Larsson Midnight Sun Tour in Bangkok” วันที่ 1 พฤศจิกายน 2569 ที่ UOB LIVE, EMSPHERE ทัวร์ครั้งนี้จัดขึ้นเพื่อโปรโมตอัลบั้มชุดที่ 4 “Midnight Sun” ที่ถ่ายทอดเรื่องราวและตัวตนของซาร่าผ่านเพลงป๊อปสุดสนุก พร้อมผลงานจากการกลับมาร่วมงานกับ MNEK เจ้าของเพลงฮิต “Never Forget You”',
+      ticketInfo: 'จำหน่ายบัตรทาง Ticketmaster Thailand',
+      dateVenue: '1 พ.ย. 2569 | UOB LIVE, EMSPHERE',
+    },
+  },
+  {
+    id: 'l7',
+    title: 'MILLI JAA EHH! ASIA TOUR 2026',
+    image: img('milli-jaa-ehh-asia-tour-2026.png'),
+    eventDetails: {
+      heading: 'MILLI ประกาศเอเชียทัวร์ครั้งแรก! “MILLI JAA EHH! ASIA TOUR 2026”',
+      description: 'MILLI (มิลลิ) แร็ปเปอร์สาวตัวจี๊ดจากค่าย YUPP! ประกาศทัวร์คอนเสิร์ตเดี่ยวระดับเอเชียครั้งแรกในชีวิต เตรียมเดินทางพบแฟน ๆ 8 ประเทศ ได้แก่ อินโดนีเซีย, ไทเป, มาเลเซีย, สิงคโปร์, ฮ่องกง, ฟิลิปปินส์, เกาหลีใต้ และประเทศไทย แฟนชาวไทยเตรียมเจอ MILLI 3 ตุลาคม 2569 ที่ สามย่าน มิตรทาวน์ จัดโดย Live Nation Tero ทัวร์ครั้งนี้ได้รับแรงบันดาลใจจากเพลง “JAA EHH” ในอัลบั้ม HEAVYWEIGHT พร้อมพลังความมันแบบจัดเต็มที่ MILLI เตรียมส่งต่อให้แฟน ๆ ทั่วเอเชีย',
+      ticketInfo: 'จำหน่ายบัตรทาง Livenation Tero',
+      dateVenue: '3 ต.ค. 2569 | สามย่าน มิตรทาวน์',
+    },
+  },
+  {
+    id: 'l8',
+    title: 'Stray Kids World Tour <RUN IT> Bangkok',
+    image: img('stray-kids-run-it-bangkok-2027.png'),
+    eventDetails: {
+      heading: 'Stray Kids เตรียมกลับมาเจอ STAY ไทยใน “Stray Kids World Tour <RUN IT>”',
+      description: 'Stray Kids บอยกรุ๊ป 8 สมาชิกจาก JYP Entertainment เตรียมเดินหน้าสร้างปรากฏการณ์ระดับโลกอีกครั้ง กับเวิลด์ทัวร์ Stray Kids World Tour <RUN IT> พร้อมผลงานใหม่ THIS & THAT วงยังคงโดดเด่นจากการมีส่วนร่วมในการสร้างสรรค์ผลงาน โดยเฉพาะยูนิต 3RACHA — Bang Chan, Changbin และ HAN พร้อมเดินหน้าขึ้นเวทีเทศกาลดนตรีระดับโลกทั้ง Governors Ball และ Rock in Rio STAY ไทยเตรียมตัวให้พร้อม! Stray Kids World Tour <RUN IT BANGKOK> พบกัน 16–17 มกราคม 2570 ที่ อิมแพ็ค อารีน่า',
+      ticketInfo: 'จำหน่ายบัตรทาง Ticketmaster Thailand',
+      dateVenue: '16–17 ม.ค. 2570 | อิมแพ็ค อารีน่า · 2 รอบการแสดงในประเทศไทย',
+    },
+  },
+  {
+    id: 'l9',
+    title: "yung kai — stay with the ocean, i'll find you: Asia 2026",
+    image: img('yung-kai-asia-tour-2026.png'),
+    eventDetails: {
+      heading: 'yung kai ประกาศเอเชียทัวร์ เตรียมเจอแฟนไทยใน “stay with the ocean, i’ll find you: Asia 2026”',
+      description: 'yung kai ศิลปินอินดี้ป๊อปชาวแคนาดา เจ้าของเพลงฮิต “blue” เตรียมเดินหน้าทัวร์เอเชียครั้งใหญ่ หลังประสบความสำเร็จจากการทัวร์ในอเมริกาเหนือ พร้อมปักหมุดกรุงเทพฯ 1 พฤศจิกายน 2569 ที่ Sphere Hall, Emsphere เอเชียทัวร์ครั้งนี้จะเดินทางผ่าน 9 เมือง ได้แก่ เซี่ยงไฮ้, กรุงเทพฯ, ฮ่องกง, โซล, สิงคโปร์, กัวลาลัมเปอร์, มะนิลา, ไทเป และโตเกียว พร้อมเพลงฮิตจากอัลบั้ม stay with the ocean, i’ll find you อย่าง “blue” และ “teach me how to dance”',
+      ticketInfo: 'จำหน่ายบัตรทาง Ticketmaster Thailand',
+      dateVenue: '1 พ.ย. 2569 | Sphere Hall, Emsphere',
+    },
+  },
+  {
+    id: 'l10', title: 'Young K Solo Tour <YOUNGEST> in BANGKOK', image: img('young-k-solo-tour-2026.png'),
+    eventDetails: { heading: 'Young K เตรียมกลับมาเจอ My Day ไทยกับโซโล่ทัวร์ครั้งใหม่!', description: 'Young K นักร้อง นักแต่งเพลง และมือเบสจาก DAY6 เตรียมกลับมาเปิดโซโล่คอนเสิร์ตในประเทศไทยกับ “Young K Solo Tour <YOUNGEST> in BANGKOK” วันที่ 10 ตุลาคม 2569 ที่ สามย่าน มิตรทาวน์ ฮอลล์ จัดโดย Live Nation Tero ครั้งนี้ Young K กลับมาพร้อมโซโล่อัลบั้มใหม่ <YOUNGEST> และทัวร์ที่เริ่มต้นจากเกาหลีใต้ ก่อนเดินทางต่อมายัง กรุงเทพฯ ไทเป ฮ่องกง สิงคโปร์ มะนิลา และกัวลาลัมเปอร์', ticketInfo: 'จำหน่ายบัตรทาง Ticketmaster Thailand', dateVenue: '10 ต.ค. 2569 | สามย่าน มิตรทาวน์ ฮอลล์' },
+  },
+  {
+    id: 'l11', title: 'Khalid — It’s Always Summer Somewhere Tour', image: img('khalid-asia-tour-2026.png'),
+    eventDetails: { heading: 'Khalid คอนเฟิร์มมาไทย! เตรียมเจอกับ “It’s Always Summer Somewhere Tour”', description: 'Khalid ศิลปินระดับโลกเจ้าของเพลงฮิต “Young Dumb & Broke” เตรียมนำทัวร์ “It’s Always Summer Somewhere Tour” มาเปิดการแสดงในประเทศไทย 29 พฤศจิกายน 2569 ที่ UOB LIVE, EMSPHERE จัดโดย Live Nation Tero เจ้าของเพลงฮิตอย่าง “Location”, “Talk”, “Love Lies” และ “Young Dumb & Broke” พร้อมกลับมาสร้างค่ำคืนแห่งเสียงเพลงให้แฟนชาวไทย หลังเดินหน้าสร้างผลงานอย่างต่อเนื่อง รวมถึงอัลบั้มล่าสุด After The Sun Goes Down', ticketInfo: 'จำหน่ายบัตรทาง Ticketmaster Thailand', dateVenue: '29 พ.ย. 2569 | UOB LIVE, EMSPHERE' },
+  },
 ];
 
 export const roadToThaiArtist = {

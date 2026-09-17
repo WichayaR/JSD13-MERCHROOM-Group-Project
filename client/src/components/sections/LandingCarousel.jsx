@@ -1,8 +1,7 @@
 import { useState } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { landingItems } from '../../data/sections';
 import Container from '../ui/Container';
-import Button from '../ui/Button';
 import SectionHeading from '../ui/SectionHeading';
 import Placeholder from '../ui/Placeholder';
 
@@ -12,6 +11,7 @@ import Placeholder from '../ui/Placeholder';
 // แหล่งข้อมูล: อาเรย์ landingItems จาก src/data/sections.js
 export default function LandingCarousel() {
   const [index, setIndex] = useState(0);
+  const [activeEvent, setActiveEvent] = useState(null);
   const total = landingItems.length;
 
   // ฟังก์ชันเลื่อนการ์ดแบบ Circular Loop (วนลูปกลับมาตัวแรก/สุดท้ายได้ไม่รู้จบ)
@@ -38,7 +38,7 @@ export default function LandingCarousel() {
       <div className="mt-12 flex w-full items-center justify-center gap-3">
         <PosterCard item={itemAt(-2)} size="sm" />
         <PosterCard item={itemAt(-1)} size="sm" onClick={() => go(-1)} ariaLabel="ก่อนหน้า" />
-        <PosterCard item={current} size="lg" />
+        <PosterCard item={current} size="lg" onClick={current.eventDetails ? () => setActiveEvent(current) : undefined} ariaLabel={`ดูรายละเอียด ${current.title}`} />
         <PosterCard item={itemAt(1)} size="sm" onClick={() => go(1)} ariaLabel="ถัดไป" />
         <PosterCard item={itemAt(2)} size="sm" />
       </div>
@@ -74,14 +74,29 @@ export default function LandingCarousel() {
           </div>
         </div>
 
-        {/* ปุ่ม Explore More พาไปดูคอลเลกชันเพิ่มเติม */}
-        <div className="mt-16 flex justify-center">
-          <Button variant="highlight" size="lg" className="w-100 font-semibold">
-            Explore More
-          </Button>
-        </div>
       </Container>
+      {activeEvent && <EventDetailsModal event={activeEvent} onClose={() => setActiveEvent(null)} />}
     </section>
+  );
+}
+
+function EventDetailsModal({ event, onClose }) {
+  const { heading, description, ticketInfo, dateVenue } = event.eventDetails;
+  return (
+    <div className="fixed inset-0 z-50 grid place-items-center bg-black/70 p-4" role="dialog" aria-modal="true" aria-labelledby="event-details-title">
+      <div className="relative w-full max-w-xl rounded-card bg-cream p-6 text-ink shadow-card md:p-8">
+        <button type="button" onClick={onClose} aria-label="ปิดรายละเอียดงาน" className="absolute right-4 top-4 grid size-9 place-items-center rounded-pill text-ink transition hover:bg-black/10 cursor-pointer">
+          <X className="size-5" />
+        </button>
+        <p className="mb-2 pr-10 text-sm font-semibold text-primary-deep">THE ROOM TALKS</p>
+        <h2 id="event-details-title" className="pr-8 font-display text-2xl leading-tight md:text-3xl">{heading}</h2>
+        <p className="mt-5 text-sm leading-7 text-zinc-700 md:text-base">{description}</p>
+        <div className="mt-6 rounded-btn bg-white p-4">
+          <p className="font-semibold">{ticketInfo}</p>
+          <p className="mt-1 text-sm text-zinc-600">{dateVenue}</p>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -96,7 +111,7 @@ function PosterCard({ item, size, onClick, ariaLabel }) {
       aria-label={ariaLabel}
       onKeyDown={onClick ? (e) => (e.key === 'Enter' || e.key === ' ') && onClick() : undefined}
       className={`shrink overflow-hidden rounded-card shadow-card ${isLg ? 'basis-[28%]' : 'basis-[20%]'} ${
-        onClick ? 'cursor-pointer' : ''
+        onClick ? 'cursor-pointer transition hover:brightness-90' : ''
       }`}
       style={{ aspectRatio: isLg ? '470 / 612' : '394 / 513' }}
     >
