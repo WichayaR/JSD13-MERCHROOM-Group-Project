@@ -1,0 +1,10 @@
+const express = require('express');
+const { authUser } = require('../middleware/auth');
+const { adminOnly } = require('../middleware/adminOnly');
+const controller = require('../controllers/user.controller');
+const router = express.Router();
+router.get('/', authUser, adminOnly, controller.listCustomers);
+router.get('/profile', authUser, controller.getProfile);
+router.patch('/profile', authUser, controller.updateProfile);
+router.patch('/me', authUser, controller.updateMe);
+module.exports = router;
