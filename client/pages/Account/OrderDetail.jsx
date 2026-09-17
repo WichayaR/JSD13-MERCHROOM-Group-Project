@@ -1,7 +1,7 @@
 // pages/Account/OrderDetail.jsx
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getOrderById } from '../../src/data/orders';
+import { getOrderById } from '../../src/api/orders.api';
 import { OrderStepper } from '../../src/components/ui/OrderStepper';
 import { OrderStatusBadge } from '../../src/components/ui/OrderStatusBadge';
 
@@ -10,12 +10,18 @@ export default function OrderDetail() {
   const navigate = useNavigate();
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     async function fetchOrder() {
-      const data = await getOrderById(orderId);
-      setOrder(data);
-      setLoading(false);
+      try {
+        const data = await getOrderById(orderId);
+        setOrder(data.order);
+      } catch (requestError) {
+        setError(requestError.message || 'ไม่สามารถโหลดคำสั่งซื้อได้');
+      } finally {
+        setLoading(false);
+      }
     }
     fetchOrder();
   }, [orderId]);
@@ -25,7 +31,7 @@ export default function OrderDetail() {
   if (!order) {
     return (
       <div className="bg-white border border-ink rounded-card p-8">
-        <h2 className="font-sans font-extrabold text-xl mb-4">ORDER NOT FOUND</h2>
+        <h2 className="font-sans font-extrabold text-xl mb-4">{error || 'ORDER NOT FOUND'}</h2>
         <button
           onClick={() => navigate('/account/orders')}
           className="bg-ink text-white px-4 py-2 rounded-btn font-sans text-xs font-bold"

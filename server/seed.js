@@ -10,6 +10,7 @@ const Order = require('./models/Order');
 const Payment = require('./models/Payment');
 const Review = require('./models/Review');
 const mongoose = require('mongoose');
+const bcrypt = require('bcrypt');
 
 // Upsert documents using _id filter
 async function upsertDocs(model, docs) {
@@ -27,6 +28,11 @@ async function runSeed() {
     await connectDB();
 
     try {
+        // Focus แก้เพิ่มฝั่ง admin
+        // สร้าง hash จริงก่อนใส่ใน User — password ทดสอบทุกบัญชีคือ "Test1234!"
+        // (แจ้งทีมให้ใช้รหัสนี้ล็อกอินตอน dev เท่านั้น ห้ามใช้ค่านี้บน production)
+         const hashedPassword = await bcrypt.hash('Test1234!', 10);
+
         // Users (Admin & Customer)
         await upsertDocs(User, [
             {
@@ -40,7 +46,7 @@ async function runSeed() {
                 paymentMethods: ["PromptPay", "บัตรเครดิต"],
                 profilePicture: "/uploads/non.png",
                 socialAccounts: ["google"],
-                password: "$2a$10$placeholderBcryptHashXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+                password: hashedPassword,
                 role: "customer"
             },
             {
@@ -54,13 +60,13 @@ async function runSeed() {
                 paymentMethods: [],
                 profilePicture: "",
                 socialAccounts: [],
-                password: "$2a$10$placeholderBcryptHashYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY",
+                password: hashedPassword,
                 role: "admin",
                 employeeId: "EMP-0001"
             },
             {
                 _id: "681a0f1e2d3c4b5a6970f002",
-                email: "focusjustdoit@gmail.com",
+                email: "focus@merchroom.com",          // เปลี่ยนจาก gmail จริง
                 firstName: "Focus",
                 lastName: "Niti",
                 phone: "0809203752",
@@ -69,13 +75,13 @@ async function runSeed() {
                 paymentMethods: ["Promtpunk"],
                 profilePicture: "",
                 socialAccounts: [],
-                password: "000000000000",
+                password: hashedPassword,               // เปลี่ยนจาก plain text
                 role: "admin",
                 employeeId: "EMP-0002"
             },
             {
                 _id: "6900f1e2d3c4b5a6970f0023",
-                email: "touchy2003@gmail.com",
+                email: "touch@merchroom.com",           // เปลี่ยนจาก gmail จริง
                 firstName: "Touch",
                 lastName: "Chy",
                 phone: "0809203752",
@@ -84,10 +90,11 @@ async function runSeed() {
                 paymentMethods: ["Promtpunk"],
                 profilePicture: "",
                 socialAccounts: [],
-                password: "000000000000",
+                password: hashedPassword,               // เปลี่ยนจาก plain text
                 role: "customer"
             }
         ]);
+
 
         // Categories
         await upsertDocs(Category, [
@@ -262,6 +269,7 @@ async function runSeed() {
                 quantity: 40,
                 date: "2026-08-05T00:00:00.000+00:00",
                 tags: ["official", "tour", "tshirt"],
+                sizes: ["S", "M", "L", "XL"],
                 category: "681a0f1e2d3c4b5a6970f010",
                 artist: "681a0f1e2d3c4b5a6970f071",
                 imageUrl: "https://www.funiki.nl/cdn/shop/files/7b8ed8f4-b4a4-6878-148a-668772e12bfc.webp?v=1725816523"
@@ -323,6 +331,7 @@ async function runSeed() {
                 quantity: 50,
                 date: "2024-09-27T00:00:00.000+00:00",
                 tags: ["official", "tshirt", "tour"],
+                sizes: ["S", "M", "L", "XL"],
                 category: "681a0f1e2d3c4b5a6970f010",
                 artist: "681a0f1e2d3c4b5a6970f081",
                 imageUrl: "/products/paradox-unplugged-tshirt.jpg"
@@ -335,6 +344,7 @@ async function runSeed() {
                 quantity: 40,
                 date: "2024-09-27T00:00:00.000+00:00",
                 tags: ["official", "sweater", "tour"],
+                sizes: ["S", "M", "L", "XL"],
                 category: "681a0f1e2d3c4b5a6970f010",
                 artist: "681a0f1e2d3c4b5a6970f081",
                 imageUrl: "/products/paradox-unplugged-sweater.jpg"
@@ -347,6 +357,7 @@ async function runSeed() {
                 quantity: 50,
                 date: "2026-08-10T00:00:00.000+00:00",
                 tags: ["official", "tshirt", "new-arrival"],
+                sizes: ["S", "M", "L", "XL"],
                 category: "681a0f1e2d3c4b5a6970f010",
                 artist: "681a0f1e2d3c4b5a6970f082",
                 imageUrl: "https://scontent.fbkk28-1.fna.fbcdn.net/v/t39.30808-6/654291590_1573408487941850_167124190072589168_n.jpg?stp=dst-jpg_tt6&cstp=mx1080x1080&ctp=p526x296&_nc_cat=110&ccb=1-7&_nc_sid=127cfc&_nc_ohc=ypNZT7dxViwQ7kNvwH3wjf9&_nc_oc=AdrjiPJZMno3f3TR8oxMngzZ_pW6gb-1yKwJOfw3pv6LtslQoqQapKMD56IaKTj3oC8&_nc_zt=23&_nc_ht=scontent.fbkk28-1.fna&_nc_gid=ASuxdh3S08ijCYDuzt_eVQ&_nc_ss=7b289&oh=00_AQG71YuOMhtOwpiRBQWFONXUjrWn_0OUCq_pDyhwJsvnWQ&oe=6A8752BC"
@@ -359,6 +370,7 @@ async function runSeed() {
                 quantity: 100,
                 date: "2026-08-10T00:00:00.000+00:00",
                 tags: ["official", "tshirt", "new-arrival"],
+                sizes: ["S", "M", "L", "XL"],
                 category: "681a0f1e2d3c4b5a6970f010",
                 artist: "681a0f1e2d3c4b5a6970f082",
                 imageUrl: "https://scontent.fbkk28-1.fna.fbcdn.net/v/t39.30808-6/654291590_1573408487941850_167124190072589168_n.jpg?stp=dst-jpg_tt6&cstp=mx1080x1080&ctp=p526x296&_nc_cat=110&ccb=1-7&_nc_sid=127cfc&_nc_ohc=ypNZT7dxViwQ7kNvwH3wjf9&_nc_oc=AdrjiPJZMno3f3TR8oxMngzZ_pW6gb-1yKwJOfw3pv6LtslQoqQapKMD56IaKTj3oC8&_nc_zt=23&_nc_ht=scontent.fbkk28-1.fna&_nc_gid=5drCKWwYOVRkfs_S2WbX2g&_nc_ss=7b289&oh=00_AQHynvwnao9__9yVsCkvDd1nR4VclIdzmrhXm15Cg8ydiA&oe=6A8752BC"
@@ -384,6 +396,7 @@ async function runSeed() {
                 quantity: 30,
                 date: "2025-10-01T00:00:00.000+00:00",
                 tags: ["collab", "hoodie", "streetwear"],
+                sizes: ["S", "M", "L", "XL"],
                 category: "681a0f1e2d3c4b5a6970f010",
                 artist: "681a0f1e2d3c4b5a6970f083",
                 imageUrl: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTQb5WGnEPQNqpWy3HA-akMuU-BxZVM235y4COeAp7xlUOIdB7UHmXSpvw&s=10"
@@ -408,6 +421,7 @@ async function runSeed() {
                 quantity: 40,
                 date: "2025-03-14T00:00:00.000+00:00",
                 tags: ["official", "concert", "tshirt"],
+                sizes: ["S", "M", "L", "XL"],
                 category: "681a0f1e2d3c4b5a6970f010",
                 artist: "681a0f1e2d3c4b5a6970f084",
                 imageUrl: "/products/bus-concert-tshirt.jpg"
@@ -465,7 +479,7 @@ async function runSeed() {
                 _id: "681a0f1e2d3c4b5a6970f040",
                 userId: "681a0f1e2d3c4b5a6970f001",
                 totalAmount: 5690,
-                status: "success",
+                status: "completed",
                 shippingProvider: "Kerry",
                 shippingAddress: "123 สุขุมวิท กรุงเทพฯ 10110",
                 purchaseDate: "2026-07-13T10:00:00.000+00:00",
@@ -520,3 +534,8 @@ async function runSeed() {
 }
 
 runSeed();
+
+
+//หลังรัน node seed.js ใหม่แล้ว ล็อกอินทดสอบหน้า Admin Gateway ได้ด้วย:
+//Email: admin@merchroom.com
+//Password: Test1234!

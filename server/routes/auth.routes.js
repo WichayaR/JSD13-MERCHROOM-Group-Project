@@ -12,7 +12,15 @@ async function hashPassword(password) {
 }
 
 function toSafeUser(user) {
-  return { _id: user._id, email: user.email, role: user.role };
+  return {
+    _id: user._id,
+    email: user.email,
+    role: user.role,
+    firstName: user.firstName,
+    lastName: user.lastName,
+    phone: user.phone,
+    employeeId: user.employeeId,
+  };
 }
 
 // POST /api/auth/register

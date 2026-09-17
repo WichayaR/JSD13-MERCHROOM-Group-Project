@@ -43,7 +43,7 @@ export default function AuthForm({ mode = 'login' }) {
     if (validationMessage) return;
 
     const result = isRegister
-      ? await register({ username: form.username, email: form.email, password: form.password })
+      ? await register({ username: form.username, email: form.email, password: form.password, phone: form.mobile })
       : await login(form.email, form.password);
 
     if (!result.success) {
@@ -53,13 +53,13 @@ export default function AuthForm({ mode = 'login' }) {
 
     setSuccessMessage(
       isRegister
-        ? 'Registration successful! Taking you to the store...'
+        ? 'Registration successful! Please log in to continue.'
         : 'Login successful! Taking you to the store...',
     );
     setSuccessOpen(true);
   };
 
-  const destination = location.state?.from ?? '/';
+  const destination = isRegister ? '/login' : (location.state?.from ?? '/');
 
   const inputClasses =
     'h-16 w-full rounded-lg bg-gray-400/40 px-4 text-xl text-ink placeholder:text-black/50 focus:outline-2 focus:outline-primary';

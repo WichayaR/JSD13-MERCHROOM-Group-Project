@@ -333,9 +333,10 @@ export default function Navbar() {
                       <div className="py-1">
                         <button
                           type="button"
-                          onClick={() => {
-                            logout?.();
+                          onClick={async () => {
+                            await logout?.();
                             handleCloseMenu();
+                            navigate('/', { replace: true });
                           }}
                           className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-xs font-semibold text-red-600 transition hover:bg-red-50 md:text-sm cursor-pointer"
                         >
