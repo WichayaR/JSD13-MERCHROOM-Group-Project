@@ -50,8 +50,8 @@ export default function Footer() {
         {/* จัดกริด 4 คอลัมน์: โลโก้แบรนด์ฝั่งซ้าย + เมนูลิงก์ 3 คอลัมน์ฝั่งขวา */}
         <div className="mt-9 grid gap-12 md:grid-cols-2 lg:grid-cols-[1fr_repeat(3,auto)] lg:gap-20">
           <div>
-            {/* โลโก้ Merchroom โทนสีเขียวมะนาว (lime) ขนาดใหญ่ */}
-            <Logo tone="lime" size="lg" />
+            {/* โลโก้ Merchroom ตัวอักษรสีขาว (wordmark-white.svg) ขนาดใหญ่ */}
+            <Logo tone="light" size="lg" />
             <p className="mt-6 max-w-91.75 text-base leading-relaxed text-white">
               More than merch, it&apos;s a room full of good things waiting to find their way to you
             </p>
