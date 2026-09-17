@@ -16,11 +16,14 @@ import Button from '../src/components/ui/Button';
 import Container from '../src/components/ui/Container';
 import Breadcrumb from '../src/components/ui/Breadcrumb';
 
-// Set ค่าจัดส่งแบบคงที่ที่ 15 ดอล และใช้ Helper formatting เพื่อแปลงตัวเลขเป็นสกุลเงิน
+// ค่าจัดส่งแบบคงที่
 const DELIVERY_FEE = 15;
 
-// Helper Function: แปลงตัวเลขเป็นฟอร์แมตสกุลเงินดอลลาร์ ($XX)
-const baht = (value) => `$${value.toLocaleString('en-US', { minimumFractionDigits: 0 })}`;
+const baht = (value) =>
+  `฿${Number(value || 0).toLocaleString('th-TH', {
+    minimumFractionDigits: Number(value || 0) % 1 !== 0 ? 2 : 0,
+    maximumFractionDigits: 2,
+  })}`;
 
 export default function Cart() {
   // ดึง State และ ฟังก์ชันจัดการตะกร้าสินค้าจาก CartContext

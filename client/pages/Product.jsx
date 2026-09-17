@@ -445,7 +445,7 @@ export default function Products() {
       </div>
 
       {/* 4. ตารางแสดงรายการสินค้า (Grid 4 คอลัมน์) */}
-      <div className="mt-8 grid grid-cols-2 gap-5 lg:grid-cols-4">
+      <div className="mt-8 grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4">
         {/* วนลูปนำรายการสินค้าจาก pageItems มาแสดงผลทีละชิ้นผ่าน ProductCard */}
         {pageItems.map((product) => (
           <ProductCard key={product.id} product={product} onAddToCart={addToCart} fluid />
