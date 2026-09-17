@@ -43,7 +43,7 @@ export default function AuthForm({ mode = 'login' }) {
   const validate = () => {
     if (!form.email.trim() || !form.password) return 'Please enter your email and password';
     if (isRegister && !form.username.trim()) return 'Please enter your full name';
-    if (form.password.length < 8) return 'Password must be at least 8 characters';
+    if (form.password.length < 6) return 'Password must be at least 6 characters';
     return '';
   };
 

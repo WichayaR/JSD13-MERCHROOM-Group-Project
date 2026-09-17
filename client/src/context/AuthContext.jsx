@@ -41,7 +41,7 @@ export function AuthProvider({ children }) {
       .finally(() => setBooting(false));
   }, []);
 
-  // ฟังก์ชัน login: พยายามต่อ backend API ก่อน ถ้าต่อไม่ติดหรือ fallback ให้เช็คกับ mockup database
+  // ฟังก์ชัน login: พยายามต่อ backend API ก่อน ถ้าต่อไม่ติดหรือ 404 ให้ fallback ไปเช็คกับ mockup database
   // คืน { success, message?, user? } เสมอ เพื่อให้ฟอร์มอ่าน result.success / result.message ได้ตรงกันทั้งสองเส้นทาง
   const login = useCallback(async (email, password) => {
     try {
@@ -49,8 +49,20 @@ export function AuthProvider({ children }) {
       if (apiResult.success && apiResult.user) {
         saveSession(apiResult.user);
         setUser(apiResult.user);
+        return apiResult;
       }
-      return apiResult;
+      // ถ้า backend ตอบกลับมาและมีข้อความปฏิเสธจริง (ไม่ใช่ 404 endpoint not found)
+      if (apiResult.status && apiResult.status !== 404 && apiResult.message) {
+        // ตรวจสอบก่อนว่าอาจเป็น mock user หรือไม่ ถ้าใช่ให้เข้าสู่ระบบผ่าน mock
+        const authed = authenticate(email, password);
+        if (authed) {
+          const { password: _pw, ...safeUser } = authed;
+          saveSession(safeUser);
+          setUser(safeUser);
+          return { success: true, message: 'Login successful', user: safeUser };
+        }
+        return apiResult;
+      }
     } catch {
       // ถ้า backend ไม่ตอบสนอง ให้ fallback ไปเช็ค mockUsers
     }
@@ -65,14 +77,37 @@ export function AuthProvider({ children }) {
     return { success: false, message: 'Invalid email or password' };
   }, []);
 
-  // ฟังก์ชัน register: สมัครสมาชิกผ่าน backend API
+  // ฟังก์ชัน register: สมัครสมาชิกผ่าน backend API (ถ้าไม่มี backend ให้ fallback บันทึกลง session)
   const register = useCallback(async ({ username, email, password, phone }) => {
-    return await registerApi({
+    try {
+      const apiResult = await registerApi({
+        email,
+        password,
+        firstName: username || '',
+        phone: phone || '',
+      });
+      if (apiResult.success) {
+        return apiResult;
+      }
+      if (apiResult.status && apiResult.status !== 404 && apiResult.message) {
+        return apiResult;
+      }
+    } catch {
+      // fallback
+    }
+
+    const newUser = {
+      _id: `usr-${Date.now()}`,
       email,
-      password,
-      firstName: username || '',
+      firstName: username || 'User',
+      lastName: '',
       phone: phone || '',
-    });
+      role: 'customer',
+      memberSince: new Date().toISOString().split('T')[0],
+    };
+    saveSession(newUser);
+    setUser(newUser);
+    return { success: true, message: 'Registration successful', user: newUser };
   }, []);
 
   // ฟังก์ชัน logout: แจ้ง backend และล้าง session ในเครื่อง

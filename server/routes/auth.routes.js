@@ -75,10 +75,11 @@ router.post('/login', async (req, res) => {
       expiresIn: '1h',
     });
 
+    const isProd = process.env.NODE_ENV === 'production';
     res.cookie('accessToken', token, {
       httpOnly: true,
-      secure: false,
-      sameSite: 'lax',
+      secure: isProd,
+      sameSite: isProd ? 'none' : 'lax',
       path: '/',
       maxAge: 60 * 60 * 1000,
     });
@@ -95,7 +96,13 @@ router.post('/login', async (req, res) => {
 
 // POST /api/auth/logout
 router.post('/logout', (req, res) => {
-  res.clearCookie('accessToken', { httpOnly: true, sameSite: 'lax', path: '/' });
+  const isProd = process.env.NODE_ENV === 'production';
+  res.clearCookie('accessToken', {
+    httpOnly: true,
+    secure: isProd,
+    sameSite: isProd ? 'none' : 'lax',
+    path: '/',
+  });
   return res.status(200).json({ success: true, message: 'Logout successful' });
 });
 

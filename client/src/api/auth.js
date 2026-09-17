@@ -25,20 +25,20 @@ async function request(path, options = {}) {
 
 // ยิง Request สมัครสมาชิกผู้ใช้ใหม่ (POST /api/auth/register)
 export async function registerApi({ email, password, firstName, lastName, phone }) {
-  const { ok, data } = await request('/register', {
+  const { ok, status, data } = await request('/register', {
     method: 'POST',
     body: JSON.stringify({ email, password, firstName, lastName, phone }),
   });
-  return { success: ok, message: data.message, user: data.user };
+  return { success: ok, status, message: data?.message, user: data?.user };
 }
 
 // ยิง Request เข้าสู่ระบบ (POST /api/auth/login)
 export async function loginApi(email, password) {
-  const { ok, data } = await request('/login', {
+  const { ok, status, data } = await request('/login', {
     method: 'POST',
     body: JSON.stringify({ email, password }),
   });
-  return { success: ok, message: data.message, user: data.user };
+  return { success: ok, status, message: data?.message, user: data?.user };
 }
 
 // ยิง Request ออกจากระบบและสั่งเคลียร์ HttpOnly Cookie (POST /api/auth/logout)
