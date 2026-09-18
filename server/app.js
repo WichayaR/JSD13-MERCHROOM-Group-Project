@@ -15,15 +15,27 @@ const userRoutes = require('./routes/user.routes');
 
 const app = express();
 
+const isProd = process.env.NODE_ENV === 'production';
+if (isProd) {
+  app.set('trust proxy', 1);
+}
+
+const allowedOrigins = [
+  'http://localhost:5173',
+  'http://localhost:5174',
+  'https://merchroom.vercel.app',
+  process.env.CLIENT_URL,
+  process.env.CLIENT_ORIGIN,
+].filter(Boolean);
+
 app.use(
   cors({
-    // Vite ปกติใช้ 5173 แต่ถ้า port ชนจะเด้งไป 5174 อัตโนมัติ จึงอนุญาตทั้งสอง port
-    origin: [
-      'http://localhost:5173',
-      'http://localhost:5174',
-      // Set CLIENT_ORIGIN in Vercel when the client and API use different origins.
-      process.env.CLIENT_ORIGIN,
-    ].filter(Boolean),
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+      return callback(null, false);
+    },
     credentials: true,
   }),
 );

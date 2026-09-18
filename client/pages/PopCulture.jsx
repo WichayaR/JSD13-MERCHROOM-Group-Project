@@ -24,9 +24,9 @@ export default function PopCulture() {
       />
 
       {/* กริดแสดงการ์ดสินค้าสากลทั้งหมด */}
-      <div className="mt-10 flex flex-wrap justify-center gap-5 lg:justify-start">
+      <div className="mt-10 grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4">
         {popProducts.map((product) => (
-          <ProductCard key={product.id} product={product} onAddToCart={addToCart} />
+          <ProductCard key={product.id} product={product} onAddToCart={addToCart} fluid />
         ))}
       </div>
     </Container>

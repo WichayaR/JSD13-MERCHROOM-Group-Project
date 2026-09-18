@@ -133,12 +133,52 @@ export const mockUsers = [
     employeeId: 'EMP-0002',
     memberSince: '2024-11-01',
   },
+  {
+    _id: 'usr-focus-admin',
+    email: 'focus@merchroom.com',
+    password: 'Test1234!',
+    firstName: 'Focus',
+    lastName: 'Admin',
+    phone: '0809203752',
+    address: 'สำนักงานใหญ่ กรุงเทพฯ',
+    role: 'admin',
+    employeeId: 'EMP-0003',
+    memberSince: '2024-11-01',
+  },
 ];
+
+const REGISTERED_USERS_KEY = 'merchroom_registered_users';
+
+function getRegisteredUsers() {
+  try {
+    const raw = localStorage.getItem(REGISTERED_USERS_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+export function saveRegisteredUser(userWithPassword) {
+  try {
+    const users = getRegisteredUsers().filter(
+      (u) => u.email.toLowerCase() !== userWithPassword.email.toLowerCase()
+    );
+    users.push(userWithPassword);
+    localStorage.setItem(REGISTERED_USERS_KEY, JSON.stringify(users));
+  } catch (err) {
+    console.error('Failed to save registered user:', err);
+  }
+}
+
+export function getAllUsers() {
+  return [...mockUsers, ...getRegisteredUsers()];
+}
 
 // Data Access & Authentication Helper
 // จำลองการตรวจสอบสิทธิ์และตัดฟิลด์ password ออกก่อนคืนค่า user session
 export function findUserByEmail(email) {
-  return mockUsers.find((user) => user.email.toLowerCase() === email.toLowerCase()) || null;
+  if (!email) return null;
+  return getAllUsers().find((user) => user.email.toLowerCase() === email.toLowerCase()) || null;
 }
 
 export function authenticate(email, password) {
@@ -152,9 +192,9 @@ export function authenticate(email, password) {
 }
 
 export function getUsers() {
-  return [...mockUsers];
+  return getAllUsers();
 }
 
 export function getUserById(userId) {
-  return mockUsers.find((user) => user._id === userId) || null;
+  return getAllUsers().find((user) => user._id === userId) || null;
 }

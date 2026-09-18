@@ -371,9 +371,9 @@ export default function ProductDetail() {
         <section className="mt-24" aria-label="สินค้าที่คุณอาจสนใจ">
           <h2 className="text-center text-3xl font-bold md:text-4xl">You might also like</h2>
 
-          <div className="mt-10 grid grid-cols-2 gap-6 lg:grid-cols-4">
+          <div className="mt-8 sm:mt-10 grid grid-cols-2 gap-3 sm:gap-6 lg:grid-cols-4">
             {related.map((item) => (
-              <ProductCard key={item.id} product={item} compact />
+              <ProductCard key={item.id} product={item} compact fluid />
             ))}
           </div>
         </section>

@@ -21,13 +21,12 @@ export default function GenreCircles() {
         />
 
         {/* รายการวงกลมแนวเพลง จัดเรียงแบบ flex-wrap และจัดกึ่งกลาง */}
-        <ul className="mt-12 flex flex-wrap items-start justify-center gap-x-8 gap-y-8">
+        <ul className="mt-12 grid grid-cols-4 gap-4 sm:flex sm:flex-wrap sm:items-start sm:justify-center sm:gap-x-8 sm:gap-y-8">
           {genres.map((g) => (
-            <li key={g.id} className="flex w-39 flex-col items-center gap-3">
-              {/* ลิงก์กดแล้วส่ง query param ?cat=id ไปที่หน้า /products */}
+            <li key={g.id} className="flex flex-col items-center gap-2 sm:w-39 sm:gap-3">
               <Link
                 to={`/products?q=${encodeURIComponent(g.label)}`}
-                className="grid size-39 place-items-center overflow-hidden rounded-pill bg-white transition hover:scale-105"
+                className="grid size-16 place-items-center overflow-hidden rounded-pill bg-white transition hover:scale-105 sm:size-39"
                 aria-label={g.label}
               >
                 {/* ถ้ามีรูปให้โหลดแบบ lazy-loading ถ้าไม่มีให้แสดง placeholder เพื่อไม่ให้หน้าพัง */}
@@ -43,7 +42,7 @@ export default function GenreCircles() {
                 )}
               </Link>
               {/* ป้ายชื่อแนวเพลงใต้รูป */}
-              <span className="text-center text-xl font-medium">{g.label}</span>
+              <span className="text-center text-xs font-medium sm:text-xl">{g.label}</span>
             </li>
           ))}
         </ul>

@@ -159,7 +159,7 @@ export default function ThaiHeritage() {
         </h2>
 
         <div
-          className="mt-6 relative overflow-hidden rounded-[20px] p-8 md:p-12 text-white shadow-md flex flex-col lg:flex-row items-center justify-between gap-8"
+          className="mt-6 relative overflow-hidden rounded-[20px] p-5 sm:p-8 md:p-12 text-white shadow-md flex flex-col lg:flex-row items-center justify-between gap-8"
           style={{
             backgroundImage: `url('${bgThaiSilk}')`,
             backgroundSize: 'cover',
@@ -169,14 +169,14 @@ export default function ThaiHeritage() {
           <div className="absolute inset-0 bg-[#351e4d]/75 backdrop-brightness-90" />
 
           {/* 3 Images */}
-          <div className="relative z-10 flex items-center justify-center gap-4 sm:gap-6 shrink-0">
-            <div className="size-28 sm:size-36 md:size-44 rounded-full overflow-hidden border border-white/20 shadow-lg">
+          <div className="relative z-10 flex items-center justify-center gap-2 sm:gap-6 shrink-0">
+            <div className="size-20 sm:size-36 md:size-44 rounded-full overflow-hidden border border-white/20 shadow-lg">
               <img src={bg1} alt="Community artisan" className="h-full w-full object-cover" />
             </div>
-            <div className="w-24 sm:w-32 md:w-36 h-28 sm:h-36 md:h-44 rounded-[20px] overflow-hidden border border-white/20 shadow-lg">
+            <div className="w-20 sm:w-32 md:w-36 h-20 sm:h-36 md:h-44 rounded-[20px] overflow-hidden border border-white/20 shadow-lg">
               <img src={bg2} alt="Thai silk pattern" className="h-full w-full object-cover" />
             </div>
-            <div className="w-24 sm:w-32 md:w-36 h-28 sm:h-36 md:h-44 rounded-[40px] overflow-hidden border border-white/20 shadow-lg">
+            <div className="w-20 sm:w-32 md:w-36 h-20 sm:h-36 md:h-44 rounded-[40px] overflow-hidden border border-white/20 shadow-lg">
               <img src={bg3} alt="Woven fabric craft" className="h-full w-full object-cover" />
             </div>
           </div>
@@ -241,15 +241,15 @@ export default function ThaiHeritage() {
         </h2>
 
         {/* Product Grid */}
-        <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="mt-8 grid grid-cols-2 gap-3 sm:gap-6 lg:grid-cols-4">
           {visibleProducts.map((product) => (
             <div
               key={product.id}
-              className="flex flex-col justify-between overflow-hidden rounded-2xl bg-white p-5 shadow-card border border-black/5 transition hover:-translate-y-1 hover:shadow-lg"
+              className="flex flex-col justify-between overflow-hidden rounded-2xl bg-white p-3 sm:p-5 shadow-card border border-black/5 transition hover:-translate-y-1 hover:shadow-lg"
             >
               <Link
                 to={`/productDetail/${product.id}`}
-                className="relative block h-44 w-full overflow-hidden rounded-lg bg-zinc-100"
+                className="relative block h-32 sm:h-44 w-full overflow-hidden rounded-lg bg-zinc-100"
               >
                 <img
                   src={product.image}
@@ -259,19 +259,19 @@ export default function ThaiHeritage() {
                 />
               </Link>
 
-              <div className="mt-4 flex flex-1 flex-col justify-between">
+              <div className="mt-3 sm:mt-4 flex flex-1 flex-col justify-between">
                 <div>
-                  <p className="text-xs font-normal uppercase text-primary">
+                  <p className="text-[11px] sm:text-xs font-normal uppercase text-primary">
                     {product.brand || 'SACIT'}
                   </p>
                   <Link
                     to={`/productDetail/${product.id}`}
-                    className="mt-1 block truncate text-base font-semibold text-ink transition hover:text-primary"
+                    className="mt-1 block truncate text-sm sm:text-base font-semibold text-ink transition hover:text-primary"
                     title={product.name}
                   >
                     {product.name}
                   </Link>
-                  <p className="mt-1 text-xl font-medium text-ink font-[Sarabun]">
+                  <p className="mt-1 text-base sm:text-xl font-medium text-ink font-[Sarabun]">
                     {baht(product.price)}
                   </p>
                 </div>
@@ -279,7 +279,7 @@ export default function ThaiHeritage() {
                 <button
                   type="button"
                   onClick={() => addToCart(product, 1)}
-                  className="mt-4 flex h-9 w-full items-center justify-center rounded-lg bg-primary text-base font-medium text-white transition hover:bg-primary-deep cursor-pointer"
+                  className="mt-3 sm:mt-4 flex h-8 sm:h-9 w-full items-center justify-center rounded-lg bg-primary text-xs sm:text-base font-medium text-white transition hover:bg-primary-deep cursor-pointer"
                 >
                   Add to Cart
                 </button>

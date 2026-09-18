@@ -23,7 +23,11 @@ const timelineIcons = {
   cancelled: CircleDashed,
 };
 
-const baht = (value) => `$${value?.toLocaleString('en-US', { minimumFractionDigits: 0 }) || 0}`;
+const baht = (value) =>
+  `฿${Number(value || 0).toLocaleString('th-TH', {
+    minimumFractionDigits: Number(value || 0) % 1 !== 0 ? 2 : 0,
+    maximumFractionDigits: 2,
+  })}`;
 
 const DELIVERY_STEPS = [
   { key: 'pending', label: 'Order Placed', description: 'Order confirmed', icon: PackageSearch },

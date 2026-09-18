@@ -15,14 +15,14 @@ export default function StoryCollage() {
             <p className="text-xl font-bold uppercase tracking-wide text-primary">
               Story of Merchroom
             </p>
-            <h2 className="mt-6 text-4xl font-bold leading-normal md:text-5xl">
+            <h2 className="mt-6 text-2xl font-bold leading-normal md:text-5xl">
               Where collectibles from everywhere{' '}
               <span className="text-violet">finally share one room</span>.
             </h2>
           </div>
 
           <div>
-            <p className="max-w-152.75 text-2xl font-bold leading-9">
+            <p className="max-w-152.75 text-lg font-bold leading-7 md:text-2xl md:leading-9">
               Long pre-orders. Drops that sell out in hours. Craftwork nobody&apos;s heard of.
               MERCHROOM brings it all into one room.
             </p>
@@ -37,7 +37,7 @@ export default function StoryCollage() {
                 to="/about"
                 variant="highlight"
                 size="lg"
-                className="w-78 shrink-0 font-semibold"
+                className="w-full shrink-0 font-semibold sm:w-78"
               >
                 Meet the Room
               </Button>
