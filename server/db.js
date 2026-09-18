@@ -4,21 +4,30 @@ require('dotenv').config();
 const mongoose = require('mongoose');
 const dns = require('dns');
 
+let connectionPromise;
+
 // ฟิก DNS เป็น Google/Cloudflare ป้องกันบั๊ก ECONNREFUSED จาก MongoDB Atlas SRV บนเน็ตบางค่าย
 dns.setServers(['8.8.8.8', '1.1.1.1']);
 
-// ฟังก์ชันเชื่อมต่อฐานข้อมูล ถ้าต่อไม่สำเร็จให้ exit(1) ออกมาเลยเพื่อแจ้งเตือน
+// Reuses a connection for warm serverless function invocations.
 const connectDB = async () => {
-  try {
-    if (!process.env.MONGO_URI) {
-      throw new Error('MONGO_URI is missing. Add it to server/.env or the deployment environment variables.');
-    }
+  if (mongoose.connection.readyState === 1) {
+    return mongoose.connection;
+  }
 
-    await mongoose.connect(process.env.MONGO_URI);
+  if (!process.env.MONGO_URI) {
+    throw new Error('MONGO_URI is missing. Add it to server/.env or the deployment environment variables.');
+  }
+
+  connectionPromise ??= mongoose.connect(process.env.MONGO_URI);
+
+  try {
+    const connection = await connectionPromise;
     console.log('[DATABASE] MongoDB connected successfully');
+    return connection;
   } catch (err) {
-    console.error('[DATABASE] Connection failed:', err.message);
-    process.exit(1);
+    connectionPromise = undefined;
+    throw err;
   }
 };
 

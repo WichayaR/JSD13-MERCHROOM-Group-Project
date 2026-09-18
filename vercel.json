@@ -1,0 +1,9 @@
+{
+  "installCommand": "npm ci && npm ci --prefix client && npm ci --prefix server",
+  "buildCommand": "npm run build --prefix client",
+  "outputDirectory": "client/dist",
+  "routes": [
+    { "handle": "filesystem" },
+    { "src": "/(.*)", "dest": "/index.html" }
+  ]
+}

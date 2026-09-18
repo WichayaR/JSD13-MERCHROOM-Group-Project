@@ -14,7 +14,7 @@ import {
   getSession,
   clearSession,
 } from '../utils/sessionStorage';
-import { registerApi, loginApi, logoutApi, checkAuthApi } from '../api/auth';
+import { registerApi, loginApi, logoutApi, checkAuthApi } from '../api/auth.api';
 
 const AuthContext = createContext(null);
 

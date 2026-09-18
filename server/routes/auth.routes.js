@@ -77,7 +77,8 @@ router.post('/login', async (req, res) => {
 
     res.cookie('accessToken', token, {
       httpOnly: true,
-      secure: false,
+      // HTTPS is required for cookies in production, including Vercel.
+      secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       path: '/',
       maxAge: 60 * 60 * 1000,

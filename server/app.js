@@ -18,7 +18,12 @@ const app = express();
 app.use(
   cors({
     // Vite ปกติใช้ 5173 แต่ถ้า port ชนจะเด้งไป 5174 อัตโนมัติ จึงอนุญาตทั้งสอง port
-    origin: ['http://localhost:5173', 'http://localhost:5174'],
+    origin: [
+      'http://localhost:5173',
+      'http://localhost:5174',
+      // Set CLIENT_ORIGIN in Vercel when the client and API use different origins.
+      process.env.CLIENT_ORIGIN,
+    ].filter(Boolean),
     credentials: true,
   }),
 );
@@ -58,4 +63,10 @@ async function start() {
   }
 }
 
-start();
+// Vercel imports this module as a serverless function. Only start a listener
+// when this file is executed directly during local development.
+if (require.main === module) {
+  start();
+}
+
+module.exports = app;
