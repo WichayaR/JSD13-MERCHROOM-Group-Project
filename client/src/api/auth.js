@@ -14,6 +14,15 @@ async function request(path, options = {}) {
     ...options,
   });
 
+  const contentType = response.headers.get('content-type') || '';
+  if (contentType.includes('text/html')) {
+    return {
+      ok: false,
+      status: 404,
+      data: { message: 'API endpoint not available' },
+    };
+  }
+
   const data = await response.json().catch(() => ({}));
 
   return {
