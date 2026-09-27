@@ -1,6 +1,6 @@
-import { Link } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
-import registerLoginImage from '../../../assets/source-Image/Register_Login.jpg';
+import { Link } from "react-router-dom";
+import { ArrowLeft } from "lucide-react";
+import registerLoginImage from "../../../assets/source-Image/Register_Login.jpg";
 
 export default function AuthLayout({ children }) {
   return (

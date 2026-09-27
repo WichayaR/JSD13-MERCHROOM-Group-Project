@@ -1,34 +1,40 @@
-import { Link } from 'react-router-dom';
-import Button from './Button';
+import { Link } from "react-router-dom";
+import Button from "./Button";
 
 const baht = (value) =>
-  `฿${Number(value || 0).toLocaleString('th-TH', { minimumFractionDigits: 2 })}`;
+  `฿${Number(value || 0).toLocaleString("th-TH", { minimumFractionDigits: 2 })}`;
 
 // ไฟล์: client/src/components/ui/ProductCard.jsx
-// คอมโพเนนต์การ์ดแสดงรายการสินค้า (Product Card)
-// เรียกมาจาก: Home.jsx, Product.jsx, ProductDetail.jsx (Related items), ThaiHeritage.jsx, PopCulture.jsx
-// รับข้อมูลผ่าน: prop product (อิงตามโครงสร้างใน src/data/product.js) และฟังก์ชัน onAddToCart
 export default function ProductCard({
   product,
   onAddToCart,
-  fluid = false, // ให้ยืดเต็มความกว้าง 100% ตาม container พ่อ
-  compact = false, // ซ่อนปุ่ม Add to Cart (เหมาะกับหน้าแสดงแบบกระชับ)
+  fluid = false,
+  compact = false,
 }) {
   if (!product) return null;
+
+  const imgSrc = product.image || product.imageUrl || "";
+  const tags = [
+    ...new Set(
+      (product.tags || []).map((tag) => String(tag).trim()).filter(Boolean),
+    ),
+  ]
+    .filter((tag) => !tag.startsWith("genre:"))
+    .slice(0, 3);
 
   return (
     <div
       className={`group flex flex-col overflow-hidden rounded-card bg-white p-3 sm:p-4 shadow-card transition duration-300 hover:-translate-y-1 hover:shadow-lg ${
-        fluid ? 'w-full' : compact ? 'w-full' : 'w-70 sm:w-73.75'
+        fluid ? "w-full" : compact ? "w-full" : "w-70 sm:w-73.75"
       }`}
     >
       <Link
-        to={`/productDetail/${product.id}`}
+        to={`/products/${product.id || product._id}`}
         className="relative block aspect-[4/3] w-full overflow-hidden rounded-btn bg-cream sm:aspect-square"
       >
-        {product.image ? (
+        {imgSrc ? (
           <img
-            src={product.image}
+            src={imgSrc}
             alt={product.name}
             loading="lazy"
             className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
@@ -47,12 +53,31 @@ export default function ProductCard({
           </p>
         )}
         <Link
-          to={`/productDetail/${product.id}`}
+          to={`/products/${product.id || product._id}`}
           className="mt-1 line-clamp-2 text-xs sm:text-sm font-semibold text-ink transition hover:text-primary"
           title={product.name}
         >
           {product.name}
         </Link>
+
+        {product.description && (
+          <p className="mt-1 line-clamp-2 text-[11px] leading-relaxed text-muted sm:text-xs">
+            {product.description}
+          </p>
+        )}
+
+        {tags.length > 0 && (
+          <div className="mt-2 flex flex-wrap gap-1" aria-label="Product tags">
+            {tags.map((tag) => (
+              <span
+                key={tag}
+                className="rounded-full bg-cream px-2 py-0.5 text-[10px] font-medium text-ink/70 sm:text-[11px]"
+              >
+                #{tag}
+              </span>
+            ))}
+          </div>
+        )}
 
         <div className="mt-auto pt-2 sm:pt-3">
           <span className="font-[Sarabun] text-sm font-bold text-ink sm:text-base md:text-lg">
@@ -60,7 +85,11 @@ export default function ProductCard({
           </span>
 
           {onAddToCart && !compact && (
-            <Button size="md" className="mt-2 sm:mt-2.5 w-full text-xs sm:text-sm !h-8 sm:!h-10" onClick={() => onAddToCart(product, 1)}>
+            <Button
+              size="md"
+              className="mt-2 sm:mt-2.5 w-full text-xs sm:text-sm !h-8 sm:!h-10"
+              onClick={() => onAddToCart(product, 1)}
+            >
               Add to Cart
             </Button>
           )}

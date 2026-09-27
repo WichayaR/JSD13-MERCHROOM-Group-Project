@@ -1,20 +1,29 @@
 // ไฟล์: client/src/components/ui/Navbar.jsx
-import { useEffect, useRef, useState, useMemo } from 'react';
-import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
-import { Key, LogOut, Menu, Package, Search, ShoppingCart, User, X } from 'lucide-react';
+import { useEffect, useRef, useState, useMemo } from "react";
+import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
+import {
+  Key,
+  LogOut,
+  Menu,
+  Package,
+  Search,
+  ShoppingCart,
+  User,
+  X,
+} from "lucide-react";
 // - useCart: จัดการ state สินค้าในตะกร้า (cartItems, updateQuantity, removeItem, totalPrice ฯลฯ)
-import { useCart } from '../../context/CartContext';
+import { useCart } from "../../context/CartContext";
 // - useAuth: ดึง user, isAuthenticated, logout สำหรับสลับเมนูโปรไฟล์/Login
-import { useAuth } from '../../context/AuthContext';
-import Logo from './Logo';
+import { useAuth } from "../../context/AuthContext";
+import Logo from "./Logo";
 
 // Import Named Export 'products' ตรงจากไฟล์ product.js
-import { products } from '../../data/product';
+import { products } from "../../data/product";
 
 const navLinks = [
-  { label: 'Pop Culture', to: '/products?cat=pop-culture' },
-  { label: 'Thai Heritage', to: '/thai-heritage' },
-  { label: 'About Us', to: '/about' },
+  { label: "Pop Culture", to: "/products?cat=pop-culture" },
+  { label: "Thai Heritage", to: "/thai-heritage" },
+  { label: "About Us", to: "/about" },
 ];
 
 export default function Navbar() {
@@ -25,7 +34,7 @@ export default function Navbar() {
   const navigate = useNavigate();
 
   const [scrolled, setScrolled] = useState(false);
-  const [query, setQuery] = useState('');
+  const [query, setQuery] = useState("");
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -43,11 +52,15 @@ export default function Navbar() {
 
     return list
       .filter((item) => {
-        const name = (item.name || '').toLowerCase();
-        const brand = (item.brand || '').toLowerCase();
-        const description = (item.description || '').toLowerCase();
-        
-        return name.includes(trimmed) || brand.includes(trimmed) || description.includes(trimmed);
+        const name = (item.name || "").toLowerCase();
+        const brand = (item.brand || "").toLowerCase();
+        const description = (item.description || "").toLowerCase();
+
+        return (
+          name.includes(trimmed) ||
+          brand.includes(trimmed) ||
+          description.includes(trimmed)
+        );
       })
       .slice(0, 6);
   }, [query]);
@@ -56,8 +69,8 @@ export default function Navbar() {
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24);
     onScroll();
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
   // ปิด Dropdown เมื่อคลิกข้างนอก
@@ -70,8 +83,8 @@ export default function Navbar() {
         setIsSearchOpen(false);
       }
     };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   // ปิด mobile menu เมื่อเปลี่ยนหน้า
@@ -81,8 +94,10 @@ export default function Navbar() {
 
   // ล็อค scroll ตอนเปิด mobile menu
   useEffect(() => {
-    document.body.style.overflow = isMobileMenuOpen ? 'hidden' : '';
-    return () => { document.body.style.overflow = ''; };
+    document.body.style.overflow = isMobileMenuOpen ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
   }, [isMobileMenuOpen]);
 
   const handleCloseMenu = () => {
@@ -110,40 +125,39 @@ export default function Navbar() {
     };
   }, []);
 
-  const isHomePage = pathname === '/';
+  const isHomePage = pathname === "/";
   const onHero = isHomePage && !scrolled;
 
   return (
     <>
       <header
-        className={`fixed inset-x-0 top-0 z-50 flex h-19 items-center transition-all duration-300 ${
+        className={`navbar fixed inset-x-0 top-0 z-50 flex h-16 items-center transition-all duration-300 md:h-19 ${
           isHomePage
             ? onHero
-              ? 'bg-navbar-gradient text-white'
-              : 'bg-navbar-gradient-fade backdrop-blur-lg text-white'
-            : 'bg-ink text-white'
+              ? "bg-navbar-gradient text-white"
+              : "bg-navbar-gradient-fade backdrop-blur-lg text-white"
+            : "bg-ink text-white"
         }`}
       >
         {/* Container หลัก: max-w-330 สูง h-12 ตรงตาม Figma */}
-        <div className="mx-auto flex h-12 w-full max-w-330 items-center justify-between gap-4 px-4 xl:gap-19.5 xl:px-0">
-          
+        <div className="navbar-content mx-auto flex h-10 w-full max-w-330 items-center justify-between gap-4 px-0 md:h-12 md:px-4 xl:gap-19.5 xl:px-0">
           {/* ฝั่งซ้าย: โลโก้ + เมนูหลัก */}
           <div className="flex items-center gap-6 xl:gap-19.5">
-            <div className="w-35 shrink-0 md:w-38.75">
+            <div className="navbar-logo w-auto shrink-0 md:w-38.75">
               <Logo />
             </div>
 
             <nav className="hidden items-center gap-6 text-sm font-medium md:flex">
               {navLinks.map((link) => {
                 const isMatch = (() => {
-                  if (link.to.includes('?')) {
-                    const [targetPath, targetSearch] = link.to.split('?');
+                  if (link.to.includes("?")) {
+                    const [targetPath, targetSearch] = link.to.split("?");
                     const targetParams = new URLSearchParams(targetSearch);
                     const currentParams = new URLSearchParams(location.search);
                     return (
                       location.pathname === targetPath &&
                       Array.from(targetParams.entries()).every(
-                        ([k, v]) => currentParams.get(k) === v
+                        ([k, v]) => currentParams.get(k) === v,
                       )
                     );
                   }
@@ -154,7 +168,7 @@ export default function Navbar() {
                   <NavLink
                     key={link.to}
                     to={link.to}
-                    className={`nav-link ${isMatch ? 'active' : ''}`}
+                    className={`nav-link ${isMatch ? "active" : ""}`}
                   >
                     {link.label}
                   </NavLink>
@@ -165,19 +179,28 @@ export default function Navbar() {
 
           {/* ฝั่งขวา: Search Bar + Cart + User + Hamburger */}
           <div className="flex flex-1 items-center justify-end gap-6 xl:gap-19.5">
-            
             {/* ช่อง Search Bar ความสูง h-12 พร้อม Dropdown Real-time */}
-            <div className="relative hidden w-full max-w-107.75 sm:block" ref={searchRef}>
+            <div
+              className="relative hidden w-full max-w-107.75 sm:block"
+              ref={searchRef}
+            >
               <form
                 className="flex h-12 w-full items-center gap-3 rounded-full bg-[#F0F0F0]/70 px-5 text-black"
                 role="search"
                 onSubmit={(e) => {
                   e.preventDefault();
                   setIsSearchOpen(false);
-                  navigate(query.trim() ? `/products?q=${encodeURIComponent(query.trim())}` : '/products');
+                  navigate(
+                    query.trim()
+                      ? `/products?q=${encodeURIComponent(query.trim())}`
+                      : "/products",
+                  );
                 }}
               >
-                <Search className="size-5 shrink-0 text-black/40" aria-hidden="true" />
+                <Search
+                  className="size-5 shrink-0 text-black/40"
+                  aria-hidden="true"
+                />
                 <input
                   type="search"
                   value={query}
@@ -192,11 +215,11 @@ export default function Navbar() {
                   className="w-full bg-transparent text-sm text-black placeholder:text-black/40 focus:outline-none [&::-webkit-search-cancel-button]:hidden [&::-webkit-search-decoration]:hidden"
                 />
                 {/* แสดงปุ่มลบเฉพาะเมื่อมีการพิมพ์ข้อความ */}
-                {query.trim() !== '' && (
+                {query.trim() !== "" && (
                   <button
                     type="button"
                     onClick={() => {
-                      setQuery('');
+                      setQuery("");
                       setIsSearchOpen(false);
                     }}
                     className="flex shrink-0 items-center justify-center p-1 text-black/40 hover:text-black"
@@ -208,7 +231,7 @@ export default function Navbar() {
               </form>
 
               {/* Dropdown ผลการค้นหา Real-time */}
-              {isSearchOpen && query.trim() !== '' && (
+              {isSearchOpen && query.trim() !== "" && (
                 <div className="absolute top-14 left-0 z-50 w-full overflow-hidden rounded-3xl bg-white p-3 text-zinc-900 shadow-2xl ring-1 ring-black/5 animate-in fade-in zoom-in-95 duration-150">
                   {searchResults.length > 0 ? (
                     <div>
@@ -245,7 +268,13 @@ export default function Navbar() {
                             {/* ราคา */}
                             <div className="shrink-0 text-right">
                               <span className="text-base font-bold text-[#FF5A36]">
-                                ฿{typeof item.price === 'number' ? item.price.toLocaleString('en-US', { minimumFractionDigits: item.price % 1 !== 0 ? 2 : 0 }) : item.price}
+                                ฿
+                                {typeof item.price === "number"
+                                  ? item.price.toLocaleString("en-US", {
+                                      minimumFractionDigits:
+                                        item.price % 1 !== 0 ? 2 : 0,
+                                    })
+                                  : item.price}
                               </span>
                             </div>
                           </Link>
@@ -258,7 +287,9 @@ export default function Navbar() {
                           type="button"
                           onClick={() => {
                             setIsSearchOpen(false);
-                            navigate(`/products?q=${encodeURIComponent(query.trim())}`);
+                            navigate(
+                              `/products?q=${encodeURIComponent(query.trim())}`,
+                            );
                           }}
                           className="inline-flex items-center justify-center gap-2 w-full py-2.5 text-sm font-semibold text-[#FF5A36] transition hover:bg-orange-50/50 rounded-2xl"
                         >
@@ -277,8 +308,12 @@ export default function Navbar() {
             </div>
 
             {/* กลุ่มไอคอน Actions */}
-            <div className="flex shrink-0 items-center gap-5 md:gap-6">
-              <Link to="/cart" className="nav-icon-link relative flex items-center justify-center text-white" aria-label="ตะกร้าสินค้า">
+            <div className="flex shrink-0 items-center gap-2.5 md:gap-6">
+              <Link
+                to="/cart"
+                className="nav-icon-link relative flex items-center justify-center text-white"
+                aria-label="ตะกร้าสินค้า"
+              >
                 <ShoppingCart className="size-6" />
                 {cartCount > 0 && (
                   <span className="absolute -top-1.5 -right-2 flex size-4.5 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-white">
@@ -312,76 +347,80 @@ export default function Navbar() {
                     onMouseLeave={handleUserMenuLeave}
                   >
                     <div className="w-56 overflow-hidden rounded-2xl bg-white p-1 text-zinc-700 shadow-xl ring-1 ring-black/5 animate-in fade-in zoom-in-95 duration-150">
-                    {!isAuthenticated ? (
-                      <div className="divide-y divide-zinc-100">
-                        <Link
-                          to="/login"
-                          onClick={handleCloseMenu}
-                          className="flex items-center gap-3 px-4 py-3 text-xs font-semibold text-zinc-600 transition hover:bg-zinc-50 hover:text-zinc-900 md:text-sm"
-                        >
-                          <User className="size-4 text-zinc-500" />
-                          <span>Log in / Registration</span>
-                        </Link>
+                      {!isAuthenticated ? (
+                        <div className="divide-y divide-zinc-100">
+                          <Link
+                            to="/login"
+                            onClick={handleCloseMenu}
+                            className="flex items-center gap-3 px-4 py-3 text-xs font-semibold text-zinc-600 transition hover:bg-zinc-50 hover:text-zinc-900 md:text-sm"
+                          >
+                            <User className="size-4 text-zinc-500" />
+                            <span>Log in / Registration</span>
+                          </Link>
 
-                        <Link
-                          to="/admin/login"
-                          onClick={handleCloseMenu}
-                          className="flex items-center gap-3 px-4 py-3 text-xs font-semibold text-zinc-600 transition hover:bg-zinc-50 hover:text-zinc-900 md:text-sm"
-                        >
-                          <Key className="size-4 text-zinc-500" />
-                          <span>Admin Gateway</span>
-                        </Link>
-                      </div>
-                    ) : (
-                      <div className="divide-y divide-zinc-100">
-                        <div className="py-1">
-                          {user?.role === 'admin' ? (
-                            <Link
-                              to="/admin/dashboard"
-                              onClick={handleCloseMenu}
-                              className="flex items-center gap-3 px-4 py-2.5 text-xs font-semibold text-zinc-600 transition hover:bg-zinc-50 hover:text-zinc-900 md:text-sm"
-                            >
-                              <User className="size-4 text-zinc-500" />
-                              <span>Admin Dashboard</span>
-                            </Link>
-                          ) : (
-                            <>
+                          <Link
+                            to="/admin/login"
+                            onClick={handleCloseMenu}
+                            className="flex items-center gap-3 px-4 py-3 text-xs font-semibold text-zinc-600 transition hover:bg-zinc-50 hover:text-zinc-900 md:text-sm"
+                          >
+                            <Key className="size-4 text-zinc-500" />
+                            <span>Admin Gateway</span>
+                          </Link>
+                        </div>
+                      ) : (
+                        <div className="divide-y divide-zinc-100">
+                          <div className="py-1">
+                            {user?.role === "admin" ? (
                               <Link
-                                to="/account/profile"
+                                to="/admin/dashboard"
                                 onClick={handleCloseMenu}
                                 className="flex items-center gap-3 px-4 py-2.5 text-xs font-semibold text-zinc-600 transition hover:bg-zinc-50 hover:text-zinc-900 md:text-sm"
                               >
                                 <User className="size-4 text-zinc-500" />
-                                <span>My Account ({user?.name || user?.firstName || 'Profile'})</span>
+                                <span>Admin Dashboard</span>
                               </Link>
+                            ) : (
+                              <>
+                                <Link
+                                  to="/account/profile"
+                                  onClick={handleCloseMenu}
+                                  className="flex items-center gap-3 px-4 py-2.5 text-xs font-semibold text-zinc-600 transition hover:bg-zinc-50 hover:text-zinc-900 md:text-sm"
+                                >
+                                  <User className="size-4 text-zinc-500" />
+                                  <span>
+                                    My Account (
+                                    {user?.name || user?.firstName || "Profile"}
+                                    )
+                                  </span>
+                                </Link>
 
-                              <Link
-                                to="/order-history"
-                                onClick={handleCloseMenu}
-                                className="flex items-center gap-3 px-4 py-2.5 text-xs font-semibold text-zinc-600 transition hover:bg-zinc-50 hover:text-zinc-900 md:text-sm"
-                              >
-                                <Package className="size-4 text-zinc-500" />
-                                <span>Order History</span>
-                              </Link>
-                            </>
-                          )}
-                        </div>
+                                <Link
+                                  to="/order-history"
+                                  onClick={handleCloseMenu}
+                                  className="flex items-center gap-3 px-4 py-2.5 text-xs font-semibold text-zinc-600 transition hover:bg-zinc-50 hover:text-zinc-900 md:text-sm"
+                                >
+                                  <Package className="size-4 text-zinc-500" />
+                                  <span>Order History</span>
+                                </Link>
+                              </>
+                            )}
+                          </div>
 
-                        <div className="py-1">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              logout?.();
-                              handleCloseMenu();
-                            }}
-                            className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-xs font-semibold text-red-600 transition hover:bg-red-50 md:text-sm cursor-pointer"
-                          >
-                            <LogOut className="size-4 text-red-500" />
-                            <span>Log out</span>
-                          </button>
+                          <div className="py-1">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                logout?.();
+                                handleCloseMenu();
+                              }}
+                              className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-xs font-semibold text-red-600 transition hover:bg-red-50 md:text-sm cursor-pointer"
+                            >
+                              <LogOut className="size-4 text-red-500" />
+                              <span>Log out</span>
+                            </button>
+                          </div>
                         </div>
-                      </div>
-                    )}
+                      )}
                     </div>
                   </div>
                 )}
@@ -391,14 +430,13 @@ export default function Navbar() {
               <button
                 type="button"
                 onClick={() => setIsMobileMenuOpen(true)}
-                className="flex items-center justify-center text-white md:hidden"
+                className="mobile-menu-trigger flex items-center justify-center text-white md:hidden"
                 aria-label="เปิดเมนู"
               >
                 <Menu className="size-6" />
               </button>
             </div>
           </div>
-
         </div>
       </header>
 
@@ -486,7 +524,7 @@ export default function Navbar() {
                 </>
               ) : (
                 <>
-                  {user?.role === 'admin' ? (
+                  {user?.role === "admin" ? (
                     <Link
                       to="/admin/dashboard"
                       onClick={() => setIsMobileMenuOpen(false)}

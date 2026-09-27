@@ -91,9 +91,17 @@ node app.js
 ```bash
 node seed.js
 ```
-- `seed.js` ใช้วิธี **upsert** = มี `_id` อยู่แล้ว → อัปเดต / ยังไม่มี → เพิ่มใหม่
+- `seed.js` เพิ่มเฉพาะ baseline ที่ยังไม่มี จึงไม่ลบหรือทับสินค้าที่เพิ่มผ่านหน้า Admin
 - รันซ้ำกี่รอบก็ได้ ไม่ลบข้อมูลเดิม ไม่ error
 - ถ้าอยากเพิ่มข้อมูลใหม่ ให้เพิ่ม object ใน seed.js แล้วรัน `node seed.js` อีกครั้ง
+
+### ซิงก์ catalog mock ไปยังฐานข้อมูล
+```bash
+npm run sync:mock-catalog
+```
+- เทียบ `client/src/data/product.js` กับ MongoDB ตามชื่อสินค้าและศิลปิน
+- เพิ่มรายการ mock ที่ยังไม่มี พร้อม tags, category, genre tag และรูปภาพ
+- อัปเดตข้อมูล catalog ของสินค้าที่ตรงกัน แต่ไม่เปลี่ยนจำนวนคงเหลือ และไม่แตะ users, orders, carts หรือ payments
 
 ### แก้ปัญหาเมื่อ `node seed.js` รันไม่ได้ (error)
 

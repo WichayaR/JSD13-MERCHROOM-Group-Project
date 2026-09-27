@@ -5,3 +5,14 @@ build/
 .env
 .env.local
 *.log
+diagrams
+mindmap-database
+output
+tmp
+BMC.excalidraw
+database-and-architecture-guide.md
+er-diagram.dio
+implementation-plan.md
+personal-data-encryption.md
+system-design-and-architecture.md
+use-case-diagram.excalidraw

@@ -6,22 +6,22 @@ export default function SectionHeading({
   eyebrow,
   title,
   description,
-  align = 'left',
+  align = "left",
   onDark = false,
-  className = '',
+  className = "",
 }) {
-  const isCenter = align === 'center';
+  const isCenter = align === "center";
   return (
     <div
       className={`flex flex-col ${
-        isCenter ? 'items-center text-center' : 'items-start text-left'
+        isCenter ? "items-center text-center" : "items-start text-left"
       } ${className}`}
     >
       {/* ข้อความหมวดหมู่ย่อยตัวพิมพ์ใหญ่ด้านบน (Eyebrow) */}
       {eyebrow && (
         <p
           className={`text-sm font-bold uppercase tracking-wider md:text-base ${
-            onDark ? 'text-highlight' : 'text-primary'
+            onDark ? "text-highlight" : "text-primary"
           }`}
         >
           {eyebrow}
@@ -32,7 +32,7 @@ export default function SectionHeading({
       {title && (
         <h2
           className={`mt-2 font-display text-3xl font-bold leading-tight md:text-5xl ${
-            onDark ? 'text-white' : 'text-ink'
+            onDark ? "text-white" : "text-ink"
           }`}
         >
           {title}
@@ -43,7 +43,7 @@ export default function SectionHeading({
       {description && (
         <p
           className={`mt-3 max-w-2xl text-base leading-relaxed ${
-            onDark ? 'text-cream-text/80' : 'text-black/70'
+            onDark ? "text-cream-text/80" : "text-black/70"
           }`}
         >
           {description}

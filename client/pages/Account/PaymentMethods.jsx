@@ -4,6 +4,12 @@ import { useState } from 'react';
 import { useAccount } from '../../src/context/AccountContext';
 import { CreditCard, QrCode, Wallet, Building2, Trash2, CheckCircle, Plus, X } from 'lucide-react';
 
+const formatCardNumber = (value) => value.replace(/\D/g, '').slice(0, 16).replace(/(\d{4})(?=\d)/g, '$1 ');
+const formatExpiryDate = (value) => {
+  const digits = value.replace(/\D/g, '').slice(0, 4);
+  return digits.length > 2 ? `${digits.slice(0, 2)}/${digits.slice(2)}` : digits;
+};
+
 export default function PaymentMethods() {
   const { profile, updateProfile } = useAccount();
   const paymentMethods = profile?.paymentMethods || ['Credit Card (**** 4242)', 'PromptPay QR'];
@@ -24,7 +30,14 @@ export default function PaymentMethods() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    const nextValue = name === 'cardNumber'
+      ? formatCardNumber(value)
+      : name === 'expDate'
+        ? formatExpiryDate(value)
+        : name === 'cvc'
+          ? value.replace(/\D/g, '').slice(0, 4)
+          : value;
+    setFormData((prev) => ({ ...prev, [name]: nextValue }));
   };
 
   const handleAddMethod = async (e) => {
@@ -234,6 +247,10 @@ export default function PaymentMethods() {
                       placeholder="Card Number"
                       value={formData.cardNumber}
                       onChange={handleChange}
+                      inputMode="numeric"
+                      autoComplete="cc-number"
+                      pattern="(?:[0-9]{4} ){3}[0-9]{4}"
+                      maxLength={19}
                       className="h-11 rounded-xl bg-[#F0F0F0] px-4 text-sm outline-none placeholder:text-black/40 focus:bg-white focus:ring-1 focus:ring-black/20"
                       required
                     />
@@ -243,6 +260,10 @@ export default function PaymentMethods() {
                       placeholder="MM/YY"
                       value={formData.expDate}
                       onChange={handleChange}
+                      inputMode="numeric"
+                      autoComplete="cc-exp"
+                      pattern="(0[1-9]|1[0-2])/[0-9]{2}"
+                      maxLength={5}
                       className="h-11 rounded-xl bg-[#F0F0F0] px-4 text-center text-sm outline-none placeholder:text-black/40 focus:bg-white focus:ring-1 focus:ring-black/20"
                       required
                     />
@@ -252,6 +273,9 @@ export default function PaymentMethods() {
                       placeholder="CVC"
                       value={formData.cvc}
                       onChange={handleChange}
+                      inputMode="numeric"
+                      autoComplete="cc-csc"
+                      maxLength={4}
                       className="h-11 rounded-xl bg-[#F0F0F0] px-4 text-center text-sm outline-none placeholder:text-black/40 focus:bg-white focus:ring-1 focus:ring-black/20"
                       required
                     />

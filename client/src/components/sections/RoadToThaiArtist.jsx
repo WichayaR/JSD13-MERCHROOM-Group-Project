@@ -2,11 +2,11 @@
 // ส่วนจัดแสดงคอลเลกชันนิทรรศการ Road to Thai Artist (บอร์ดจัดแสดงสไตล์ Editorial)
 // เรียกมาจาก: Home.jsx (วางเป็น section ล่างสุดของหน้าแรกก่อนถึง footer)
 // แหล่งข้อมูล: roadToThaiArtist จาก src/data/sections.js และข้อมูลสินค้าจาก src/data/product.js
-import { useEffect, useRef, useState } from 'react';
-import { products, roadToThaiArtist } from '../../data/sections';
-import Container from '../ui/Container';
-import ScaledStage from '../ui/ScaledStage';
-import Placeholder from '../ui/Placeholder';
+import { useEffect, useRef, useState } from "react";
+import { products, roadToThaiArtist } from "../../data/sections";
+import Container from "../ui/Container";
+import ScaledStage from "../ui/ScaledStage";
+import Placeholder from "../ui/Placeholder";
 
 // ฟังก์ชันช่วยดึงข้อมูลสินค้าจาก array products ตาม id
 function findProduct(id) {
@@ -38,19 +38,21 @@ const CRAFT_LAYOUT = [
 ];
 
 // ป้ายตัวเลขกลมๆ สไตล์ editorial บอกหมายเลขโซน เช่น 01, 02, 03
-function Badge({ number, className = '' }) {
+function Badge({ number, className = "" }) {
   return (
     <div
       className={`absolute z-30 grid size-15 place-items-center rounded-pill shadow-card ${className}`}
     >
-      <span className="font-editorial text-[32px] font-bold text-white">{number}</span>
+      <span className="font-editorial text-[32px] font-bold text-white">
+        {number}
+      </span>
     </div>
   );
 }
 
 // คอมโพเนนต์ทำ Scroll Reveal Animation โดยใช้ IntersectionObserver
 // ดักจับเมื่อผู้ใช้เลื่อนจอมาถึง threshold 20% แล้วค่อย fade in และลอยเข้าสู่ตำแหน่งจริง
-function Reveal({ delay = 0, x = 0, y = 40, className = '', style, children }) {
+function Reveal({ delay = 0, x = 0, y = 40, className = "", style, children }) {
   const ref = useRef(null);
   const [inView, setInView] = useState(false);
 
@@ -75,7 +77,7 @@ function Reveal({ delay = 0, x = 0, y = 40, className = '', style, children }) {
         ...style,
         transform: inView
           ? style?.transform
-          : `${style?.transform ?? ''} translate(${x}px, ${y}px)`,
+          : `${style?.transform ?? ""} translate(${x}px, ${y}px)`,
         opacity: inView ? 1 : 0,
         transition: `transform 700ms cubic-bezier(0.22, 1, 0.36, 1) ${delay}ms, opacity 500ms ease ${delay}ms`,
       }}
@@ -89,13 +91,19 @@ function Reveal({ delay = 0, x = 0, y = 40, className = '', style, children }) {
 function PopPolaroid({ item, layout }) {
   const product = findProduct(item.productId);
   if (!product) return null;
-  const overlay = item.overlayProductId ? findProduct(item.overlayProductId) : null;
+  const overlay = item.overlayProductId
+    ? findProduct(item.overlayProductId)
+    : null;
   const captionProduct = overlay ?? product;
 
   return (
     <div
       className="z-10 bg-white p-5 pb-3 shadow-card"
-      style={{ width: layout.width, transform: `rotate(${item.rotate}deg)`, transformOrigin: 'center' }}
+      style={{
+        width: layout.width,
+        transform: `rotate(${item.rotate}deg)`,
+        transformOrigin: "center",
+      }}
     >
       <div className="relative">
         {product.image ? (
@@ -113,7 +121,7 @@ function PopPolaroid({ item, layout }) {
             src={overlay.image}
             alt={overlay.name}
             className="absolute inset-0 h-full w-full object-cover"
-            style={{ transform: 'rotate(0.6deg)' }}
+            style={{ transform: "rotate(0.6deg)" }}
           />
         )}
       </div>
@@ -132,11 +140,21 @@ function ThaiPolaroid({ item, layout }) {
   return (
     <div
       className="z-10 bg-ink p-2 pb-3 shadow-card"
-      style={{ width: layout.width, transform: `rotate(${item.rotate}deg)`, transformOrigin: 'center' }}
+      style={{
+        width: layout.width,
+        transform: `rotate(${item.rotate}deg)`,
+        transformOrigin: "center",
+      }}
     >
-      <div className={`w-full overflow-hidden ${item.wide ? 'aspect-244/159' : 'aspect-square'}`}>
+      <div
+        className={`w-full overflow-hidden ${item.wide ? "aspect-244/159" : "aspect-square"}`}
+      >
         {product.image ? (
-          <img src={product.image} alt={product.name} className="h-full w-full object-cover" />
+          <img
+            src={product.image}
+            alt={product.name}
+            className="h-full w-full object-cover"
+          />
         ) : (
           <Placeholder label={product.name} className="h-full" />
         )}
@@ -160,7 +178,7 @@ export default function RoadToThaiArtist() {
       <Container>
         {/* ครอบด้วย ScaledStage เพื่อรักษาอัตราส่วนพิกัด x,y ขององค์ประกอบทั้งหมดในบอร์ด */}
         <ScaledStage width={1320} height={815}>
-          <div className="relative h-203.75 w-330">  
+          <div className="relative h-203.75 w-330">
             {/* โซนที่ 1: การ์ดโพลารอยด์ฝั่งสากล (Pop Culture) ลอยเยื้องซ้ายบน */}
             {pop.map((item, idx) => (
               <Reveal
@@ -176,7 +194,12 @@ export default function RoadToThaiArtist() {
             ))}
 
             {/* แผ่นเสียงไวนิลชิ้นไฮไลต์ตรงกลางขวา */}
-            <Reveal delay={200} y={50} className="absolute" style={{ left: 714, top: 0 }}>
+            <Reveal
+              delay={200}
+              y={50}
+              className="absolute"
+              style={{ left: 714, top: 0 }}
+            >
               <div className="h-99 w-100.75 bg-black p-3 shadow-card">
                 <div className="flex h-full w-full items-center justify-center bg-ink p-2">
                   {vinyl?.image ? (
@@ -197,7 +220,10 @@ export default function RoadToThaiArtist() {
               x={-140}
               y={24}
               className="absolute left-15 top-3 z-30 w-70.25"
-              style={{ transform: 'rotate(-4.53deg)', transformOrigin: 'center' }}
+              style={{
+                transform: "rotate(-4.53deg)",
+                transformOrigin: "center",
+              }}
             >
               <p className="font-editorial text-[32px] font-bold italic leading-10 text-primary-deep">
                 collection of stories and connections
@@ -210,7 +236,10 @@ export default function RoadToThaiArtist() {
               delay={350}
               y={30}
               className="absolute left-256 top-103.5 z-10 w-69.25"
-              style={{ transform: 'rotate(0.88deg)', transformOrigin: 'center' }}
+              style={{
+                transform: "rotate(0.88deg)",
+                transformOrigin: "center",
+              }}
             >
               <p className="text-right font-editorial text-xl font-bold text-black">
                 the centerpiece — a record worth the shelf space
@@ -222,7 +251,10 @@ export default function RoadToThaiArtist() {
               x={-120}
               y={40}
               className="absolute left-44.5 top-106.5 z-30 w-32.5"
-              style={{ transform: 'rotate(3.03deg)', transformOrigin: 'center' }}
+              style={{
+                transform: "rotate(3.03deg)",
+                transformOrigin: "center",
+              }}
             >
               <p className="font-editorial text-2xl font-bold italic leading-7.5 text-violet">
                 Road to Thai Artist
@@ -238,7 +270,10 @@ export default function RoadToThaiArtist() {
                 x={-60}
                 y={90}
                 className="absolute"
-                style={{ left: THAI_LAYOUT[idx].left, top: THAI_LAYOUT[idx].top }}
+                style={{
+                  left: THAI_LAYOUT[idx].left,
+                  top: THAI_LAYOUT[idx].top,
+                }}
               >
                 <ThaiPolaroid item={item} layout={THAI_LAYOUT[idx]} />
               </Reveal>
@@ -250,24 +285,36 @@ export default function RoadToThaiArtist() {
               x={60}
               y={-50}
               className="absolute left-155.5 top-82.75 z-30 w-61.5"
-              style={{ transform: 'rotate(-10.73deg)', transformOrigin: 'center' }}
+              style={{
+                transform: "rotate(-10.73deg)",
+                transformOrigin: "center",
+              }}
             >
               <div className="bg-white p-4 shadow-card">
                 <div className="flex items-center gap-2">
-                  <span className="size-5 rounded-pill border border-ink bg-violet" aria-hidden="true" />
+                  <span
+                    className="size-5 rounded-pill border border-ink bg-violet"
+                    aria-hidden="true"
+                  />
                   <span className="font-editorial text-xl font-bold italic text-primary">
                     MERCHROOM
                   </span>
                 </div>
                 <span className="mt-1 block h-0.75 w-39.25 bg-highlight" />
                 <p className="mt-2 font-mono text-sm font-light leading-snug text-black">
-                  Two headline artists, one weekend haul — tour merch worth keeping.
+                  Two headline artists, one weekend haul — tour merch worth
+                  keeping.
                 </p>
               </div>
             </Reveal>
 
             {/* โซนที่ 3: กรอบรวมงานหัตถกรรมไทย (Thai Handcraft Edit) พร้อม Badge 03 */}
-            <Reveal x={140} y={60} className="absolute" style={{ left: 756, top: 464 }}>
+            <Reveal
+              x={140}
+              y={60}
+              className="absolute"
+              style={{ left: 756, top: 464 }}
+            >
               <div className="relative h-76.5 w-139.5 border-[5px] border-black bg-white shadow-card">
                 <Badge number="03" className="left-8.5 top-8.25 bg-highlight" />
                 <h3 className="absolute left-25 top-10.75 font-editorial text-[32px] font-bold italic text-ink">

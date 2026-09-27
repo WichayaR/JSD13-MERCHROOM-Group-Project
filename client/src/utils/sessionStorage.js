@@ -1,7 +1,7 @@
 // ไฟล์: client/src/utils/sessionStorage.js
 // โมดูลจัดการ Session ผู้ใช้ลงใน LocalStorage (key: merchroom_session)
 // เรียกใช้งานโดย: AuthContext.jsx สำหรับจดจำและคืนสถานะการเข้าสู่ระบบของผู้ใช้
-const SESSION_KEY = 'merchroom_session';
+const SESSION_KEY = "merchroom_session";
 
 // บันทึกข้อมูลผู้ใช้ปัจจุบันหลังล็อกอินสำเร็จ
 export function saveSession(user) {

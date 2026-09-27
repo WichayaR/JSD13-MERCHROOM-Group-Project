@@ -1,6 +1,6 @@
 // src/components/ui/AvatarUploader.jsx
 // คอมโพเนนต์อัปโหลดรูปโปรไฟล์ — ดีไซน์ Rounded 2xl minimal ตามแบบ UI
-import { useRef } from 'react';
+import { useRef } from "react";
 
 export const AvatarUploader = ({ currentAvatar, onUpload }) => {
   const fileInputRef = useRef(null);
@@ -14,13 +14,15 @@ export const AvatarUploader = ({ currentAvatar, onUpload }) => {
     <div className="flex items-center gap-6 p-4 rounded-2xl border border-gray-100 bg-gray-50/70">
       <div className="w-20 h-20 rounded-2xl overflow-hidden border border-gray-200 shrink-0 bg-white shadow-sm">
         <img
-          src={currentAvatar || 'https://via.placeholder.com/150'}
+          src={currentAvatar || "https://via.placeholder.com/150"}
           alt="Avatar Preview"
           className="w-full h-full object-cover"
         />
       </div>
       <div className="flex flex-col gap-1 items-start">
-        <h3 className="font-sans font-semibold text-sm text-gray-900">Avatar</h3>
+        <h3 className="font-sans font-semibold text-sm text-gray-900">
+          Avatar
+        </h3>
         <span className="text-xs text-gray-500">
           Recommended size: 500x500px.
         </span>

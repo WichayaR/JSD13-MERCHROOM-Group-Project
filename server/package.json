@@ -7,6 +7,9 @@
     "dev": "node app.js",
     "start": "node app.js",
     "build": "echo 'No build step required'",
+    "migrate:encrypt-users": "node scripts/migrate-encrypt-user-data.js",
+    "migrate:product-genres": "node scripts/backfill-product-genres.js",
+    "sync:mock-catalog": "node scripts/sync-mock-catalog.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -14,12 +17,14 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
+    "@google/genai": "^2.24.0",
     "bcrypt": "^6.0.0",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "jsonwebtoken": "^9.0.3",
-    "mongoose": "^9.9.1"
+    "mongoose": "^9.9.1",
+    "omise": "^1.1.0"
   }
 }

@@ -1,10 +1,15 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from "react";
 
 // ไฟล์: client/src/components/ui/ScaledStage.jsx
 // คอมโพเนนต์คุมสเกลผืนผ้าใบ (Canvas Scaler) สำหรับส่วนที่มีการวาง layout แบบ absolute coordinate เป๊ะๆ
 // เรียกมาจาก: RoadToThaiArtist.jsx (ใช้ครอบบอร์ดแสดงงานขนาด 1320x815px)
 // หน้าที่: ย่อขนาดคอนเทนต์ข้างในลงตามสัดส่วนหน้าจอจริงด้วย CSS transform scale
-export default function ScaledStage({ width = 1320, height = 815, children, className = '' }) {
+export default function ScaledStage({
+  width = 1320,
+  height = 815,
+  children,
+  className = "",
+}) {
   const containerRef = useRef(null);
   const [scale, setScale] = useState(1);
 
@@ -19,8 +24,8 @@ export default function ScaledStage({ width = 1320, height = 815, children, clas
     };
 
     handleResize();
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, [width]);
 
   return (
@@ -34,7 +39,7 @@ export default function ScaledStage({ width = 1320, height = 815, children, clas
           width: `${width}px`,
           height: `${height * scale}px`,
           transform: `scale(${scale})`,
-          transformOrigin: 'top left',
+          transformOrigin: "top left",
         }}
       >
         {children}

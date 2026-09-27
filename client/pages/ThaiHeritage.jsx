@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
-import { createPortal } from 'react-dom';
-import { Link } from 'react-router-dom';
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
+import { Link } from "react-router-dom";
 import {
   ArrowRight,
   ChevronLeft,
@@ -10,24 +10,24 @@ import {
   ShoppingBag,
   Sparkles,
   X,
-} from 'lucide-react';
-import { products } from '../src/data/product';
-import Container from '../src/components/ui/Container';
-import { useCart } from '../src/context/CartContext';
+} from "lucide-react";
+import { products } from "../src/data/product";
+import Container from "../src/components/ui/Container";
+import { useCart } from "../src/context/CartContext";
 
-import bgHero from '../assets/source-Image/BG-Hero thai silk.jpg';
-import bgAside from '../assets/source-Image/BG-Aside thai silk.jpg';
-import bg1 from '../assets/source-Image/BG-1 thai silk.jpg';
-import bg2 from '../assets/source-Image/BG-2 thai silk.jpg';
-import bg3 from '../assets/source-Image/BG-3 thai silk.jpg';
-import bgThaiSilk from '../assets/source-Image/BG-Thai silk.jpg';
+import bgHero from "../assets/source-Image/BG-Hero thai silk.jpg";
+import bgAside from "../assets/source-Image/BG-Aside thai silk.jpg";
+import bg1 from "../assets/source-Image/BG-1 thai silk.jpg";
+import bg2 from "../assets/source-Image/BG-2 thai silk.jpg";
+import bg3 from "../assets/source-Image/BG-3 thai silk.jpg";
+import bgThaiSilk from "../assets/source-Image/BG-Thai silk.jpg";
 
 const CRAFT_TECHNIQUES = [
-  { id: 'weaving', label: 'Weaving', icon: Sparkles },
-  { id: 'basketry', label: 'Basketry', icon: ShoppingBag },
+  { id: "weaving", label: "Weaving", icon: Sparkles },
+  { id: "basketry", label: "Basketry", icon: ShoppingBag },
   {
-    id: 'pottery',
-    label: 'Pottery',
+    id: "pottery",
+    label: "Pottery",
     icon: (props) => (
       <svg
         viewBox="0 0 24 24"
@@ -43,22 +43,24 @@ const CRAFT_TECHNIQUES = [
       </svg>
     ),
   },
-  { id: 'silversmithing', label: 'Silversmithing', icon: Coins },
-  { id: 'carving', label: 'Carving', icon: Hammer },
+  { id: "silversmithing", label: "Silversmithing", icon: Coins },
+  { id: "carving", label: "Carving", icon: Hammer },
 ];
 
 const STATS = [
-  { value: '18', label: 'Artisan Communities' },
-  { value: '12', label: 'Provinces' },
-  { value: '200+', label: 'Artisans' },
+  { value: "18", label: "Artisan Communities" },
+  { value: "12", label: "Provinces" },
+  { value: "200+", label: "Artisans" },
 ];
 
 const baht = (value) =>
-  `฿${Number(value || 0).toLocaleString('th-TH', { minimumFractionDigits: 2 })}`;
+  `฿${Number(value || 0).toLocaleString("th-TH", { minimumFractionDigits: 2 })}`;
 
 export default function ThaiHeritage() {
   const { addToCart } = useCart();
-  const heritageProducts = products.filter((product) => product.id.endsWith('hr'));
+  const heritageProducts = products.filter((product) =>
+    product.id.endsWith("hr"),
+  );
 
   const [sliderIndex, setSliderIndex] = useState(0);
   const itemsPerPage = 4;
@@ -72,13 +74,13 @@ export default function ThaiHeritage() {
   useEffect(() => {
     if (!isStoryModalOpen && !isCommunityModalOpen) return;
     const handleKeyDown = (e) => {
-      if (e.key === 'Escape') {
+      if (e.key === "Escape") {
         setIsStoryModalOpen(false);
         setIsCommunityModalOpen(false);
       }
     };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isStoryModalOpen, isCommunityModalOpen]);
 
   const handlePrev = () => {
@@ -89,8 +91,12 @@ export default function ThaiHeritage() {
     setSliderIndex((prev) => Math.min(maxIndex, prev + 1));
   };
 
-  const visibleProducts = heritageProducts.slice(sliderIndex, sliderIndex + itemsPerPage);
-  const progressPercent = maxIndex > 0 ? ((sliderIndex + 1) / (maxIndex + 1)) * 100 : 100;
+  const visibleProducts = heritageProducts.slice(
+    sliderIndex,
+    sliderIndex + itemsPerPage,
+  );
+  const progressPercent =
+    maxIndex > 0 ? ((sliderIndex + 1) / (maxIndex + 1)) * 100 : 100;
 
   return (
     <Container className="max-w-[1320px] px-4 py-8 md:py-12">
@@ -111,8 +117,9 @@ export default function ThaiHeritage() {
             Explore Thai Creativity
           </h1>
           <p className="mt-4 text-base md:text-xl font-medium leading-relaxed text-white/95">
-            Explore the beauty of Thai craftsmanship, where every piece is made by skilled artisans
-            and communities across Thailand, and every creation tells a story.
+            Explore the beauty of Thai craftsmanship, where every piece is made
+            by skilled artisans and communities across Thailand, and every
+            creation tells a story.
           </p>
         </div>
       </section>
@@ -134,9 +141,10 @@ export default function ThaiHeritage() {
             From Praewa silk to the bag you carry
           </h2>
           <p className="mt-4 text-base md:text-xl font-medium leading-relaxed text-ink/80">
-            Each pattern woven into the fabric takes more than two weeks to create by hand. Passed
-            down from generation to generation in Kalasin, these traditional techniques are
-            transformed into contemporary products that preserve their timeless character.
+            Each pattern woven into the fabric takes more than two weeks to
+            create by hand. Passed down from generation to generation in
+            Kalasin, these traditional techniques are transformed into
+            contemporary products that preserve their timeless character.
           </p>
           <button
             type="button"
@@ -162,8 +170,8 @@ export default function ThaiHeritage() {
           className="mt-6 relative overflow-hidden rounded-[20px] p-5 sm:p-8 md:p-12 text-white shadow-md flex flex-col lg:flex-row items-center justify-between gap-8"
           style={{
             backgroundImage: `url('${bgThaiSilk}')`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
+            backgroundSize: "cover",
+            backgroundPosition: "center",
           }}
         >
           <div className="absolute inset-0 bg-[#351e4d]/75 backdrop-brightness-90" />
@@ -171,13 +179,25 @@ export default function ThaiHeritage() {
           {/* 3 Images */}
           <div className="relative z-10 flex items-center justify-center gap-2 sm:gap-6 shrink-0">
             <div className="size-20 sm:size-36 md:size-44 rounded-full overflow-hidden border border-white/20 shadow-lg">
-              <img src={bg1} alt="Community artisan" className="h-full w-full object-cover" />
+              <img
+                src={bg1}
+                alt="Community artisan"
+                className="h-full w-full object-cover"
+              />
             </div>
             <div className="w-20 sm:w-32 md:w-36 h-20 sm:h-36 md:h-44 rounded-[20px] overflow-hidden border border-white/20 shadow-lg">
-              <img src={bg2} alt="Thai silk pattern" className="h-full w-full object-cover" />
+              <img
+                src={bg2}
+                alt="Thai silk pattern"
+                className="h-full w-full object-cover"
+              />
             </div>
             <div className="w-20 sm:w-32 md:w-36 h-20 sm:h-36 md:h-44 rounded-[40px] overflow-hidden border border-white/20 shadow-lg">
-              <img src={bg3} alt="Woven fabric craft" className="h-full w-full object-cover" />
+              <img
+                src={bg3}
+                alt="Woven fabric craft"
+                className="h-full w-full object-cover"
+              />
             </div>
           </div>
 
@@ -186,10 +206,12 @@ export default function ThaiHeritage() {
             <h3 className="text-xl md:text-2xl font-bold text-white">
               Ban Phon Praewa Silk Weaving Group
             </h3>
-            <p className="text-lg md:text-xl font-bold text-white/90 mt-1">Kalasin, Thailand</p>
+            <p className="text-lg md:text-xl font-bold text-white/90 mt-1">
+              Kalasin, Thailand
+            </p>
             <p className="mt-3 text-base md:text-lg font-medium italic text-white leading-relaxed">
-              &ldquo;We want our traditional patterns to become part of the lives of a new
-              generation around the world.&rdquo;
+              &ldquo;We want our traditional patterns to become part of the
+              lives of a new generation around the world.&rdquo;
             </p>
             <button
               type="button"
@@ -208,7 +230,9 @@ export default function ThaiHeritage() {
         <p className="text-base md:text-xl font-bold uppercase tracking-wider text-primary">
           BROWSE BY TECHNIQUE
         </p>
-        <h2 className="mt-2 text-2xl md:text-3xl font-medium text-ink">Explore by Craft</h2>
+        <h2 className="mt-2 text-2xl md:text-3xl font-medium text-ink">
+          Explore by Craft
+        </h2>
 
         <div className="mt-8 flex flex-wrap justify-center sm:justify-between gap-6">
           {CRAFT_TECHNIQUES.map((tech) => {
@@ -248,7 +272,7 @@ export default function ThaiHeritage() {
               className="flex flex-col justify-between overflow-hidden rounded-2xl bg-white p-3 sm:p-5 shadow-card border border-black/5 transition hover:-translate-y-1 hover:shadow-lg"
             >
               <Link
-                to={`/productDetail/${product.id}`}
+                to={`/products/${product.id}`}
                 className="relative block h-32 sm:h-44 w-full overflow-hidden rounded-lg bg-zinc-100"
               >
                 <img
@@ -262,10 +286,10 @@ export default function ThaiHeritage() {
               <div className="mt-3 sm:mt-4 flex flex-1 flex-col justify-between">
                 <div>
                   <p className="text-[11px] sm:text-xs font-normal uppercase text-primary">
-                    {product.brand || 'SACIT'}
+                    {product.brand || "SACIT"}
                   </p>
                   <Link
-                    to={`/productDetail/${product.id}`}
+                    to={`/products/${product.id}`}
                     className="mt-1 block truncate text-sm sm:text-base font-semibold text-ink transition hover:text-primary"
                     title={product.name}
                   >
@@ -331,8 +355,9 @@ export default function ThaiHeritage() {
               Every purchase directly supports the artisans behind the craft.
             </h3>
             <p className="mt-3 text-base font-medium leading-relaxed text-white/85">
-              Merchroom works with 18 artisan communities across 12 provinces in Thailand. Most of
-              the revenue goes directly to the makers, without middlemen.
+              Merchroom works with 18 artisan communities across 12 provinces in
+              Thailand. Most of the revenue goes directly to the makers, without
+              middlemen.
             </p>
           </div>
 
@@ -384,12 +409,14 @@ export default function ThaiHeritage() {
                     <button
                       type="button"
                       onClick={() =>
-                        setSelectedStoryImg((prev) => (prev === bg1 ? bgAside : bg1))
+                        setSelectedStoryImg((prev) =>
+                          prev === bg1 ? bgAside : bg1,
+                        )
                       }
                       className={`h-20 sm:h-24 rounded-xl overflow-hidden border-2 transition cursor-pointer ${
                         selectedStoryImg === bg1
-                          ? 'border-primary shadow-sm'
-                          : 'border-transparent hover:opacity-90'
+                          ? "border-primary shadow-sm"
+                          : "border-transparent hover:opacity-90"
                       }`}
                     >
                       <img
@@ -401,12 +428,14 @@ export default function ThaiHeritage() {
                     <button
                       type="button"
                       onClick={() =>
-                        setSelectedStoryImg((prev) => (prev === bg2 ? bgAside : bg2))
+                        setSelectedStoryImg((prev) =>
+                          prev === bg2 ? bgAside : bg2,
+                        )
                       }
                       className={`h-20 sm:h-24 rounded-xl overflow-hidden border-2 transition cursor-pointer ${
                         selectedStoryImg === bg2
-                          ? 'border-primary shadow-sm'
-                          : 'border-transparent hover:opacity-90'
+                          ? "border-primary shadow-sm"
+                          : "border-transparent hover:opacity-90"
                       }`}
                     >
                       <img
@@ -418,12 +447,14 @@ export default function ThaiHeritage() {
                     <button
                       type="button"
                       onClick={() =>
-                        setSelectedStoryImg((prev) => (prev === bg3 ? bgAside : bg3))
+                        setSelectedStoryImg((prev) =>
+                          prev === bg3 ? bgAside : bg3,
+                        )
                       }
                       className={`h-20 sm:h-24 rounded-xl overflow-hidden border-2 transition cursor-pointer ${
                         selectedStoryImg === bg3
-                          ? 'border-primary shadow-sm'
-                          : 'border-transparent hover:opacity-90'
+                          ? "border-primary shadow-sm"
+                          : "border-transparent hover:opacity-90"
                       }`}
                     >
                       <img
@@ -442,16 +473,19 @@ export default function ThaiHeritage() {
                   </h3>
                   <div className="mt-4 text-xs sm:text-sm md:text-base leading-relaxed text-black/80 space-y-3 font-normal">
                     <p>
-                      Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam eu turpis
-                      molestie, dictum est a, mattis tellus. Sed dignissim, metus nec fringilla
-                      accumsan, risus sem sollicitudin lacus, ut interdum tellus elit sed risus.
-                      Maecenas eget condimentum velit, sit amet feugiat lectus. Class aptent taciti
-                      sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos.
+                      Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+                      Etiam eu turpis molestie, dictum est a, mattis tellus. Sed
+                      dignissim, metus nec fringilla accumsan, risus sem
+                      sollicitudin lacus, ut interdum tellus elit sed risus.
+                      Maecenas eget condimentum velit, sit amet feugiat lectus.
+                      Class aptent taciti sociosqu ad litora torquent per
+                      conubia nostra, per inceptos himenaeos.
                     </p>
                     <p>
-                      Praesent auctor purus luctus enim egestas, ac scelerisque ante pulvinar. Donec
-                      ut rhoncus ex. Suspendisse ac rhoncus nisl, eu tempor urna. Curabitur vel
-                      bibendum lorem. Morbi convallis convallis diam sit amet lacinia. Aliquam in
+                      Praesent auctor purus luctus enim egestas, ac scelerisque
+                      ante pulvinar. Donec ut rhoncus ex. Suspendisse ac rhoncus
+                      nisl, eu tempor urna. Curabitur vel bibendum lorem. Morbi
+                      convallis convallis diam sit amet lacinia. Aliquam in
                       elementum tellus.
                     </p>
                   </div>
@@ -494,12 +528,14 @@ export default function ThaiHeritage() {
                     <button
                       type="button"
                       onClick={() =>
-                        setSelectedCommunityImg((prev) => (prev === bg1 ? bgThaiSilk : bg1))
+                        setSelectedCommunityImg((prev) =>
+                          prev === bg1 ? bgThaiSilk : bg1,
+                        )
                       }
                       className={`h-20 sm:h-24 rounded-xl overflow-hidden border-2 transition cursor-pointer ${
                         selectedCommunityImg === bg1
-                          ? 'border-primary shadow-sm'
-                          : 'border-transparent hover:opacity-90'
+                          ? "border-primary shadow-sm"
+                          : "border-transparent hover:opacity-90"
                       }`}
                     >
                       <img
@@ -511,12 +547,14 @@ export default function ThaiHeritage() {
                     <button
                       type="button"
                       onClick={() =>
-                        setSelectedCommunityImg((prev) => (prev === bg2 ? bgThaiSilk : bg2))
+                        setSelectedCommunityImg((prev) =>
+                          prev === bg2 ? bgThaiSilk : bg2,
+                        )
                       }
                       className={`h-20 sm:h-24 rounded-xl overflow-hidden border-2 transition cursor-pointer ${
                         selectedCommunityImg === bg2
-                          ? 'border-primary shadow-sm'
-                          : 'border-transparent hover:opacity-90'
+                          ? "border-primary shadow-sm"
+                          : "border-transparent hover:opacity-90"
                       }`}
                     >
                       <img
@@ -528,12 +566,14 @@ export default function ThaiHeritage() {
                     <button
                       type="button"
                       onClick={() =>
-                        setSelectedCommunityImg((prev) => (prev === bg3 ? bgThaiSilk : bg3))
+                        setSelectedCommunityImg((prev) =>
+                          prev === bg3 ? bgThaiSilk : bg3,
+                        )
                       }
                       className={`h-20 sm:h-24 rounded-xl overflow-hidden border-2 transition cursor-pointer ${
                         selectedCommunityImg === bg3
-                          ? 'border-primary shadow-sm'
-                          : 'border-transparent hover:opacity-90'
+                          ? "border-primary shadow-sm"
+                          : "border-transparent hover:opacity-90"
                       }`}
                     >
                       <img
@@ -559,19 +599,20 @@ export default function ThaiHeritage() {
 
                   <div className="mt-4 text-xs sm:text-sm md:text-base leading-relaxed text-black/80 space-y-3 font-normal">
                     <p className="italic text-black/90 font-medium">
-                      &ldquo;We want our traditional patterns to become part of the lives of a new
-                      generation around the world.&rdquo;
+                      &ldquo;We want our traditional patterns to become part of
+                      the lives of a new generation around the world.&rdquo;
                     </p>
                     <p>
-                      Located in Kalasin province, the artisan collective of Ban Phon is
-                      renowned for Phraewa silk, often hailed as the Queen of Thai Silk. Every
-                      pattern embodies intricate geometric motifs woven entirely by hand using
+                      Located in Kalasin province, the artisan collective of Ban
+                      Phon is renowned for Phraewa silk, often hailed as the
+                      Queen of Thai Silk. Every pattern embodies intricate
+                      geometric motifs woven entirely by hand using
                       centuries-old heritage techniques.
                     </p>
                     <p>
-                      Through Merchroom, each piece sold returns direct, fair earnings to the
-                      weavers, ensuring that this living cultural legacy thrives for generations
-                      to come.
+                      Through Merchroom, each piece sold returns direct, fair
+                      earnings to the weavers, ensuring that this living
+                      cultural legacy thrives for generations to come.
                     </p>
                   </div>
 

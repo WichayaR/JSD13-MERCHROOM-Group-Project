@@ -2,7 +2,7 @@
 // หน้าแดชบอร์ดสำหรับลูกค้าทั่วไป (Customer Dashboard)
 // เรียกมาจาก: App.jsx ผ่าน Route path="/user/dashboard" (หรือ redirect จากหน้า Login)
 // แหล่งข้อมูล: โปรไฟล์ผู้ใช้จาก useAuth() และประวัติการสั่งซื้อจาก src/data/mockup/mockOrders.js
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from "react-router-dom";
 import {
   BadgeCheck,
   Box,
@@ -12,14 +12,18 @@ import {
   PackageCheck,
   Truck,
   XCircle,
-} from 'lucide-react';
-import { useAuth } from '../src/context/AuthContext';
-import { DELIVERY_STATUS, PAYMENT_STATUS, getOrdersByUser } from '../src/data/mockup/mockOrders';
-import Button from '../src/components/ui/Button';
-import Container from '../src/components/ui/Container';
-import Breadcrumb from '../src/components/ui/Breadcrumb';
+} from "lucide-react";
+import { useAuth } from "../src/context/AuthContext";
+import {
+  DELIVERY_STATUS,
+  PAYMENT_STATUS,
+  getOrdersByUser,
+} from "../src/data/mockup/mockOrders";
+import Button from "../src/components/ui/Button";
+import Container from "../src/components/ui/Container";
+import Breadcrumb from "../src/components/ui/Breadcrumb";
 
-const baht = (value) => `฿${value.toLocaleString('th-TH')}`;
+const baht = (value) => `฿${value.toLocaleString("th-TH")}`;
 
 // หน้า Dashboard สำหรับลูกค้าทั่วไป (Customer): ดูประวัติคำสั่งซื้อ สถานะจัดส่ง และข้อมูลส่วนตัว
 export default function UserDashboard() {
@@ -30,7 +34,9 @@ export default function UserDashboard() {
   if (!user || !isCustomer) {
     return (
       <Container className="py-10 text-center">
-        <p className="text-lg font-semibold">กรุณาล็อกอินเป็นลูกค้าก่อนเข้าแดชบอร์ดนี้</p>
+        <p className="text-lg font-semibold">
+          กรุณาล็อกอินเป็นลูกค้าก่อนเข้าแดชบอร์ดนี้
+        </p>
         <Button to="/login" variant="dark" size="lg" className="mt-6">
           ไปหน้าล็อกอิน
         </Button>
@@ -42,19 +48,42 @@ export default function UserDashboard() {
   const orders = getOrdersByUser(user._id);
 
   // ฟังก์ชันนับจำนวนออเดอร์ตามสถานะจัดส่ง
-  const countByStatus = (status) => orders.filter((o) => o.deliveryStatus === status).length;
+  const countByStatus = (status) =>
+    orders.filter((o) => o.deliveryStatus === status).length;
 
   // การ์ดสรุปสถิติ 4 ใบ: ทั้งหมด, กำลังจัดส่ง, สำเร็จแล้ว, ยกเลิก
   const stats = [
-    { label: 'ทั้งหมด', value: orders.length, icon: Box, color: 'bg-ink text-white' },
-    { label: 'กำลังจัดส่ง', value: countByStatus('in_transit'), icon: Truck, color: 'bg-violet text-white' },
-    { label: 'จัดส่งแล้ว', value: countByStatus('delivered'), icon: BadgeCheck, color: 'bg-success text-white' },
-    { label: 'ยกเลิก', value: countByStatus('cancelled'), icon: XCircle, color: 'bg-error text-white' },
+    {
+      label: "ทั้งหมด",
+      value: orders.length,
+      icon: Box,
+      color: "bg-ink text-white",
+    },
+    {
+      label: "กำลังจัดส่ง",
+      value: countByStatus("in_transit"),
+      icon: Truck,
+      color: "bg-violet text-white",
+    },
+    {
+      label: "จัดส่งแล้ว",
+      value: countByStatus("delivered"),
+      icon: BadgeCheck,
+      color: "bg-success text-white",
+    },
+    {
+      label: "ยกเลิก",
+      value: countByStatus("cancelled"),
+      icon: XCircle,
+      color: "bg-error text-white",
+    },
   ];
 
   return (
     <Container className="py-10">
-      <Breadcrumb items={[{ label: 'Home', to: '/' }, { label: 'Users Dashboard' }]} />
+      <Breadcrumb
+        items={[{ label: "Home", to: "/" }, { label: "Users Dashboard" }]}
+      />
 
       {/* ส่วนหัวแสดงโปรไฟล์ผู้ใช้ และปุ่มลัด */}
       <div className="mt-4 flex flex-wrap items-center justify-between gap-4">
@@ -68,7 +97,12 @@ export default function UserDashboard() {
           <Button to="/products" variant="primary" size="md">
             Shop More
           </Button>
-          <Button to="/login" variant="outline" size="md" onClick={() => navigate('/login')}>
+          <Button
+            to="/login"
+            variant="outline"
+            size="md"
+            onClick={() => navigate("/login")}
+          >
             สลับบัญชี
           </Button>
         </div>
@@ -79,13 +113,22 @@ export default function UserDashboard() {
         {stats.map((s) => {
           const Icon = s.icon;
           return (
-            <div key={s.label} className="flex items-center gap-4 rounded-card bg-white p-5 shadow-card">
-              <div className={`grid size-12 place-items-center rounded-pill ${s.color}`}>
+            <div
+              key={s.label}
+              className="flex items-center gap-4 rounded-card bg-white p-5 shadow-card"
+            >
+              <div
+                className={`grid size-12 place-items-center rounded-pill ${s.color}`}
+              >
                 <Icon className="size-5" aria-hidden="true" />
               </div>
               <div>
-                <p className="text-2xl font-bold leading-none text-ink">{s.value}</p>
-                <p className="mt-1 text-xs font-semibold text-muted">{s.label}</p>
+                <p className="text-2xl font-bold leading-none text-ink">
+                  {s.value}
+                </p>
+                <p className="mt-1 text-xs font-semibold text-muted">
+                  {s.label}
+                </p>
               </div>
             </div>
           );
@@ -93,7 +136,10 @@ export default function UserDashboard() {
       </div>
 
       {/* ประวัติการสั่งซื้อทั้งหมดของผู้ใช้ */}
-      <section className="mt-8 rounded-card bg-white p-6 md:p-8 shadow-card" aria-label="ประวัติการสั่งซื้อ">
+      <section
+        className="mt-8 rounded-card bg-white p-6 md:p-8 shadow-card"
+        aria-label="ประวัติการสั่งซื้อ"
+      >
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-bold">Order History</h2>
           <span className="text-sm text-muted">{orders.length} รายการ</span>
@@ -109,20 +155,30 @@ export default function UserDashboard() {
               const del = DELIVERY_STATUS[order.deliveryStatus];
               const pay = PAYMENT_STATUS[order.paymentStatus];
               return (
-                <div key={order._id} className="rounded-btn border border-ink/10 bg-cream p-5">
+                <div
+                  key={order._id}
+                  className="rounded-btn border border-ink/10 bg-cream p-5"
+                >
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div>
-                      <p className="font-semibold text-ink">Order #{order.orderNumber}</p>
+                      <p className="font-semibold text-ink">
+                        Order #{order.orderNumber}
+                      </p>
                       <p className="mt-0.5 flex items-center gap-1.5 text-xs text-muted">
                         <Clock className="size-3.5" aria-hidden="true" />
-                        สั่งซื้อเมื่อ {new Date(order.createdAt).toLocaleString('th-TH')}
+                        สั่งซื้อเมื่อ{" "}
+                        {new Date(order.createdAt).toLocaleString("th-TH")}
                       </p>
                     </div>
                     <div className="flex gap-2">
-                      <span className={`rounded-pill bg-white px-3 py-1 text-xs font-bold ${del.color}`}>
+                      <span
+                        className={`rounded-pill bg-white px-3 py-1 text-xs font-bold ${del.color}`}
+                      >
                         {del.label}
                       </span>
-                      <span className={`rounded-pill bg-white px-3 py-1 text-xs font-bold ${pay.color}`}>
+                      <span
+                        className={`rounded-pill bg-white px-3 py-1 text-xs font-bold ${pay.color}`}
+                      >
                         {pay.label}
                       </span>
                     </div>
@@ -135,7 +191,7 @@ export default function UserDashboard() {
                     </span>
                     <span className="flex items-center gap-1.5">
                       <Box className="size-4" aria-hidden="true" />
-                      Tracking: {order.trackingNumber || '-'}
+                      Tracking: {order.trackingNumber || "-"}
                     </span>
                     <span className="flex items-center gap-1.5">
                       <MapPin className="size-4" aria-hidden="true" />
@@ -144,8 +200,12 @@ export default function UserDashboard() {
                   </div>
 
                   <div className="mt-4 flex items-center justify-between rounded-btn bg-white p-3">
-                    <p className="text-sm text-muted">{order.items.length} รายการสินค้า</p>
-                    <p className="font-bold text-ink">รวม {baht(order.totalAmount)}</p>
+                    <p className="text-sm text-muted">
+                      {order.items.length} รายการสินค้า
+                    </p>
+                    <p className="font-bold text-ink">
+                      รวม {baht(order.totalAmount)}
+                    </p>
                   </div>
 
                   <div className="mt-4 flex gap-3">
@@ -170,7 +230,9 @@ export default function UserDashboard() {
         <dl className="mt-5 grid gap-4 text-sm sm:grid-cols-2">
           <div>
             <dt className="text-muted">ชื่อ-นามสกุล</dt>
-            <dd className="mt-0.5 font-semibold">{user.firstName} {user.lastName}</dd>
+            <dd className="mt-0.5 font-semibold">
+              {user.firstName} {user.lastName}
+            </dd>
           </div>
           <div>
             <dt className="text-muted">อีเมล</dt>

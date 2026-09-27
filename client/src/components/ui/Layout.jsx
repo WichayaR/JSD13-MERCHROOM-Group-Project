@@ -1,7 +1,8 @@
-import { useEffect } from 'react';
-import { Outlet } from 'react-router-dom';
-import Navbar from './Navbar';
-import Footer from './Footer';
+import { useEffect } from "react";
+import { Outlet } from "react-router-dom";
+import Navbar from "./Navbar";
+import Footer from "./Footer";
+import NongHedChatbot from "./NongHedChatbot";
 
 // ไฟล์: client/src/components/ui/Layout.jsx
 // โครงสร้างเลย์เอาต์หลักของเว็บไซต์ (Shell Component)
@@ -14,8 +15,8 @@ export default function Layout() {
       document.documentElement.style.zoom = String(window.innerWidth / 1440);
     };
     apply();
-    window.addEventListener('resize', apply);
-    return () => window.removeEventListener('resize', apply);
+    window.addEventListener("resize", apply);
+    return () => window.removeEventListener("resize", apply);
   }, []);
 
   return (
@@ -30,6 +31,7 @@ export default function Layout() {
 
       {/* แถบข้อมูลด้านล่าง (Footer) */}
       <Footer />
+      <NongHedChatbot />
     </div>
   );
 }

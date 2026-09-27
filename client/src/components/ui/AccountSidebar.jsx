@@ -1,14 +1,18 @@
 // src/components/ui/AccountSidebar.jsx
 // แถบเมนูด้านข้างหน้า Account — การ์ดสีขาวขอบมน ตามสไตล์ UI ในรูป
-import { NavLink } from 'react-router-dom';
-import { User, Package, Heart, CreditCard } from 'lucide-react';
+import { NavLink } from "react-router-dom";
+import { User, Package, Heart, CreditCard } from "lucide-react";
 
 export const AccountSidebar = () => {
   const navItems = [
-    { label: 'Profile Settings', path: '/account/profile', icon: User },
-    { label: 'Order History', path: '/account/orders', icon: Package },
-    { label: 'Wishlist', path: '/account/wishlist', icon: Heart },
-    { label: 'Payment Methods', path: '/account/payment-methods', icon: CreditCard },
+    { label: "Profile Settings", path: "/account/profile", icon: User },
+    { label: "Order History", path: "/account/orders", icon: Package },
+    { label: "Wishlist", path: "/account/wishlist", icon: Heart },
+    {
+      label: "Payment Methods",
+      path: "/account/payment-methods",
+      icon: CreditCard,
+    },
   ];
 
   return (
@@ -23,8 +27,8 @@ export const AccountSidebar = () => {
               className={({ isActive }) =>
                 `flex items-center gap-3 px-4 py-3 font-sans text-sm rounded-xl transition-all shrink-0 md:shrink ${
                   isActive
-                    ? 'bg-[#685bc7] text-white font-semibold shadow-sm'
-                    : 'bg-transparent text-gray-700 hover:bg-gray-100 font-medium'
+                    ? "bg-[#685bc7] text-white font-semibold shadow-sm"
+                    : "bg-transparent text-gray-700 hover:bg-gray-100 font-medium"
                 }`
               }
             >

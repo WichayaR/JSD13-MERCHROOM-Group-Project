@@ -1,9 +1,9 @@
-import { Link } from 'react-router-dom';
-import { ArrowRight } from 'lucide-react';
-import { categories } from '../../data/sections';
-import Container from '../ui/Container';
-import SectionHeading from '../ui/SectionHeading';
-import Placeholder from '../ui/Placeholder';
+import { Link } from "react-router-dom";
+import { ArrowRight } from "lucide-react";
+import { categories } from "../../data/sections";
+import Container from "../ui/Container";
+import SectionHeading from "../ui/SectionHeading";
+import Placeholder from "../ui/Placeholder";
 
 // ไฟล์: client/src/components/sections/CategoriesGrid.jsx
 // ส่วนแสดงกริดการ์ดหมวดหมู่สินค้า (Bento Grid สลับขนาดการ์ด 1 ช่อง กับ 2 ช่อง)
@@ -27,30 +27,46 @@ export default function CategoriesGrid() {
           {categories.map((cat, idx) => {
             // การ์ดคู่แรก: ใบแรกกว้าง 1 ส่วน ใบสองกว้าง 2 ส่วน
             // การ์ดคู่สอง: ใบแรกกว้าง 2 ส่วน ใบสองกว้าง 1 ส่วน ให้เลย์เอาต์ดูมีลูกเล่น
-            const spanMap = ['md:col-span-1', 'md:col-span-2', 'md:col-span-2', 'md:col-span-1'];
+            const spanMap = [
+              "md:col-span-1",
+              "md:col-span-2",
+              "md:col-span-2",
+              "md:col-span-1",
+            ];
             return (
               <Link
                 key={cat.id}
                 to={`/products?cat=${cat.id}`}
-                className={`group relative overflow-hidden rounded-card shadow-card transition hover:brightness-95 ${spanMap[idx]}`}
+                className={`group relative overflow-hidden rounded-card shadow-card transition hover:brightness-95 ${
+                  cat.id === "thai-band"
+                    ? "bg-[center_34%] md:bg-center"
+                    : cat.id === "thai-heritage"
+                      ? "bg-[center_80%] md:bg-center"
+                      : cat.id === "artist"
+                        ? "bg-[center_-170px] md:bg-center"
+                        : "bg-center"
+                } ${spanMap[idx]}`}
                 style={{
                   backgroundImage: cat.cover ? `url(${cat.cover})` : undefined,
-                  backgroundSize: 'cover',
-                  backgroundPosition: 'center',
+                  backgroundSize: "cover",
                 }}
               >
                 {/* กำหนดความสูงของการ์ด */}
                 <div className="h-72" />
 
                 {/* กรณีไม่มีรูปปก ให้แสดง Placeholder แทน */}
-                {!cat.cover && <Placeholder label={cat.title} className="absolute inset-0" />}
+                {!cat.cover && (
+                  <Placeholder label={cat.title} className="absolute inset-0" />
+                )}
 
                 {/* Overlay ไล่เฉดสีดำ ช่วยให้อ่านข้อความสีขาวได้ชัดเจนขึ้น */}
                 <div className="absolute inset-0 bg-linear-to-b from-black/10 via-transparent to-black/60" />
 
                 {/* ป้ายชื่อหมวดหมู่มุมบนซ้าย สไตล์ Glassmorphism */}
                 <div className="absolute left-4 top-4 flex items-center gap-2 rounded-pill bg-white/20 px-5 py-2 backdrop-blur-sm">
-                  <span className="text-xl font-medium text-white">{cat.title}</span>
+                  <span className="text-xl font-medium text-white">
+                    {cat.title}
+                  </span>
                   <ArrowRight className="size-5 text-white" />
                 </div>
 

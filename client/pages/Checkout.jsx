@@ -5,20 +5,109 @@
 // - useCart: Custom Hook สำหรับดึงข้อมูลสินค้าในตะกร้า, ฟังก์ชันล้างตะกร้า และอัตราส่วนลด
 // - Container, Breadcrumb: UI Components สำหรับจัดเลย์เอาต์และแสดงเส้นทางนำทาง
 // ----------------------------------------------------------------------
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useCart } from '../src/context/CartContext';
-import Container from '../src/components/ui/Container';
-import Breadcrumb from '../src/components/ui/Breadcrumb';
+import { useState, useEffect, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
+import { useCart } from "../src/context/CartContext";
+import Container from "../src/components/ui/Container";
+import Breadcrumb from "../src/components/ui/Breadcrumb";
+import { createOrder } from "../src/api/orders.api";
+import { chargeCard } from "../src/api/payments.api";
+import { getPublicProducts } from "../src/api/products.api";
 
 // ค่าจัดส่งแบบคงที่
 const DELIVERY_FEE = 15;
 
 const formatCurrency = (val) =>
-  `฿${Number(val || 0).toLocaleString('th-TH', {
+  `฿${Number(val || 0).toLocaleString("th-TH", {
     minimumFractionDigits: Number(val || 0) % 1 !== 0 ? 2 : 0,
     maximumFractionDigits: 2,
   })}`;
+
+const OMISE_SCRIPT_URL = "https://cdn.omise.co/omise.js";
+const formatCardNumber = (value) =>
+  value
+    .replace(/\D/g, "")
+    .slice(0, 16)
+    .replace(/(\d{4})(?=\d)/g, "$1 ");
+const formatExpiryDate = (value) => {
+  const digits = value.replace(/\D/g, "").slice(0, 4);
+  return digits.length > 2
+    ? `${digits.slice(0, 2)}/${digits.slice(2)}`
+    : digits;
+};
+
+function loadOmise() {
+  if (window.Omise) return Promise.resolve(window.Omise);
+  return new Promise((resolve, reject) => {
+    const existing = document.querySelector(
+      `script[src="${OMISE_SCRIPT_URL}"]`,
+    );
+    if (existing) {
+      existing.addEventListener("load", () => resolve(window.Omise), {
+        once: true,
+      });
+      existing.addEventListener(
+        "error",
+        () => reject(new Error("Unable to load Omise")),
+        { once: true },
+      );
+      return;
+    }
+    const script = document.createElement("script");
+    script.src = OMISE_SCRIPT_URL;
+    script.async = true;
+    script.onload = () => resolve(window.Omise);
+    script.onerror = () => reject(new Error("Unable to load Omise"));
+    document.head.appendChild(script);
+  });
+}
+
+async function createOmiseCardToken(card) {
+  const publicKey = import.meta.env.VITE_OMISE_PUBLIC_KEY;
+  if (!publicKey)
+    throw new Error("Card payment is not configured. Please contact support.");
+  const [month, shortYear] = card.expDate.trim().split("/");
+  const expirationMonth = Number(month);
+  const expirationYear = Number(
+    shortYear?.length === 2 ? `20${shortYear}` : shortYear,
+  );
+  if (
+    !card.cardName.trim() ||
+    !/^\d{12,19}$/.test(card.cardNumber.replace(/\s|-/g, "")) ||
+    !Number.isInteger(expirationMonth) ||
+    expirationMonth < 1 ||
+    expirationMonth > 12 ||
+    !Number.isInteger(expirationYear) ||
+    !/^\d{3,4}$/.test(card.cvc)
+  ) {
+    throw new Error("Please enter valid card details.");
+  }
+  const Omise = await loadOmise();
+  if (!Omise) throw new Error("Unable to initialize card payment.");
+  Omise.setPublicKey(publicKey);
+  return new Promise((resolve, reject) => {
+    Omise.createToken(
+      "card",
+      {
+        name: card.cardName.trim(),
+        number: card.cardNumber.replace(/\s|-/g, ""),
+        expiration_month: expirationMonth,
+        expiration_year: expirationYear,
+        security_code: card.cvc,
+      },
+      (statusCode, response) => {
+        if (statusCode >= 200 && statusCode < 300 && response?.id)
+          resolve(response.id);
+        else
+          reject(
+            new Error(
+              response?.message || "Omise could not validate this card.",
+            ),
+          );
+      },
+    );
+  });
+}
 
 export default function Checkout() {
   // Navigation Hook สำหรับย้ายหน้าหลังทำรายการสำเร็จหรือถูกส่งกลับ
@@ -33,7 +122,7 @@ export default function Checkout() {
   // ----------------------------------------------------------------------
   useEffect(() => {
     if (items.length === 0) {
-      navigate('/cart');
+      navigate("/cart");
     }
   }, [items, navigate]);
 
@@ -44,7 +133,10 @@ export default function Checkout() {
   // - deliveryFee: ค่าจัดส่ง ($15 หากมีสินค้าในตะกร้า, $0 หากตะกร้าว่าง)
   // - total: ยอดเงินสุทธิตัวสุดท้ายที่ต้องชำระ (ป้องกันค่าน้อยกว่า 0 ด้วย Math.max)
   // ----------------------------------------------------------------------
-  const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const subtotal = items.reduce(
+    (sum, item) => sum + item.price * item.quantity,
+    0,
+  );
   const discountAmount = Math.round(subtotal * discountRate);
   const deliveryFee = items.length > 0 ? DELIVERY_FEE : 0;
   const total = Math.max(0, subtotal - discountAmount) + deliveryFee;
@@ -56,21 +148,99 @@ export default function Checkout() {
   const [saveDefaultCard, setSaveDefaultCard] = useState(false);
 
   // State สำหรับเลือกประเภทช่องทางการชำระเงิน ('card' | 'promptpay' | 'truemoney' | 'bank')
-  const [paymentMethod, setPaymentMethod] = useState('card');
+  const [paymentMethod, setPaymentMethod] = useState("card");
+  const [stockByKey, setStockByKey] = useState({});
+  const [stockLoading, setStockLoading] = useState(true);
+  const [checkoutError, setCheckoutError] = useState("");
 
   // State สำหรับเก็บข้อมูลในแบบฟอร์ม (ผู้ติดต่อ, ที่อยู่จัดส่ง, ข้อมูลการชำระเงิน)
   const [formData, setFormData] = useState({
-    name: '', email: '', city: '', state: '', zipCode: '', country: '',
-    addressLine: '', addressLine2: '', deliveryName: '', deliveryAddressLine: '',
-    deliveryAddressLine2: '', deliveryCity: '', deliveryState: '', deliveryZipCode: '',
-    deliveryCountry: '', cardName: '', cardNumber: '', expDate: '', cvc: '',
-    truemoneyPhone: '', selectedBank: 'SCB', bankAccountNumber: '',
+    name: "",
+    email: "",
+    city: "",
+    state: "",
+    zipCode: "",
+    country: "",
+    addressLine: "",
+    addressLine2: "",
+    deliveryName: "",
+    deliveryAddressLine: "",
+    deliveryAddressLine2: "",
+    deliveryCity: "",
+    deliveryState: "",
+    deliveryZipCode: "",
+    deliveryCountry: "",
+    cardName: "",
+    cardNumber: "",
+    expDate: "",
+    cvc: "",
+    truemoneyPhone: "",
+    selectedBank: "SCB",
+    bankAccountNumber: "",
   });
+
+  // Refresh stock at checkout so the UI reflects the current database value,
+  // rather than the quantity that may have been saved in the cart earlier.
+  useEffect(() => {
+    let active = true;
+    getPublicProducts({ limit: 100 })
+      .then((response) => {
+        if (!active) return;
+        const next = {};
+        (response.products || []).forEach((product) => {
+          const available = Number(product.quantity);
+          if (!Number.isFinite(available)) return;
+          if (product._id || product.id)
+            next[String(product._id || product.id)] = available;
+          if (product.name)
+            next[`name:${product.name.trim().toLowerCase()}`] = available;
+        });
+        setStockByKey(next);
+      })
+      .catch(() => {
+        // The server performs the same stock check at order creation.
+        if (active) setStockByKey({});
+      })
+      .finally(() => {
+        if (active) setStockLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const availableStock = (item) => {
+    const liveStock =
+      stockByKey[String(item.id)] ??
+      stockByKey[
+        `name:${String(item.name || "")
+          .trim()
+          .toLowerCase()}`
+      ];
+    return Number.isFinite(liveStock) ? liveStock : null;
+  };
+  const stockIssues = useMemo(
+    () =>
+      items.filter((item) => {
+        const available = availableStock(item);
+        return available !== null && Number(item.quantity) > available;
+      }),
+    [items, stockByKey],
+  );
+  const hasStockIssue = stockIssues.length > 0;
 
   // Handler จัดการการเปลี่ยนแปลงมูลค่าในอินพุตทุกช่องของฟอร์ม
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    const nextValue =
+      name === "cardNumber"
+        ? formatCardNumber(value)
+        : name === "expDate"
+          ? formatExpiryDate(value)
+          : name === "cvc"
+            ? value.replace(/\D/g, "").slice(0, 4)
+            : value;
+    setFormData((prev) => ({ ...prev, [name]: nextValue }));
   };
 
   // ----------------------------------------------------------------------
@@ -79,40 +249,73 @@ export default function Checkout() {
   // - บันทึกลง localStorage ('my_orders') สำหรับจำลองระบบสั่งซื้อ
   // - ล้างข้อมูลตะกร้าสินค้า (clearCart) และเปลี่ยนหน้าไปยัง /orders
   // ----------------------------------------------------------------------
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    if (hasStockIssue) {
+      setCheckoutError(
+        "Some items exceed the available stock. Please update your cart before checking out.",
+      );
+      return;
+    }
+    setCheckoutError("");
+    const address = useSameAddress
+      ? [
+          formData.name,
+          formData.addressLine,
+          formData.addressLine2,
+          formData.city,
+          formData.state,
+          formData.zipCode,
+          formData.country,
+        ]
+      : [
+          formData.deliveryName,
+          formData.deliveryAddressLine,
+          formData.deliveryAddressLine2,
+          formData.deliveryCity,
+          formData.deliveryState,
+          formData.deliveryZipCode,
+          formData.deliveryCountry,
+        ];
 
-    // สร้างข้อมูลคำสั่งซื้อใหม่ (Mock Order Data)
-    const newOrder = {
-      id: `ORD-${Date.now().toString().slice(-6)}`,
-      date: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
-      status: 'Processing',
-      total: total,
-      paymentMethod: paymentMethod,
-      items: items.map((item) => ({
-        id: item.id,
-        name: item.name,
-        size: item.size || 'M',
-        color: item.color || 'Standard',
-        price: item.price,
-        quantity: item.quantity,
-        image: item.image || '',
-      })),
-    };
+    try {
+      const { order } = await createOrder({
+        items: items.map((item) => ({
+          productId: item.id,
+          name: item.name,
+          quantity: item.quantity,
+        })),
+        shippingAddress: address.filter(Boolean).join(", "),
+        shippingProvider: "Standard Delivery",
+        paymentMethod,
+      });
+      if (paymentMethod === "card") {
+        const token = await createOmiseCardToken(formData);
+        await chargeCard(order._id, token);
+      }
+    } catch (error) {
+      setCheckoutError(
+        error?.message ||
+          "Unable to create order. Please sign in and try again.",
+      );
+      return;
+    }
 
-    // บันทึกคำสั่งซื้อลงใน LocalStorage
-    const existingOrders = JSON.parse(localStorage.getItem('my_orders') || '[]');
-    localStorage.setItem('my_orders', JSON.stringify([newOrder, ...existingOrders]));
-
-    // ล้างตะกร้าสินค้าและนำทางไปหน้าประวัติการสั่งซื้อ (/orders)
+    // Clear the cart only after the order has been saved to the database.
     if (clearCart) clearCart();
-    navigate('/orders');
+    navigate("/orders");
   };
 
   return (
     <Container className="max-w-[1160px] py-6 md:py-8">
       {/* Breadcrumb นำทาง: Home > Cart > Checkout */}
-      <Breadcrumb items={[{ label: 'Home', to: '/' }, { label: 'Cart', to: '/cart' }, { label: 'Checkout' }]} />
+      <Breadcrumb
+        items={[
+          { label: "Home", to: "/" },
+          { label: "Cart", to: "/cart" },
+          { label: "Checkout" },
+        ]}
+      />
 
       {/* หัวข้อหน้า Checkout */}
       <h1 className="mt-4 text-2xl font-extrabold uppercase tracking-tight text-black md:text-3xl leading-none font-integral">
@@ -120,14 +323,17 @@ export default function Checkout() {
       </h1>
 
       {/* แบบฟอร์มสั่งซื้อสินค้าหลัก */}
-      <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-5 lg:flex-row items-start justify-between">
-        
+      <form
+        onSubmit={handleSubmit}
+        className="mt-6 flex flex-col gap-5 lg:flex-row items-start justify-between"
+      >
         {/* คอลัมน์ซ้าย: ฟอร์มกรอกข้อมูล 3 ส่วน (ผู้ติดต่อ, ที่อยู่จัดส่ง, การชำระเงิน) */}
         <div className="w-full lg:w-[680px] shrink-0 flex flex-col gap-5">
-          
           {/* Section 1: ข้อมูลผู้ติดต่อและที่อยู่หลัก (Contact Information) */}
           <section className="rounded-[20px] border border-black/10 bg-white p-5 md:p-6">
-            <h2 className="text-lg md:text-xl font-bold text-black">Contact information</h2>
+            <h2 className="text-lg md:text-xl font-bold text-black">
+              Contact information
+            </h2>
             <div className="mt-4 flex flex-col gap-3">
               <input
                 type="text"
@@ -207,7 +413,9 @@ export default function Checkout() {
 
           {/* Section 2: ข้อมูลสถานที่จัดส่ง (Delivery Details) */}
           <section className="rounded-[20px] border border-black/10 bg-white p-5 md:p-6">
-            <h2 className="text-lg md:text-xl font-bold text-black">Delivery</h2>
+            <h2 className="text-lg md:text-xl font-bold text-black">
+              Delivery
+            </h2>
             <div className="mt-4 flex flex-col gap-3">
               <input
                 type="text"
@@ -224,7 +432,11 @@ export default function Checkout() {
                   name="deliveryAddressLine"
                   placeholder="Address Line"
                   disabled={useSameAddress}
-                  value={useSameAddress ? formData.addressLine : formData.deliveryAddressLine}
+                  value={
+                    useSameAddress
+                      ? formData.addressLine
+                      : formData.deliveryAddressLine
+                  }
                   onChange={handleChange}
                   className="h-11 rounded-xl bg-[#F0F0F0] px-4 text-sm outline-none disabled:opacity-50 focus:bg-white focus:ring-1 focus:ring-black/20"
                 />
@@ -233,7 +445,11 @@ export default function Checkout() {
                   name="deliveryAddressLine2"
                   placeholder="Address Line 2"
                   disabled={useSameAddress}
-                  value={useSameAddress ? formData.addressLine2 : formData.deliveryAddressLine2}
+                  value={
+                    useSameAddress
+                      ? formData.addressLine2
+                      : formData.deliveryAddressLine2
+                  }
                   onChange={handleChange}
                   className="h-11 rounded-xl bg-[#F0F0F0] px-4 text-sm outline-none disabled:opacity-50 focus:bg-white focus:ring-1 focus:ring-black/20"
                 />
@@ -253,7 +469,9 @@ export default function Checkout() {
                   name="deliveryState"
                   placeholder="State"
                   disabled={useSameAddress}
-                  value={useSameAddress ? formData.state : formData.deliveryState}
+                  value={
+                    useSameAddress ? formData.state : formData.deliveryState
+                  }
                   onChange={handleChange}
                   className="h-11 rounded-xl bg-[#F0F0F0] px-4 text-sm outline-none disabled:opacity-50 focus:bg-white focus:ring-1 focus:ring-black/20"
                 />
@@ -262,7 +480,9 @@ export default function Checkout() {
                   name="deliveryZipCode"
                   placeholder="Zip Code"
                   disabled={useSameAddress}
-                  value={useSameAddress ? formData.zipCode : formData.deliveryZipCode}
+                  value={
+                    useSameAddress ? formData.zipCode : formData.deliveryZipCode
+                  }
                   onChange={handleChange}
                   className="h-11 rounded-xl bg-[#F0F0F0] px-4 text-sm outline-none disabled:opacity-50 focus:bg-white focus:ring-1 focus:ring-black/20"
                 />
@@ -270,17 +490,19 @@ export default function Checkout() {
 
               {/* Toggle Switch: ใช้ที่อยู่เดียวกับผู้ติดต่อ */}
               <div className="mt-2 flex items-center justify-between">
-                <span className="text-xs md:text-sm font-medium text-black/70">Use same contact address</span>
+                <span className="text-xs md:text-sm font-medium text-black/70">
+                  Use same contact address
+                </span>
                 <button
                   type="button"
                   onClick={() => setUseSameAddress(!useSameAddress)}
                   className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
-                    useSameAddress ? 'bg-black' : 'bg-gray-300'
+                    useSameAddress ? "bg-black" : "bg-gray-300"
                   }`}
                 >
                   <span
                     className={`inline-block size-3.5 transform rounded-full bg-white transition-transform ${
-                      useSameAddress ? 'translate-x-4' : 'translate-x-0.5'
+                      useSameAddress ? "translate-x-4" : "translate-x-0.5"
                     }`}
                   />
                 </button>
@@ -290,17 +512,19 @@ export default function Checkout() {
 
           {/* Section 3: รายละเอียดการชำระเงิน (Payment Details) */}
           <section className="rounded-[20px] border border-black/10 bg-white p-5 md:p-6">
-            <h2 className="text-lg md:text-xl font-bold text-black">Payment details</h2>
-            
+            <h2 className="text-lg md:text-xl font-bold text-black">
+              Payment details
+            </h2>
+
             {/* ตัวเลือกช่องทางการชำระเงิน (Payment Method Selector) */}
             <div className="mt-4 grid grid-cols-2 gap-2.5 sm:grid-cols-4">
               <button
                 type="button"
-                onClick={() => setPaymentMethod('card')}
+                onClick={() => setPaymentMethod("card")}
                 className={`flex flex-col items-center justify-center rounded-xl border p-3 text-xs font-semibold transition ${
-                  paymentMethod === 'card'
-                    ? 'border-black bg-black text-white'
-                    : 'border-black/10 bg-[#F0F0F0] text-black hover:bg-black/5'
+                  paymentMethod === "card"
+                    ? "border-black bg-black text-white"
+                    : "border-black/10 bg-[#F0F0F0] text-black hover:bg-black/5"
                 }`}
               >
                 <span>Credit / Debit</span>
@@ -308,11 +532,11 @@ export default function Checkout() {
 
               <button
                 type="button"
-                onClick={() => setPaymentMethod('promptpay')}
+                onClick={() => setPaymentMethod("promptpay")}
                 className={`flex flex-col items-center justify-center rounded-xl border p-3 text-xs font-semibold transition ${
-                  paymentMethod === 'promptpay'
-                    ? 'border-black bg-black text-white'
-                    : 'border-black/10 bg-[#F0F0F0] text-black hover:bg-black/5'
+                  paymentMethod === "promptpay"
+                    ? "border-black bg-black text-white"
+                    : "border-black/10 bg-[#F0F0F0] text-black hover:bg-black/5"
                 }`}
               >
                 <span>QR PromptPay</span>
@@ -320,11 +544,11 @@ export default function Checkout() {
 
               <button
                 type="button"
-                onClick={() => setPaymentMethod('truemoney')}
+                onClick={() => setPaymentMethod("truemoney")}
                 className={`flex flex-col items-center justify-center rounded-xl border p-3 text-xs font-semibold transition ${
-                  paymentMethod === 'truemoney'
-                    ? 'border-black bg-black text-white'
-                    : 'border-black/10 bg-[#F0F0F0] text-black hover:bg-black/5'
+                  paymentMethod === "truemoney"
+                    ? "border-black bg-black text-white"
+                    : "border-black/10 bg-[#F0F0F0] text-black hover:bg-black/5"
                 }`}
               >
                 <span>TrueMoney</span>
@@ -332,11 +556,11 @@ export default function Checkout() {
 
               <button
                 type="button"
-                onClick={() => setPaymentMethod('bank')}
+                onClick={() => setPaymentMethod("bank")}
                 className={`flex flex-col items-center justify-center rounded-xl border p-3 text-xs font-semibold transition ${
-                  paymentMethod === 'bank'
-                    ? 'border-black bg-black text-white'
-                    : 'border-black/10 bg-[#F0F0F0] text-black hover:bg-black/5'
+                  paymentMethod === "bank"
+                    ? "border-black bg-black text-white"
+                    : "border-black/10 bg-[#F0F0F0] text-black hover:bg-black/5"
                 }`}
               >
                 <span>Bank Account</span>
@@ -346,7 +570,7 @@ export default function Checkout() {
             {/* ฟอร์มและรายละเอียดการชำระเงินตามประเภทที่เลือก */}
             <div className="mt-4 flex flex-col gap-3">
               {/* 1. Credit / Debit Card */}
-              {paymentMethod === 'card' && (
+              {paymentMethod === "card" && (
                 <>
                   <input
                     type="text"
@@ -355,7 +579,7 @@ export default function Checkout() {
                     value={formData.cardName}
                     onChange={handleChange}
                     className="h-11 w-full rounded-xl bg-[#F0F0F0] px-4 text-sm outline-none placeholder:text-black/40 focus:bg-white focus:ring-1 focus:ring-black/20"
-                    required={paymentMethod === 'card'}
+                    required={paymentMethod === "card"}
                   />
                   <div className="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_110px_90px]">
                     <input
@@ -364,8 +588,12 @@ export default function Checkout() {
                       placeholder="Card Number"
                       value={formData.cardNumber}
                       onChange={handleChange}
+                      inputMode="numeric"
+                      autoComplete="cc-number"
+                      pattern="(?:[0-9]{4} ){3}[0-9]{4}"
+                      maxLength={19}
                       className="h-11 rounded-xl bg-[#F0F0F0] px-4 text-sm outline-none placeholder:text-black/40 focus:bg-white focus:ring-1 focus:ring-black/20"
-                      required={paymentMethod === 'card'}
+                      required={paymentMethod === "card"}
                     />
                     <input
                       type="text"
@@ -373,8 +601,12 @@ export default function Checkout() {
                       placeholder="MM/YY"
                       value={formData.expDate}
                       onChange={handleChange}
+                      inputMode="numeric"
+                      autoComplete="cc-exp"
+                      pattern="(0[1-9]|1[0-2])/[0-9]{2}"
+                      maxLength={5}
                       className="h-11 rounded-xl bg-[#F0F0F0] px-4 text-center text-sm outline-none placeholder:text-black/40 focus:bg-white focus:ring-1 focus:ring-black/20"
-                      required={paymentMethod === 'card'}
+                      required={paymentMethod === "card"}
                     />
                     <input
                       type="text"
@@ -382,24 +614,29 @@ export default function Checkout() {
                       placeholder="CVC"
                       value={formData.cvc}
                       onChange={handleChange}
+                      inputMode="numeric"
+                      autoComplete="cc-csc"
+                      maxLength={4}
                       className="h-11 rounded-xl bg-[#F0F0F0] px-4 text-center text-sm outline-none placeholder:text-black/40 focus:bg-white focus:ring-1 focus:ring-black/20"
-                      required={paymentMethod === 'card'}
+                      required={paymentMethod === "card"}
                     />
                   </div>
 
                   {/* Toggle Switch: บันทึกบัตรชำระเงินเป็นค่าเริ่มต้น */}
                   <div className="mt-2 flex items-center justify-between">
-                    <span className="text-xs md:text-sm font-medium text-black/70">Save this card as default payment method</span>
+                    <span className="text-xs md:text-sm font-medium text-black/70">
+                      Save this card as default payment method
+                    </span>
                     <button
                       type="button"
                       onClick={() => setSaveDefaultCard(!saveDefaultCard)}
                       className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
-                        saveDefaultCard ? 'bg-black' : 'bg-gray-300'
+                        saveDefaultCard ? "bg-black" : "bg-gray-300"
                       }`}
                     >
                       <span
                         className={`inline-block size-3.5 transform rounded-full bg-white transition-transform ${
-                          saveDefaultCard ? 'translate-x-4' : 'translate-x-0.5'
+                          saveDefaultCard ? "translate-x-4" : "translate-x-0.5"
                         }`}
                       />
                     </button>
@@ -408,10 +645,14 @@ export default function Checkout() {
               )}
 
               {/* 2. QR PromptPay (Mock) */}
-              {paymentMethod === 'promptpay' && (
+              {paymentMethod === "promptpay" && (
                 <div className="flex flex-col items-center justify-center rounded-2xl bg-[#F0F0F0] p-6 text-center">
-                  <p className="text-sm font-bold text-black">Scan QR Code to Pay</p>
-                  <p className="mt-1 text-xs text-black/60">รองรับ Mobile Banking ทุกธนาคาร</p>
+                  <p className="text-sm font-bold text-black">
+                    Scan QR Code to Pay
+                  </p>
+                  <p className="mt-1 text-xs text-black/60">
+                    รองรับ Mobile Banking ทุกธนาคาร
+                  </p>
                   <div className="mt-4 flex size-44 items-center justify-center rounded-2xl border border-black/10 bg-white p-2 shadow-xs">
                     <img
                       src={`https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=PROMPTPAY_MOCK_TOTAL_${total}`}
@@ -419,14 +660,18 @@ export default function Checkout() {
                       className="size-full object-contain"
                     />
                   </div>
-                  <p className="mt-4 text-xs font-bold text-black/80">ยอดชำระสุทธิ: {formatCurrency(total)}</p>
+                  <p className="mt-4 text-xs font-bold text-black/80">
+                    ยอดชำระสุทธิ: {formatCurrency(total)}
+                  </p>
                 </div>
               )}
 
               {/* 3. TrueMoney Wallet */}
-              {paymentMethod === 'truemoney' && (
+              {paymentMethod === "truemoney" && (
                 <div className="flex flex-col gap-3 rounded-2xl bg-[#F0F0F0] p-5 md:p-6">
-                  <p className="text-xs font-bold text-black/80">ชำระผ่าน TrueMoney Wallet</p>
+                  <p className="text-xs font-bold text-black/80">
+                    ชำระผ่าน TrueMoney Wallet
+                  </p>
                   <input
                     type="tel"
                     name="truemoneyPhone"
@@ -434,16 +679,21 @@ export default function Checkout() {
                     value={formData.truemoneyPhone}
                     onChange={handleChange}
                     className="h-11 w-full rounded-xl bg-white px-4 text-sm outline-none placeholder:text-black/40 focus:ring-1 focus:ring-black/20"
-                    required={paymentMethod === 'truemoney'}
+                    required={paymentMethod === "truemoney"}
                   />
-                  <p className="text-[11px] text-black/50">* ระบบจะส่งข้อความแจ้งเตือนไปยังแอป TrueMoney เพื่อยืนยันการชำระเงิน</p>
+                  <p className="text-[11px] text-black/50">
+                    * ระบบจะส่งข้อความแจ้งเตือนไปยังแอป TrueMoney
+                    เพื่อยืนยันการชำระเงิน
+                  </p>
                 </div>
               )}
 
               {/* 4. Thai Bank Account Direct Link */}
-              {paymentMethod === 'bank' && (
+              {paymentMethod === "bank" && (
                 <div className="flex flex-col gap-3 rounded-2xl bg-[#F0F0F0] p-5 md:p-6">
-                  <p className="text-xs font-bold text-black/80">ผูกบัญชีธนาคาร (Direct Bank Debit)</p>
+                  <p className="text-xs font-bold text-black/80">
+                    ผูกบัญชีธนาคาร (Direct Bank Debit)
+                  </p>
                   <select
                     name="selectedBank"
                     value={formData.selectedBank}
@@ -464,9 +714,12 @@ export default function Checkout() {
                     value={formData.bankAccountNumber}
                     onChange={handleChange}
                     className="h-11 w-full rounded-xl bg-white px-4 text-sm outline-none placeholder:text-black/40 focus:ring-1 focus:ring-black/20"
-                    required={paymentMethod === 'bank'}
+                    required={paymentMethod === "bank"}
                   />
-                  <p className="text-[11px] text-black/50">* ระบบจะนำคุณไปยังหน้า Mobile Banking ของธนาคารที่เลือกเพื่อยืนยันการผูกบัญชี</p>
+                  <p className="text-[11px] text-black/50">
+                    * ระบบจะนำคุณไปยังหน้า Mobile Banking
+                    ของธนาคารที่เลือกเพื่อยืนยันการผูกบัญชี
+                  </p>
                 </div>
               )}
             </div>
@@ -474,32 +727,82 @@ export default function Checkout() {
         </div>
 
         {/* คอลัมน์ขวา: สรุปรายการสั่งซื้อและยอดเงินทั้งหมด (Order Summary) */}
-        <aside className="w-full lg:w-[440px] shrink-0 rounded-[20px] border border-black/10 bg-white p-5 md:p-6" aria-label="Order Summary">
-          <h2 className="text-lg md:text-xl font-bold text-black">Order Summary</h2>
+        <aside
+          className="w-full lg:w-[440px] shrink-0 rounded-[20px] border border-black/10 bg-white p-5 md:p-6"
+          aria-label="Order Summary"
+        >
+          <h2 className="text-lg md:text-xl font-bold text-black">
+            Order Summary
+          </h2>
 
           {/* รายการสินค้าย่อยในตะกร้า (Mini Items List) */}
           <div className="mt-4 max-h-[220px] overflow-y-auto divide-y divide-black/10 pr-1">
             {items.map((item) => (
               <div key={item.id} className="flex items-center gap-3 py-2.5">
                 <div className="size-12 shrink-0 overflow-hidden rounded-md bg-[#F0F0F0]">
-                  {item.image && <img src={item.image} alt={item.name} className="h-full w-full object-cover" />}
+                  {item.image && (
+                    <img
+                      src={item.image}
+                      alt={item.name}
+                      className="h-full w-full object-cover"
+                    />
+                  )}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-xs md:text-sm font-bold text-black">{item.name}</p>
+                  <p className="truncate text-xs md:text-sm font-bold text-black">
+                    {item.name}
+                  </p>
                   <p className="text-xs text-black/60">Qty: {item.quantity}</p>
+                  {availableStock(item) !== null &&
+                    availableStock(item) <= 10 && (
+                      <p
+                        className={`mt-1 text-xs font-semibold ${Number(item.quantity) > availableStock(item) ? "text-red-600" : "text-[#d97706]"}`}
+                      >
+                        {Number(item.quantity) > availableStock(item)
+                          ? `Only ${availableStock(item)} in stock — reduce quantity`
+                          : `Low stock: only ${availableStock(item)} left`}
+                      </p>
+                    )}
                 </div>
-                <p className="text-xs md:text-sm font-bold text-black">{formatCurrency(item.price * item.quantity)}</p>
+                <p className="text-xs md:text-sm font-bold text-black">
+                  {formatCurrency(item.price * item.quantity)}
+                </p>
               </div>
             ))}
           </div>
 
           <div className="my-4 border-t border-black/10" />
 
+          {stockLoading && (
+            <p className="mb-4 text-xs font-medium text-black/50">
+              Checking current stock…
+            </p>
+          )}
+          {hasStockIssue && (
+            <p
+              className="mb-4 rounded-xl bg-red-50 px-3 py-2 text-xs font-semibold text-red-700"
+              role="alert"
+            >
+              Checkout is unavailable until the quantities are within available
+              stock.
+            </p>
+          )}
+          {checkoutError && (
+            <p
+              className="mb-4 rounded-xl bg-red-50 px-3 py-2 text-xs font-semibold text-red-700"
+              role="alert"
+            >
+              {checkoutError}
+            </p>
+          )}
+
           {/* ตารางแสดงสรุปราคา (Subtotal, Discount, Delivery Fee) */}
           <dl className="flex flex-col gap-3 text-sm md:text-base">
             <div className="flex justify-between items-center">
               <dt className="text-black/60">Subtotal</dt>
-              <dd className="font-bold text-black">{formatCurrency(subtotal)}</dd>
+              <dd className="font-bold text-black">
+                {formatCurrency(subtotal)}
+              </dd>
             </div>
 
             {/* แสดงส่วนลดเฉพาะกรณีที่มีส่วนลดมากกว่า 0 */}
@@ -512,7 +815,9 @@ export default function Checkout() {
 
             <div className="flex justify-between items-center">
               <dt className="text-black/60">Delivery Fee</dt>
-              <dd className="font-bold text-black">{formatCurrency(deliveryFee)}</dd>
+              <dd className="font-bold text-black">
+                {formatCurrency(deliveryFee)}
+              </dd>
             </div>
           </dl>
 
@@ -527,9 +832,14 @@ export default function Checkout() {
           {/* ปุ่มยืนยันการสั่งซื้อ */}
           <button
             type="submit"
-            className="mt-5 flex h-12 w-full items-center justify-center rounded-full bg-primary text-base font-semibold text-white transition hover:opacity-90"
+            disabled={stockLoading || hasStockIssue}
+            className="mt-5 flex h-12 w-full items-center justify-center rounded-full bg-primary text-base font-semibold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            Finish checkout
+            {stockLoading
+              ? "Checking stock…"
+              : hasStockIssue
+                ? "Update cart quantities"
+                : "Finish checkout"}
           </button>
         </aside>
       </form>

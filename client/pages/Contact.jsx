@@ -1,13 +1,13 @@
 // ไฟล์: client/pages/Contact.jsx
 // หน้าแบบฟอร์มติดต่อสอบถาม (Contact Us)
 // เรียกมาจาก: App.jsx ผ่าน Route path="/contact" หรือคลิกลิงก์จาก Footer
-import { useState } from 'react';
-import Button from '../src/components/ui/Button';
-import Container from '../src/components/ui/Container';
-import SectionHeading from '../src/components/ui/SectionHeading';
+import { useState } from "react";
+import Button from "../src/components/ui/Button";
+import Container from "../src/components/ui/Container";
+import SectionHeading from "../src/components/ui/SectionHeading";
 
 // ค่าเริ่มต้นของฟอร์มติดต่อเรา
-const initialForm = { name: '', email: '', message: '' };
+const initialForm = { name: "", email: "", message: "" };
 
 // หน้า Contact Us สำหรับส่งข้อความสอบถาม
 export default function Contact() {
@@ -31,11 +31,18 @@ export default function Contact() {
     <Container className="py-16">
       <div className="mx-auto max-w-md rounded-card bg-white p-8">
         {/* หัวข้อหน้า Contact */}
-        <SectionHeading eyebrow="Get in touch" title="Contact Us" align="center" />
+        <SectionHeading
+          eyebrow="Get in touch"
+          title="Contact Us"
+          align="center"
+        />
 
         {/* ข้อความแจ้งเตือนเมื่อส่งสำเร็จ */}
         {sent && (
-          <p className="mt-6 rounded-btn bg-success/10 p-3 text-sm text-success" role="status">
+          <p
+            className="mt-6 rounded-btn bg-success/10 p-3 text-sm text-success"
+            role="status"
+          >
             ขอบคุณครับ เราได้รับข้อความของคุณแล้ว
           </p>
         )}

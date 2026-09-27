@@ -2,12 +2,12 @@
 // คอมโพเนนต์โลโก้แบรนด์ Merchroom (ไอคอนเห็ด + ตัวหนังสือ)
 // เรียกมาจาก: Navbar.jsx (ขนาด md), Footer.jsx (ขนาด lg โทน lime) และ AboutUs.jsx (ขนาด lg โทน dark)
 // แหล่งไฟล์ภาพ SVG: โฟลเดอร์ assets/Merchroom-Logo/
-import { Link } from 'react-router-dom';
-import iconMushroom from '../../../assets/Merchroom-Logo/icon-mushroom.svg';
-import iconMushroomDark from '../../../assets/Merchroom-Logo/5.svg';
-import wordmarkWhite from '../../../assets/Merchroom-Logo/wordmark-white.svg';
-import wordmarkLime from '../../../assets/Merchroom-Logo/wordmark-lime.svg';
-import wordmarkDark from '../../../assets/Merchroom-Logo/7.svg';
+import { Link } from "react-router-dom";
+import iconMushroom from "../../../assets/Merchroom-Logo/icon-mushroom.svg";
+import iconMushroomDark from "../../../assets/Merchroom-Logo/5.svg";
+import wordmarkWhite from "../../../assets/Merchroom-Logo/wordmark-white.svg";
+import wordmarkLime from "../../../assets/Merchroom-Logo/wordmark-lime.svg";
+import wordmarkDark from "../../../assets/Merchroom-Logo/7.svg";
 
 // อัตราส่วนความกว้างต่อความสูงของไอคอนเห็ดและตัวหนังสือ เพื่อคำนวณ height ไม่ให้รูปเบี้ยว
 const iconRatio = {
@@ -27,23 +27,27 @@ const sizes = {
 };
 
 // คอมโพเนนต์โลโก้หลักของ Merchroom (กดแล้วลิงก์กลับหน้าแรก)
-export default function Logo({ tone = 'light', size = 'md', className = '' }) {
+export default function Logo({ tone = "light", size = "md", className = "" }) {
   const s = sizes[size] || sizes.md;
-  const isDark = tone === 'dark';
-  const isLime = tone === 'lime';
+  const isDark = tone === "dark";
+  const isLime = tone === "lime";
 
   // สลับไฟล์รูปตัวหนังสือและไอคอนตามธีมสี:
   // - dark (AboutUs): ไอคอนเห็ดดาวเหลืองเขียว (5.svg) + ตัวหนังสือดำ OO เขียว (7.svg)
   // - lime (Footer): ไอคอนเห็ด (icon-mushroom.svg) + ตัวหนังสือเขียว lime (wordmark-lime.svg)
   // - light (Navbar): ไอคอนเห็ด (icon-mushroom.svg) + ตัวหนังสือขาว (wordmark-white.svg)
   const iconSrc = isDark ? iconMushroomDark : iconMushroom;
-  const wordmarkSrc = isDark ? wordmarkDark : isLime ? wordmarkLime : wordmarkWhite;
+  const wordmarkSrc = isDark
+    ? wordmarkDark
+    : isLime
+      ? wordmarkLime
+      : wordmarkWhite;
   const currentIconRatio = isDark ? iconRatio.dark : iconRatio.default;
   const currentWordmarkRatio = isDark
     ? wordmarkRatio.dark
     : isLime
-    ? wordmarkRatio.lime
-    : wordmarkRatio.light;
+      ? wordmarkRatio.lime
+      : wordmarkRatio.light;
 
   return (
     <Link
@@ -69,4 +73,3 @@ export default function Logo({ tone = 'light', size = 'md', className = '' }) {
     </Link>
   );
 }
-

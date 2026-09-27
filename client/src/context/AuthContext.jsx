@@ -3,19 +3,17 @@
 // เรียกมาจาก: App.jsx (นำ AuthProvider ไปครอบทั้งแอป)
 // แหล่งข้อมูลผู้ใช้: รองรับทั้ง backend API (/api/auth) และ fallback ระบบ mockup (src/data/mockup/mockUsers.js)
 // ส่งออก Hook: useAuth() สำหรับหน้า Login, Register, Navbar, UserDashboard, AdminDashboard
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import {
-  authenticate,
-  getUsers,
-  getUserById,
-  saveRegisteredUser,
-} from '../data/mockup/mockUsers';
-import {
-  saveSession,
-  getSession,
-  clearSession,
-} from '../utils/sessionStorage';
-import { registerApi, loginApi, logoutApi, checkAuthApi } from '../api/auth';
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
+import { getUsers, getUserById } from "../data/mockup/mockUsers";
+import { saveSession, getSession, clearSession } from "../utils/sessionStorage";
+import { registerApi, loginApi, logoutApi, checkAuthApi } from "../api/auth";
 
 const AuthContext = createContext(null);
 
@@ -34,89 +32,74 @@ export function AuthProvider({ children }) {
         if (result.success && result.user) {
           saveSession(result.user);
           setUser(result.user);
+        } else {
+          // A local session is not an authenticated backend session. Remove it
+          // so protected API calls such as checkout always have a JWT cookie.
+          clearSession();
+          setUser(null);
         }
       })
       .catch(() => {
-        // ออฟไลน์หรือยังไม่ต่อ backend ให้ใช้ session เดิม
+        clearSession();
+        setUser(null);
       })
       .finally(() => setBooting(false));
   }, []);
 
   // ฟังก์ชัน login: พยายามต่อ backend API ก่อน ถ้าต่อไม่ติดหรือ 404 ให้ fallback ไปเช็คกับ mockup database
   // คืน { success, message?, user? } เสมอ เพื่อให้ฟอร์มอ่าน result.success / result.message ได้ตรงกันทั้งสองเส้นทาง
-  const login = useCallback(async (email, password) => {
+  const login = useCallback(async (email, password, gateway = "customer") => {
     try {
-      const apiResult = await loginApi(email, password);
+      const apiResult = await loginApi(email, password, gateway);
       if (apiResult.success && apiResult.user) {
         saveSession(apiResult.user);
         setUser(apiResult.user);
         return apiResult;
       }
-      // ถ้า backend ตอบกลับมาและมีข้อความปฏิเสธจริง (ไม่ใช่ 404 endpoint not found)
+      // When the backend answered, do not silently authenticate with mock data.
+      // A mock session has no HttpOnly JWT cookie and cannot create an order.
       if (apiResult.status && apiResult.status !== 404 && apiResult.message) {
-        // ตรวจสอบก่อนว่าอาจเป็น mock user หรือไม่ ถ้าใช่ให้เข้าสู่ระบบผ่าน mock
-        const authed = authenticate(email, password);
-        if (authed) {
-          const { password: _pw, ...safeUser } = authed;
-          saveSession(safeUser);
-          setUser(safeUser);
-          return { success: true, message: 'Login successful', user: safeUser };
-        }
         return apiResult;
       }
     } catch {
-      // ถ้า backend ไม่ตอบสนอง ให้ fallback ไปเช็ค mockUsers
+      return {
+        success: false,
+        message: "Unable to connect to the backend. Please try again.",
+      };
     }
 
-    const authed = authenticate(email, password);
-    if (authed) {
-      const { password: _pw, ...safeUser } = authed;
-      saveSession(safeUser);
-      setUser(safeUser);
-      return { success: true, message: 'Login successful', user: safeUser };
-    }
-    return { success: false, message: 'Invalid email or password' };
+    return {
+      success: false,
+      message: "Backend authentication is unavailable. Please try again.",
+    };
   }, []);
 
   // ฟังก์ชัน register: สมัครสมาชิกผ่าน backend API (ถ้าไม่มี backend ให้ fallback บันทึกลง session)
   const register = useCallback(async ({ username, email, password, phone }) => {
-    const newUserWithPassword = {
-      _id: `usr-${Date.now()}`,
-      email,
-      password,
-      firstName: username || 'User',
-      lastName: '',
-      phone: phone || '',
-      role: 'customer',
-      memberSince: new Date().toISOString().split('T')[0],
-    };
-
     try {
       const apiResult = await registerApi({
         email,
         password,
-        firstName: username || '',
-        phone: phone || '',
+        firstName: username || "",
+        phone: phone || "",
       });
       if (apiResult.success) {
-        saveRegisteredUser({
-          ...newUserWithPassword,
-          _id: apiResult.user?._id || newUserWithPassword._id,
-        });
         return apiResult;
       }
       if (apiResult.status && apiResult.status !== 404 && apiResult.message) {
         return apiResult;
       }
     } catch {
-      // fallback
+      return {
+        success: false,
+        message: "Unable to connect to the backend. Please try again.",
+      };
     }
 
-    saveRegisteredUser(newUserWithPassword);
-    const { password: _pw, ...safeUser } = newUserWithPassword;
-    saveSession(safeUser);
-    setUser(safeUser);
-    return { success: true, message: 'Registration successful', user: safeUser };
+    return {
+      success: false,
+      message: "Backend registration is unavailable. Please try again.",
+    };
   }, []);
 
   // ฟังก์ชัน logout: แจ้ง backend และล้าง session ในเครื่อง
@@ -131,8 +114,8 @@ export function AuthProvider({ children }) {
   }, []);
 
   // ฟังก์ชันรีเซ็ตรหัสผ่าน (mock endpoint)
-  const resetPassword = useCallback((email, newPassword) => {
-    return { success: true, message: 'Password updated successfully' };
+  const resetPassword = useCallback(() => {
+    return { success: true, message: "Password updated successfully" };
   }, []);
 
   // ฟังก์ชัน refresh ข้อมูล user
@@ -160,8 +143,8 @@ export function AuthProvider({ children }) {
       isLoggedIn: Boolean(user),
       booting,
       isAuthenticated: Boolean(user),
-      isAdmin: Boolean(user && user.role === 'admin'),
-      isCustomer: Boolean(user && user.role === 'customer'),
+      isAdmin: Boolean(user && user.role === "admin"),
+      isCustomer: Boolean(user && user.role === "customer"),
       users: getUsers(),
       login,
       register,
@@ -170,7 +153,16 @@ export function AuthProvider({ children }) {
       refreshUser,
       updateCurrentUser,
     }),
-    [user, booting, login, register, logout, resetPassword, refreshUser, updateCurrentUser],
+    [
+      user,
+      booting,
+      login,
+      register,
+      logout,
+      resetPassword,
+      refreshUser,
+      updateCurrentUser,
+    ],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
@@ -181,7 +173,7 @@ export function AuthProvider({ children }) {
 export function useAuth() {
   const context = useContext(AuthContext);
   if (!context) {
-    throw new Error('useAuth must be used within AuthProvider');
+    throw new Error("useAuth must be used within AuthProvider");
   }
   return context;
 }

@@ -1,8 +1,8 @@
 // ไฟล์: client/pages/News.jsx
 // หน้าข่าวสารและอัปเดตกิจกรรม (News)
 // เรียกมาจาก: App.jsx ผ่าน Route path="/news" หรือคลิกเมนู News บน Navbar
-import Container from '../src/components/ui/Container';
-import SectionHeading from '../src/components/ui/SectionHeading';
+import Container from "../src/components/ui/Container";
+import SectionHeading from "../src/components/ui/SectionHeading";
 
 // หน้าข่าวสารและอัปเดตกิจกรรม (News / What's Live)
 export default function News() {

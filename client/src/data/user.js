@@ -3,19 +3,20 @@
 /**
  * Mock User Data Source - อิงจาก User.js Mongoose Schema
  */
-const USER_STORAGE_KEY = 'merchroom_user_profile';
+const USER_STORAGE_KEY = "merchroom_user_profile";
 
 const DEFAULT_USER = {
-  _id: 'usr_65f1a2b3c4d5e6f7a8b9c0d1',
-  email: 'kornkanok@merchroom.co.th',
-  firstName: 'KORNKANOK',
-  lastName: 'THAIHERITAGE',
-  phone: '081-234-5678',
-  address: '99/9 ถ.สุขุมวิท แขวงคลองเตย เขตคลองเตย กรุงเทพมหานคร 10110',
-  interests: ['Pop Culture', 'Vinyl Art Toys', 'Streetwear'],
-  paymentMethods: ['VISA ending in 4242', 'PromptPay QR'],
-  profilePicture: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
-  role: 'customer',
+  _id: "usr_65f1a2b3c4d5e6f7a8b9c0d1",
+  email: "kornkanok@merchroom.co.th",
+  firstName: "KORNKANOK",
+  lastName: "THAIHERITAGE",
+  phone: "081-234-5678",
+  address: "99/9 ถ.สุขุมวิท แขวงคลองเตย เขตคลองเตย กรุงเทพมหานคร 10110",
+  interests: ["Pop Culture", "Vinyl Art Toys", "Streetwear"],
+  paymentMethods: ["VISA ending in 4242", "PromptPay QR"],
+  profilePicture:
+    "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80",
+  role: "customer",
 };
 
 function getStoredUser() {

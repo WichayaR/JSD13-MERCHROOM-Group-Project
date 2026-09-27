@@ -1,9 +1,16 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 
 const CartContext = createContext(null);
 
-const STORAGE_KEY = 'merchroom_cart';
-const DISCOUNT_STORAGE_KEY = 'promo_discount_rate';
+const STORAGE_KEY = "merchroom_cart";
+const DISCOUNT_STORAGE_KEY = "promo_discount_rate";
 
 export function CartProvider({ children }) {
   // โหลดของในตะกร้าจาก localStorage
@@ -52,7 +59,7 @@ export function CartProvider({ children }) {
   // เพิ่มสินค้าเข้าตะกร้า
   const addToCart = useCallback((product, quantity = 1) => {
     if (!product?.id) {
-      console.warn('[cart] addToCart ต้องรับ product object ไม่ใช่ event');
+      console.warn("[cart] addToCart ต้องรับ product object ไม่ใช่ event");
       return;
     }
 
@@ -61,7 +68,9 @@ export function CartProvider({ children }) {
 
       if (existing) {
         return prev.map((item) =>
-          item.id === product.id ? { ...item, quantity: item.quantity + quantity } : item,
+          item.id === product.id
+            ? { ...item, quantity: item.quantity + quantity }
+            : item,
         );
       }
 
@@ -93,7 +102,10 @@ export function CartProvider({ children }) {
   // แพ็ก context value ด้วย useMemo
   const value = useMemo(() => {
     const cartCount = items.reduce((sum, item) => sum + item.quantity, 0);
-    const cartTotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+    const cartTotal = items.reduce(
+      (sum, item) => sum + item.price * item.quantity,
+      0,
+    );
 
     return {
       items,
@@ -106,7 +118,15 @@ export function CartProvider({ children }) {
       updateQuantity,
       clearCart,
     };
-  }, [items, discountRate, applyDiscount, addToCart, removeFromCart, updateQuantity, clearCart]);
+  }, [
+    items,
+    discountRate,
+    applyDiscount,
+    addToCart,
+    removeFromCart,
+    updateQuantity,
+    clearCart,
+  ]);
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 }
@@ -117,7 +137,7 @@ export function useCart() {
   const context = useContext(CartContext);
 
   if (!context) {
-    throw new Error('useCart ต้องใช้ภายใน <CartProvider> เท่านั้น');
+    throw new Error("useCart ต้องใช้ภายใน <CartProvider> เท่านั้น");
   }
 
   return context;

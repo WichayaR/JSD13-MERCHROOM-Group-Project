@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Download, SlidersHorizontal } from 'lucide-react';
-import { getOrders, getOrderStats, updateOrderStatus } from '../../src/api/orders.api';
+import { cancelOrder, createManualOrder, getOrders, getOrderStats, subscribeToOrderEvents, updateOrderStatus } from '../../src/api/orders.api';
+import { getCustomers } from '../../src/api/users.api';
+import { getProducts } from '../../src/api/products.api';
 import { getOrders as getMockOrders } from '../../src/data/mockup/mockOrders';
 import formatCurrency from '../../src/utils/formatCurrency';
 import AdminPanel from '../../src/components/admin/AdminPanel';
@@ -20,6 +22,12 @@ export default function OrdersAdmin() {
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [manualOrder, setManualOrder] = useState(null);
+  const [customers, setCustomers] = useState([]);
+  const [products, setProducts] = useState([]);
+  const [manualError, setManualError] = useState('');
+  const [cancellingOrderId, setCancellingOrderId] = useState('');
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -40,7 +48,8 @@ export default function OrdersAdmin() {
       // Backend unavailable, fallback to mock orders
     }
 
-    let filtered = getMockOrders() || [];
+    const allMockOrders = getMockOrders() || [];
+    let filtered = allMockOrders;
     if (filter !== 'all') {
       filtered = filtered.filter((o) => (o.deliveryStatus || o.status) === filter);
     }
@@ -67,13 +76,53 @@ export default function OrdersAdmin() {
       pendingPayment: 5,
       awaitingFulfillment: 9,
       shipped: 42,
+      cancelled: allMockOrders.filter((order) => (order.deliveryStatus || order.status) === 'cancelled').length,
     });
     setLoading(false);
   }, [filter, page, search]);
 
   useEffect(() => {
-    load();
+    const timer = window.setTimeout(load, 0);
+    return () => window.clearTimeout(timer);
   }, [load]);
+
+  useEffect(() => {
+    const unsubscribe = subscribeToOrderEvents(() => load());
+    const fallbackPoll = window.setInterval(load, 15000);
+    return () => {
+      unsubscribe();
+      window.clearInterval(fallbackPoll);
+    };
+  }, [load]);
+
+  const openManualOrder = async () => {
+    setManualError('');
+    setManualOrder({ userId: '', productId: '', quantity: 1, shippingAddress: '', shippingProvider: 'Standard Delivery' });
+    try {
+      const [customerData, productData] = await Promise.all([getCustomers(), getProducts()]);
+      setCustomers(customerData.users || []);
+      setProducts(productData.products || []);
+    } catch {
+      setManualError('Unable to load customers or products. Please check your admin session and try again.');
+    }
+  };
+
+  const submitManualOrder = async (event) => {
+    event.preventDefault();
+    setManualError('');
+    try {
+      await createManualOrder({
+        userId: manualOrder.userId,
+        items: [{ productId: manualOrder.productId, quantity: Number(manualOrder.quantity) }],
+        shippingAddress: manualOrder.shippingAddress,
+        shippingProvider: manualOrder.shippingProvider,
+      });
+      setManualOrder(null);
+      load();
+    } catch (err) {
+      setManualError(err?.message || 'Unable to create manual order.');
+    }
+  };
 
   const changeStatus = async (id, status) => {
     try {
@@ -81,6 +130,23 @@ export default function OrdersAdmin() {
       setOrders((current) => current.map((item) => (item._id === id ? order : item)));
     } catch {
       setOrders((current) => current.map((item) => (item._id === id ? { ...item, status, deliveryStatus: status } : item)));
+    }
+  };
+
+  const cancelOrderByAdmin = async (order) => {
+    const orderId = order._id;
+    if (!orderId || !window.confirm('ยืนยันการยกเลิกคำสั่งซื้อนี้? สินค้าจะกลับเข้าสต็อก')) return;
+
+    setCancellingOrderId(orderId);
+    setError('');
+    try {
+      const { order: updatedOrder } = await cancelOrder(orderId);
+      setOrders((current) => current.map((item) => (item._id === orderId ? updatedOrder : item)));
+      await load();
+    } catch (err) {
+      setError(err?.message || 'ไม่สามารถยกเลิกคำสั่งซื้อได้');
+    } finally {
+      setCancellingOrderId('');
     }
   };
 
@@ -123,7 +189,7 @@ export default function OrdersAdmin() {
           <button className="ghost-btn" onClick={exportCsv}>
             <Download size={15} /> Export CSV
           </button>
-          <button className="primary-btn" disabled title="Manual order creation is not in the current API scope">
+          <button className="primary-btn" onClick={openManualOrder}>
             Create Manual Order
           </button>
         </div>
@@ -134,6 +200,7 @@ export default function OrdersAdmin() {
         <StatCard label="Pending Payment" value={stats?.pendingPayment ?? '—'} />
         <StatCard label="Awaiting Fulfilment" value={stats?.awaitingFulfillment ?? '—'} />
         <StatCard dark label="Shipped / Completed" value={stats?.shipped ?? '—'} />
+        <StatCard label="Cancelled Orders" value={stats?.cancelled ?? '—'} />
       </div>
 
       <AdminPanel
@@ -148,26 +215,29 @@ export default function OrdersAdmin() {
                 setPage(1);
               }}
             />
-            <button className="ghost-btn">
+            <button className="ghost-btn" aria-expanded={filtersOpen} onClick={() => setFiltersOpen((open) => !open)}>
               <SlidersHorizontal size={14} /> Filters
             </button>
           </div>
         }
       >
-        <div className="filter-pills">
-          {filters.map((item) => (
-            <button
-              key={item}
-              className={filter === item ? 'active' : ''}
-              onClick={() => {
-                setFilter(item);
-                setPage(1);
-              }}
-            >
-              {item === 'all' ? 'All orders' : item}
-            </button>
-          ))}
-        </div>
+        {filtersOpen && (
+          <div className="filter-pills" aria-label="Filter orders by status">
+            {filters.map((item) => (
+              <button
+                key={item}
+                className={filter === item ? 'active' : ''}
+                onClick={() => {
+                  setFilter(item);
+                  setPage(1);
+                  setFiltersOpen(false);
+                }}
+              >
+                {item === 'all' ? 'All orders' : item}
+              </button>
+            ))}
+          </div>
+        )}
 
         {error ? (
           <div className="order-state">
@@ -182,7 +252,7 @@ export default function OrdersAdmin() {
           <div className="order-state">ยังไม่มีคำสั่งซื้อในสถานะนี้</div>
         ) : (
           <>
-            <AdminTable columns={['Order ID', 'Customer', 'Items', 'Total', 'Payment', 'Status', 'Courier', 'Date']}>
+            <AdminTable columns={['Order ID', 'Customer', 'Items', 'Total', 'Payment', 'Status', 'Courier', 'Date', 'Actions']}>
               {safeOrders.map((order) => {
                 const customerName = order.userId
                   ? typeof order.userId === 'object'
@@ -227,7 +297,20 @@ export default function OrdersAdmin() {
                       <AdminBadge status={currentStatus} />
                     </td>
                     <td>{order.shippingProvider || 'Flash Express'}</td>
-                    <td>{new Date(order.purchaseDate || order.createdAt || Date.now()).toLocaleDateString('th-TH')}</td>
+                    <td>{order.purchaseDate || order.createdAt ? new Date(order.purchaseDate || order.createdAt).toLocaleString('th-TH', { dateStyle: 'short', timeStyle: 'short' }) : '—'}</td>
+                    <td>
+                      {['pending', 'processing'].includes(currentStatus) ? (
+                        <button
+                          className="link-btn danger"
+                          disabled={cancellingOrderId === order._id}
+                          onClick={() => cancelOrderByAdmin(order)}
+                        >
+                          {cancellingOrderId === order._id ? 'Cancelling…' : 'Cancel order'}
+                        </button>
+                      ) : (
+                        <span>—</span>
+                      )}
+                    </td>
                   </tr>
                 );
               })}
@@ -258,6 +341,29 @@ export default function OrdersAdmin() {
           </>
         )}
       </AdminPanel>
+      {manualOrder && (
+        <div className="modal" role="dialog" aria-modal="true" aria-labelledby="manual-order-title">
+          <form className="product-form manual-order-form" onSubmit={submitManualOrder}>
+            <button type="button" className="close" onClick={() => setManualOrder(null)}>×</button>
+            <h2 id="manual-order-title">Create Manual Order</h2>
+            {manualError && <p className="form-error">{manualError}</p>}
+            <select required value={manualOrder.userId} onChange={(e) => setManualOrder({ ...manualOrder, userId: e.target.value })}>
+              <option value="">Select customer</option>
+              {customers.map((customer) => <option key={customer._id} value={customer._id}>{customer.firstName} {customer.lastName} {customer.phone ? `(${customer.phone})` : ''}</option>)}
+            </select>
+            <select required value={manualOrder.productId} onChange={(e) => setManualOrder({ ...manualOrder, productId: e.target.value })}>
+              <option value="">Select product</option>
+              {products.map((product) => <option key={product._id} value={product._id}>{product.name} — {product.quantity ?? 0} in stock</option>)}
+            </select>
+            <input required type="number" min="1" placeholder="Quantity" value={manualOrder.quantity} onChange={(e) => setManualOrder({ ...manualOrder, quantity: e.target.value })} />
+            <input placeholder="Shipping address (optional if customer has one)" value={manualOrder.shippingAddress} onChange={(e) => setManualOrder({ ...manualOrder, shippingAddress: e.target.value })} />
+            <select value={manualOrder.shippingProvider} onChange={(e) => setManualOrder({ ...manualOrder, shippingProvider: e.target.value })}>
+              <option>Standard Delivery</option><option>Flash Express</option><option>Kerry Express</option>
+            </select>
+            <button className="primary-btn">Create order</button>
+          </form>
+        </div>
+      )}
     </div>
   );
 }

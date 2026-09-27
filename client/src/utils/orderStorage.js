@@ -1,29 +1,29 @@
 // ไฟล์: client/src/utils/orderStorage.js
 // โมดูลจัดการบันทึกและดึงข้อมูลออเดอร์ใน LocalStorage (key: merchroom_orders)
 // เรียกใช้งานโดย: Checkout.jsx (สร้างและบันทึกออเดอร์) และ OrderConfirmation.jsx (ค้นหาออเดอร์ตามรหัส)
-const ORDERS_KEY = 'merchroom_orders';
+const ORDERS_KEY = "merchroom_orders";
 
 // รายการช่องทางการชำระเงินที่ระบบรองรับ
 export const PAYMENT_METHODS = [
   {
-    id: 'promptpay',
-    label: 'PromptPay',
-    description: 'สแกน QR Code เพื่อชำระเงิน',
+    id: "promptpay",
+    label: "PromptPay",
+    description: "สแกน QR Code เพื่อชำระเงิน",
   },
   {
-    id: 'card',
-    label: 'บัตรเครดิต / เดบิต',
-    description: 'Visa, Mastercard, JCB',
+    id: "card",
+    label: "บัตรเครดิต / เดบิต",
+    description: "Visa, Mastercard, JCB",
   },
   {
-    id: 'bank',
-    label: 'โอนเงินผ่านธนาคาร',
-    description: 'ชำระเงินโอนเข้าบัญชีธนาคาร',
+    id: "bank",
+    label: "โอนเงินผ่านธนาคาร",
+    description: "ชำระเงินโอนเข้าบัญชีธนาคาร",
   },
   {
-    id: 'cod',
-    label: 'เก็บเงินปลายทาง (COD)',
-    description: 'ชำระเงินเมื่อได้รับสินค้า',
+    id: "cod",
+    label: "เก็บเงินปลายทาง (COD)",
+    description: "ชำระเงินเมื่อได้รับสินค้า",
   },
 ];
 
@@ -31,8 +31,8 @@ export const PAYMENT_METHODS = [
 export function generateOrderId() {
   const date = new Date();
   const yyyy = date.getFullYear();
-  const mm = String(date.getMonth() + 1).padStart(2, '0');
-  const dd = String(date.getDate()).padStart(2, '0');
+  const mm = String(date.getMonth() + 1).padStart(2, "0");
+  const dd = String(date.getDate()).padStart(2, "0");
   const rand = Math.floor(100000 + Math.random() * 900000);
   return `MR-${yyyy}${mm}${dd}-${rand}`;
 }

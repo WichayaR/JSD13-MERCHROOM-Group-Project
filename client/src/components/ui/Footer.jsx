@@ -2,40 +2,40 @@
 // คอมโพเนนต์ส่วนท้ายของเว็บไซต์ (Global Footer)
 // เรียกมาจาก: Layout.jsx (แสดงผลท้ายหน้าทุกหน้าที่อยู่ภายใต้ layout หลัก)
 // มีการเรียกใช้คอมโพเนนต์ย่อย: Logo (กำหนดโทนสี lime และขนาด lg)
-import Logo from './Logo';
+import Logo from "./Logo";
 
 // ข้อมูลลิงก์ใน Footer แบ่งเป็น 3 คอลัมน์หลักตามหมวดหมู่
 const footerColumns = [
   {
-    title: 'CATEGORIES',
+    title: "CATEGORIES",
     links: [
-      'Music A - Z',
-      'Character A - Z',
-      'Apparel',
-      'Accessories',
-      'Arrivals - Just Dropped!',
-      'Upcoming',
-      'Featured',
-      'Sale & Promotions',
+      "Music A - Z",
+      "Character A - Z",
+      "Apparel",
+      "Accessories",
+      "Arrivals - Just Dropped!",
+      "Upcoming",
+      "Featured",
+      "Sale & Promotions",
     ],
   },
   {
-    title: 'INFORMATION',
+    title: "INFORMATION",
     links: [
-      'About Us',
-      'Contact Us',
-      'Copyright Information',
-      'FAQs',
-      'Privacy Policy',
-      'Shipping & Returns Policy',
-      'Size Guides',
-      'Terms & Conditions',
-      'Sitemap',
+      "About Us",
+      "Contact Us",
+      "Copyright Information",
+      "FAQs",
+      "Privacy Policy",
+      "Shipping & Returns Policy",
+      "Size Guides",
+      "Terms & Conditions",
+      "Sitemap",
     ],
   },
   {
-    title: 'Makers',
-    links: ['Artist', 'Band', 'Craftsmen', 'Local Studios', 'View All Makers'],
+    title: "Makers",
+    links: ["Artist", "Band", "Craftsmen", "Local Studios", "View All Makers"],
   },
 ];
 
@@ -53,18 +53,24 @@ export default function Footer() {
             {/* โลโก้ Merchroom ตัวอักษรสีขาว (wordmark-white.svg) ขนาดใหญ่ */}
             <Logo tone="light" size="lg" />
             <p className="mt-6 max-w-91.75 text-base leading-relaxed text-white">
-              More than merch, it&apos;s a room full of good things waiting to find their way to you
+              More than merch, it&apos;s a room full of good things waiting to
+              find their way to you
             </p>
           </div>
 
           {/* เรนเดอร์คอลัมน์ลิงก์ข้อมูล */}
           {footerColumns.map((column) => (
             <nav key={column.title} aria-label={column.title}>
-              <h2 className="text-base font-bold text-highlight">{column.title}</h2>
+              <h2 className="text-base font-bold text-highlight">
+                {column.title}
+              </h2>
               <ul className="mt-3 space-y-0.75">
                 {column.links.map((label) => (
                   <li key={label}>
-                    <a href="#" className="text-sm transition hover:text-highlight">
+                    <a
+                      href="#"
+                      className="text-sm transition hover:text-highlight"
+                    >
                       {label}
                     </a>
                   </li>
@@ -78,7 +84,9 @@ export default function Footer() {
       {/* แถบแถบล่างสุดสำหรับลิขสิทธิ์ (Copyright bar) */}
       <div className="bg-[#d9d9d9]">
         <div className="px-6 py-6 lg:px-15">
-          <p className="text-base text-[#6e6e6e]">@merchroom All Right Reserved</p>
+          <p className="text-base text-[#6e6e6e]">
+            @merchroom All Right Reserved
+          </p>
         </div>
       </div>
     </footer>
