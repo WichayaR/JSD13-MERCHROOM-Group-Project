@@ -2,7 +2,14 @@ import { Bell, Search, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { searchAdminDatabase } from "../../api/dashboard.api";
-import { getOrders, subscribeToOrderEvents } from "../../api/orders.api";
+import {
+  getUnreadOrderNotifications,
+  getOrderById,
+  getOrders,
+  markAllOrderNotificationsRead,
+  markOrderNotificationRead,
+  subscribeToOrderEvents,
+} from "../../api/orders.api";
 import { useAuth } from "../../context/AuthContext";
 
 export default function AdminTopbar() {
@@ -15,7 +22,6 @@ export default function AdminTopbar() {
   const [searchError, setSearchError] = useState("");
   const [notifications, setNotifications] = useState([]);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
-  const knownOrderIds = useRef(null);
   const paymentNotificationIds = useRef(new Set());
 
   useEffect(() => {
@@ -40,27 +46,28 @@ export default function AdminTopbar() {
 
   useEffect(() => {
     let mounted = true;
-    const checkNewOrders = async () => {
+    const loadUnreadNotifications = async () => {
       try {
-        const data = await getOrders({ page: 1, limit: 20 });
-        const orders = data?.orders || [];
-        const ids = new Set(orders.map((order) => order._id));
-        if (knownOrderIds.current) {
-          const incoming = orders.filter(
-            (order) => !knownOrderIds.current.has(order._id),
-          );
-          if (incoming.length && mounted)
-            setNotifications((current) =>
-              [...incoming, ...current].slice(0, 10),
-            );
-        }
-        knownOrderIds.current = ids;
+        const data = await getUnreadOrderNotifications();
+        if (!mounted) return;
+        const persistent = (data?.notifications || []).map((notification) => ({
+          ...notification.order,
+          _notificationId: notification._id,
+          _notificationKey: `created-${notification._id}`,
+          _notificationType: notification.type,
+        }));
+        setNotifications((current) => [
+          ...persistent,
+          ...current.filter(
+            (notification) => notification._notificationType === "payment-paid",
+          ),
+        ].slice(0, 50));
       } catch {
         /* API errors are shown by their respective pages. */
       }
     };
-    checkNewOrders();
-    const interval = window.setInterval(checkNewOrders, 30000);
+    loadUnreadNotifications();
+    const interval = window.setInterval(loadUnreadNotifications, 30000);
     return () => {
       mounted = false;
       window.clearInterval(interval);
@@ -68,22 +75,49 @@ export default function AdminTopbar() {
   }, []);
 
   // Payment changes happen on an existing order, so polling for a new order ID
-  // cannot detect them. Listen to the admin SSE stream for paid payments.
+  // cannot detect them. The stream also delivers new orders immediately.
   useEffect(() => {
     const unsubscribe = subscribeToOrderEvents((event) => {
       try {
         const payload = JSON.parse(event.data || "{}");
+        const orderId = String(payload.orderId || "");
+        if (!orderId) return;
+
+        if (payload.type === "created") {
+          getOrderById(orderId)
+            .then((data) => {
+              const order = data?.order;
+              if (!order) return;
+              setNotifications((current) =>
+                [
+                  {
+                    ...order,
+                    _notificationId: payload.notificationId,
+                    _notificationKey: `created-${payload.notificationId || order._id}`,
+                    _notificationType: "created",
+                  },
+                  ...current.filter(
+                    (item) =>
+                      item._notificationKey !==
+                      `created-${payload.notificationId || order._id}`,
+                  ),
+                ].slice(0, 10),
+              );
+            })
+            .catch(() => {});
+          return;
+        }
+
         if (
           payload.type !== "payment-paid" ||
-          !payload.orderId ||
-          paymentNotificationIds.current.has(payload.orderId)
+          paymentNotificationIds.current.has(orderId)
         )
           return;
-        paymentNotificationIds.current.add(payload.orderId);
+        paymentNotificationIds.current.add(orderId);
         getOrders({ page: 1, limit: 100 })
           .then((data) => {
             const order = (data?.orders || []).find(
-              (item) => String(item._id) === String(payload.orderId),
+              (item) => String(item._id) === orderId,
             );
             if (!order) return;
             setNotifications((current) =>
@@ -116,6 +150,28 @@ export default function AdminTopbar() {
   const chooseResult = (result) => {
     navigate(result.path);
     closeSearch();
+  };
+  const openNotification = async (notification) => {
+    if (notification._notificationId) {
+      try {
+        await markOrderNotificationRead(notification._notificationId);
+      } catch {
+        return;
+      }
+    }
+    setNotifications((current) =>
+      current.filter((item) => item._notificationKey !== notification._notificationKey),
+    );
+    navigate("/admin/orders");
+    setNotificationsOpen(false);
+  };
+  const markAllRead = async () => {
+    try {
+      await markAllOrderNotificationsRead();
+      setNotifications([]);
+    } catch {
+      // Keep the visible notifications if the server could not mark them read.
+    }
   };
 
   return (
@@ -201,7 +257,7 @@ export default function AdminTopbar() {
               <div className="notification-heading">
                 <b>Order notifications</b>
                 {notifications.length > 0 && (
-                  <button type="button" onClick={() => setNotifications([])}>
+                  <button type="button" onClick={markAllRead}>
                     Mark all read
                   </button>
                 )}
@@ -212,10 +268,7 @@ export default function AdminTopbar() {
                     <li key={order._notificationKey || order._id}>
                       <button
                         type="button"
-                        onClick={() => {
-                          navigate("/admin/orders");
-                          setNotificationsOpen(false);
-                        }}
+                        onClick={() => openNotification(order)}
                       >
                         <b>
                           {order._notificationType === "payment-paid"

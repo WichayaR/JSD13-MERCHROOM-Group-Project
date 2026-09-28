@@ -2,7 +2,7 @@
 // หน้ารายละเอียดคำสั่งซื้อ — อ้างอิงดีไซน์ Rounded 2xl อัพเดตตาม UI ในรูปตัวอย่าง
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getOrderById } from '../../src/api/orders.api';
+import { getOrderById, subscribeToMyOrderEvents } from '../../src/api/orders.api';
 import { createReview } from '../../src/api/reviews.api';
 import { OrderStepper } from '../../src/components/ui/OrderStepper';
 import { OrderStatusBadge } from '../../src/components/ui/OrderStatusBadge';
@@ -23,16 +23,36 @@ export default function OrderDetail() {
   const [reviewedProductIds, setReviewedProductIds] = useState([]);
 
   useEffect(() => {
+    let mounted = true;
     async function fetchOrder() {
       try {
         const data = await getOrderById(orderId);
-        setOrder(data.order || null);
+        if (mounted) setOrder(data.order || null);
       } catch {
-        setOrder(null);
+        if (mounted) setOrder(null);
       }
-      setLoading(false);
+      if (mounted) setLoading(false);
     }
     fetchOrder();
+
+    const unsubscribe = subscribeToMyOrderEvents((event) => {
+      try {
+        const payload = JSON.parse(event.data || '{}');
+        if (
+          payload.type === 'status-updated' &&
+          String(payload.orderId) === String(orderId)
+        ) {
+          fetchOrder();
+        }
+      } catch {
+        // Ignore malformed events; the existing order remains visible.
+      }
+    });
+
+    return () => {
+      mounted = false;
+      unsubscribe();
+    };
   }, [orderId]);
 
   if (loading) return <div className="p-8 font-sans text-sm text-gray-500">Loading order details...</div>;

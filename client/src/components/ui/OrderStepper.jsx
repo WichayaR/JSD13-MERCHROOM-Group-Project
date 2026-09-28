@@ -16,8 +16,11 @@ export const OrderStepper = ({ currentStatus }) => {
       case "processing":
         return 1;
       case "shipping":
+      case "shipped":
+      case "in_transit":
         return 2;
       case "delivered":
+      case "completed":
         return 3;
       default:
         return 0;

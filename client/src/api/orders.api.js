@@ -38,6 +38,11 @@ export const updateOrderStatus = (id, status) =>
   });
 export const cancelOrder = (id) =>
   request(`/${id}/cancel`, { method: "PATCH" });
+export const getUnreadOrderNotifications = () => request("/notifications");
+export const markOrderNotificationRead = (id) =>
+  request(`/notifications/${id}/read`, { method: "PATCH" });
+export const markAllOrderNotificationsRead = () =>
+  request("/notifications/read-all", { method: "PATCH" });
 export const subscribeToOrderEvents = (onChange) => {
   const stream = new EventSource(`${BASE}/events`, { withCredentials: true });
   stream.addEventListener("order-change", onChange);
