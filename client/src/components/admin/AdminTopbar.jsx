@@ -50,17 +50,24 @@ export default function AdminTopbar() {
       try {
         const data = await getUnreadOrderNotifications();
         if (!mounted) return;
-        const persistent = (data?.notifications || []).map((notification) => ({
-          ...notification.order,
-          _notificationId: notification._id,
-          _notificationKey: `created-${notification._id}`,
-          _notificationType: notification.type,
-        }));
+        const persistentByOrderId = new Map();
+        (data?.notifications || []).forEach((notification) => {
+          const orderId = String(notification.order?._id || "");
+          if (!orderId || persistentByOrderId.has(orderId)) return;
+          persistentByOrderId.set(orderId, {
+            ...notification.order,
+            _notificationId: notification._id,
+            _notificationKey: `created-${notification._id}`,
+            _notificationType: notification.type,
+          });
+        });
+        const persistent = [...persistentByOrderId.values()];
         setNotifications((current) => [
           ...persistent,
-          ...current.filter(
-            (notification) => notification._notificationType === "payment-paid",
-          ),
+          ...current.filter((notification) => {
+            if (notification._notificationType === "payment-paid") return true;
+            return !persistentByOrderId.has(String(notification._id));
+          }),
         ].slice(0, 50));
       } catch {
         /* API errors are shown by their respective pages. */

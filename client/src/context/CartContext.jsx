@@ -23,14 +23,16 @@ export function CartProvider({ children }) {
     }
   });
 
-  // โหลดค่า discountRate จาก localStorage ตอนเริ่มต้น
+  // A discount is valid only for the active checkout session. Older versions
+  // persisted only the percentage, which could apply a stale discount without
+  // a promo code being entered in the current cart.
   const [discountRate, setDiscountRate] = useState(() => {
     try {
-      const storedRate = localStorage.getItem(DISCOUNT_STORAGE_KEY);
-      return storedRate ? Number(storedRate) : 0;
+      localStorage.removeItem(DISCOUNT_STORAGE_KEY);
     } catch {
-      return 0;
+      // Storage can be unavailable in private browsing; start without a discount.
     }
+    return 0;
   });
 
   // ซิงค์ข้อมูลตะกร้าลง localStorage
@@ -41,15 +43,6 @@ export function CartProvider({ children }) {
       // ดักเคสเปิด incognito หรือ storage เต็ม
     }
   }, [items]);
-
-  // ซิงค์ค่า discountRate ลง localStorage
-  useEffect(() => {
-    try {
-      localStorage.setItem(DISCOUNT_STORAGE_KEY, discountRate.toString());
-    } catch {
-      // ดักเคส storage เต็ม
-    }
-  }, [discountRate]);
 
   // ฟังก์ชันนำส่วนลดไปใช้
   const applyDiscount = useCallback((rate) => {
@@ -96,6 +89,7 @@ export function CartProvider({ children }) {
   const clearCart = useCallback(() => {
     setItems([]);
     setDiscountRate(0);
+    localStorage.removeItem(STORAGE_KEY);
     localStorage.removeItem(DISCOUNT_STORAGE_KEY);
   }, []);
 

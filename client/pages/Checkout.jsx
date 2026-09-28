@@ -5,7 +5,7 @@
 // - useCart: Custom Hook สำหรับดึงข้อมูลสินค้าในตะกร้า, ฟังก์ชันล้างตะกร้า และอัตราส่วนลด
 // - Container, Breadcrumb: UI Components สำหรับจัดเลย์เอาต์และแสดงเส้นทางนำทาง
 // ----------------------------------------------------------------------
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useCart } from "../src/context/CartContext";
 import Container from "../src/components/ui/Container";
@@ -152,6 +152,8 @@ export default function Checkout() {
   const [stockByKey, setStockByKey] = useState({});
   const [stockLoading, setStockLoading] = useState(true);
   const [checkoutError, setCheckoutError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const submittingRef = useRef(false);
 
   // State สำหรับเก็บข้อมูลในแบบฟอร์ม (ผู้ติดต่อ, ที่อยู่จัดส่ง, ข้อมูลการชำระเงิน)
   const [formData, setFormData] = useState({
@@ -251,12 +253,15 @@ export default function Checkout() {
   // ----------------------------------------------------------------------
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (hasStockIssue) {
+    if (submittingRef.current || hasStockIssue) {
+      if (submittingRef.current) return;
       setCheckoutError(
         "Some items exceed the available stock. Please update your cart before checking out.",
       );
       return;
     }
+    submittingRef.current = true;
+    setIsSubmitting(true);
     setCheckoutError("");
     const address = useSameAddress
       ? [
@@ -279,6 +284,12 @@ export default function Checkout() {
         ];
 
     try {
+      // Generate and validate the card token before creating an order. This
+      // prevents a missing/invalid Omise key from leaving a pending order.
+      const cardToken =
+        paymentMethod === "card"
+          ? await createOmiseCardToken(formData)
+          : null;
       const { order } = await createOrder({
         items: items.map((item) => ({
           productId: item.id,
@@ -290,19 +301,22 @@ export default function Checkout() {
         paymentMethod,
       });
       if (paymentMethod === "card") {
-        const token = await createOmiseCardToken(formData);
-        await chargeCard(order._id, token);
+        await chargeCard(order._id, cardToken);
       }
     } catch (error) {
       setCheckoutError(
         error?.message ||
           "Unable to create order. Please sign in and try again.",
       );
+      submittingRef.current = false;
+      setIsSubmitting(false);
       return;
     }
 
-    // Clear the cart only after the order has been saved to the database.
+    // Clear both React state and local storage only after checkout succeeds.
     if (clearCart) clearCart();
+    submittingRef.current = false;
+    setIsSubmitting(false);
     navigate("/orders");
   };
 
@@ -832,11 +846,13 @@ export default function Checkout() {
           {/* ปุ่มยืนยันการสั่งซื้อ */}
           <button
             type="submit"
-            disabled={stockLoading || hasStockIssue}
+            disabled={stockLoading || hasStockIssue || isSubmitting}
             className="mt-5 flex h-12 w-full items-center justify-center rounded-full bg-primary text-base font-semibold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {stockLoading
               ? "Checking stock…"
+              : isSubmitting
+                ? "Processing checkout…"
               : hasStockIssue
                 ? "Update cart quantities"
                 : "Finish checkout"}
