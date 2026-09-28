@@ -2,6 +2,7 @@ const Order = require("../models/Order");
 const Payment = require("../models/Payment");
 const User = require("../models/User");
 const Product = require("../models/Product");
+const AdminNotification = require("../models/AdminNotification");
 const mongoose = require("mongoose");
 const { publish, subscribe } = require("../services/orderEvents");
 const ORDER_STATUSES = [
@@ -38,6 +39,16 @@ async function attachPayments(orders) {
   }));
 }
 
+const createOrderNotification = async (order) => {
+  try {
+    return await AdminNotification.create({ type: "created", orderId: order._id });
+  } catch (error) {
+    // An order must still complete if its non-critical notification cannot be saved.
+    console.error("[ORDER_NOTIFICATION]", error.message);
+    return null;
+  }
+};
+
 exports.stream = (req, res) => {
   res.writeHead(200, {
     "Content-Type": "text/event-stream",
@@ -58,6 +69,57 @@ exports.streamMyOrders = (req, res) => {
   res.write("event: connected\ndata: {}\n\n");
   const unsubscribe = subscribe(res, req.user._id);
   req.on("close", unsubscribe);
+};
+
+exports.getUnreadNotifications = async (req, res, next) => {
+  try {
+    const notifications = await AdminNotification.find({
+      readBy: { $ne: req.user._id },
+    })
+      .sort({ createdAt: -1 })
+      .limit(50)
+      .populate({
+        path: "orderId",
+        populate: { path: "userId", select: "firstName lastName" },
+      });
+
+    res.json({
+      success: true,
+      notifications: notifications
+        .filter((notification) => notification.orderId)
+        .map((notification) => ({
+          _id: notification._id,
+          type: notification.type,
+          createdAt: notification.createdAt,
+          order: notification.orderId,
+        })),
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.markNotificationRead = async (req, res, next) => {
+  try {
+    await AdminNotification.findByIdAndUpdate(req.params.notificationId, {
+      $addToSet: { readBy: req.user._id },
+    });
+    res.json({ success: true });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.markAllNotificationsRead = async (req, res, next) => {
+  try {
+    await AdminNotification.updateMany(
+      { readBy: { $ne: req.user._id } },
+      { $addToSet: { readBy: req.user._id } },
+    );
+    res.json({ success: true });
+  } catch (error) {
+    next(error);
+  }
 };
 
 exports.getAllOrders = async (req, res, next) => {
@@ -222,7 +284,10 @@ exports.createOrder = async (req, res, next) => {
           ),
         ),
       );
-      publish("created", order);
+      const notification = await createOrderNotification(order);
+      publish("created", order, {
+        notificationId: notification ? String(notification._id) : undefined,
+      });
       res
         .status(201)
         .json({ success: true, order: { ...order.toObject(), payment } });
@@ -316,7 +381,10 @@ exports.createManualOrder = async (req, res, next) => {
       ),
     );
     await order.populate("userId", "firstName lastName phone address");
-    publish("created", order);
+    const notification = await createOrderNotification(order);
+    publish("created", order, {
+      notificationId: notification ? String(notification._id) : undefined,
+    });
     res
       .status(201)
       .json({ success: true, order: (await attachPayments([order]))[0] });

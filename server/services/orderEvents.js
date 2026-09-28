@@ -13,10 +13,10 @@ const subscribe = (response, userId = null) => {
   };
 };
 
-const publish = (type, order) => {
+const publish = (type, order, details = {}) => {
   const orderId = order?._id || order;
   const orderUserId = order?.userId?._id || order?.userId;
-  const payload = `event: order-change\ndata: ${JSON.stringify({ type, orderId: String(orderId) })}\n\n`;
+  const payload = `event: order-change\ndata: ${JSON.stringify({ type, orderId: String(orderId), ...details })}\n\n`;
   subscribers.forEach(({ response, userId }) => {
     if (!userId || userId === String(orderUserId)) response.write(payload);
   });

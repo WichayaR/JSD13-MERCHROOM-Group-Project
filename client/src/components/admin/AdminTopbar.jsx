@@ -3,8 +3,11 @@ import { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { searchAdminDatabase } from "../../api/dashboard.api";
 import {
+  getUnreadOrderNotifications,
   getOrderById,
   getOrders,
+  markAllOrderNotificationsRead,
+  markOrderNotificationRead,
   subscribeToOrderEvents,
 } from "../../api/orders.api";
 import { useAuth } from "../../context/AuthContext";
@@ -19,8 +22,6 @@ export default function AdminTopbar() {
   const [searchError, setSearchError] = useState("");
   const [notifications, setNotifications] = useState([]);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
-  const knownOrderIds = useRef(null);
-  const createdNotificationIds = useRef(new Set());
   const paymentNotificationIds = useRef(new Set());
 
   useEffect(() => {
@@ -45,41 +46,28 @@ export default function AdminTopbar() {
 
   useEffect(() => {
     let mounted = true;
-    const checkNewOrders = async () => {
+    const loadUnreadNotifications = async () => {
       try {
-        const data = await getOrders({ page: 1, limit: 20 });
-        const orders = data?.orders || [];
-        const ids = new Set(orders.map((order) => order._id));
-        if (knownOrderIds.current) {
-          const incoming = orders.filter((order) => {
-            const id = String(order._id);
-            return (
-              !knownOrderIds.current.has(order._id) &&
-              !createdNotificationIds.current.has(id)
-            );
-          });
-          incoming.forEach((order) =>
-            createdNotificationIds.current.add(String(order._id)),
-          );
-          if (incoming.length && mounted)
-            setNotifications((current) =>
-              [
-                ...incoming.map((order) => ({
-                  ...order,
-                  _notificationKey: `created-${order._id}`,
-                  _notificationType: "created",
-                })),
-                ...current,
-              ].slice(0, 10),
-            );
-        }
-        knownOrderIds.current = ids;
+        const data = await getUnreadOrderNotifications();
+        if (!mounted) return;
+        const persistent = (data?.notifications || []).map((notification) => ({
+          ...notification.order,
+          _notificationId: notification._id,
+          _notificationKey: `created-${notification._id}`,
+          _notificationType: notification.type,
+        }));
+        setNotifications((current) => [
+          ...persistent,
+          ...current.filter(
+            (notification) => notification._notificationType === "payment-paid",
+          ),
+        ].slice(0, 50));
       } catch {
         /* API errors are shown by their respective pages. */
       }
     };
-    checkNewOrders();
-    const interval = window.setInterval(checkNewOrders, 30000);
+    loadUnreadNotifications();
+    const interval = window.setInterval(loadUnreadNotifications, 30000);
     return () => {
       mounted = false;
       window.clearInterval(interval);
@@ -96,9 +84,6 @@ export default function AdminTopbar() {
         if (!orderId) return;
 
         if (payload.type === "created") {
-          if (createdNotificationIds.current.has(orderId)) return;
-          createdNotificationIds.current.add(orderId);
-          knownOrderIds.current?.add(orderId);
           getOrderById(orderId)
             .then((data) => {
               const order = data?.order;
@@ -107,11 +92,14 @@ export default function AdminTopbar() {
                 [
                   {
                     ...order,
-                    _notificationKey: `created-${order._id}`,
+                    _notificationId: payload.notificationId,
+                    _notificationKey: `created-${payload.notificationId || order._id}`,
                     _notificationType: "created",
                   },
                   ...current.filter(
-                    (item) => item._notificationKey !== `created-${order._id}`,
+                    (item) =>
+                      item._notificationKey !==
+                      `created-${payload.notificationId || order._id}`,
                   ),
                 ].slice(0, 10),
               );
@@ -162,6 +150,28 @@ export default function AdminTopbar() {
   const chooseResult = (result) => {
     navigate(result.path);
     closeSearch();
+  };
+  const openNotification = async (notification) => {
+    if (notification._notificationId) {
+      try {
+        await markOrderNotificationRead(notification._notificationId);
+      } catch {
+        return;
+      }
+    }
+    setNotifications((current) =>
+      current.filter((item) => item._notificationKey !== notification._notificationKey),
+    );
+    navigate("/admin/orders");
+    setNotificationsOpen(false);
+  };
+  const markAllRead = async () => {
+    try {
+      await markAllOrderNotificationsRead();
+      setNotifications([]);
+    } catch {
+      // Keep the visible notifications if the server could not mark them read.
+    }
   };
 
   return (
@@ -247,7 +257,7 @@ export default function AdminTopbar() {
               <div className="notification-heading">
                 <b>Order notifications</b>
                 {notifications.length > 0 && (
-                  <button type="button" onClick={() => setNotifications([])}>
+                  <button type="button" onClick={markAllRead}>
                     Mark all read
                   </button>
                 )}
@@ -258,10 +268,7 @@ export default function AdminTopbar() {
                     <li key={order._notificationKey || order._id}>
                       <button
                         type="button"
-                        onClick={() => {
-                          navigate("/admin/orders");
-                          setNotificationsOpen(false);
-                        }}
+                        onClick={() => openNotification(order)}
                       >
                         <b>
                           {order._notificationType === "payment-paid"
