@@ -469,24 +469,20 @@ export default function ThaiHeritage() {
                 {/* Right Side: Text */}
                 <div className="pt-2 md:pt-0">
                   <h3 className="text-xl sm:text-2xl md:text-[26px] font-bold text-black leading-snug font-sans">
-                    Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+                    จากผ้าแพรวา สู่งานคราฟต์ที่อยู่ในทุกวัน
                   </h3>
                   <div className="mt-4 text-xs sm:text-sm md:text-base leading-relaxed text-black/80 space-y-3 font-normal">
                     <p>
-                      Lorem ipsum dolor sit amet, consectetur adipiscing elit.
-                      Etiam eu turpis molestie, dictum est a, mattis tellus. Sed
-                      dignissim, metus nec fringilla accumsan, risus sem
-                      sollicitudin lacus, ut interdum tellus elit sed risus.
-                      Maecenas eget condimentum velit, sit amet feugiat lectus.
-                      Class aptent taciti sociosqu ad litora torquent per
-                      conubia nostra, per inceptos himenaeos.
+                      ผ้าแพรวาและงานทอมือไทยสะท้อนเวลา ความประณีต และภูมิ
+                      ปัญญาที่ส่งต่อจากช่างฝีมือรุ่นสู่รุ่น ทุกเส้นด้ายจึงไม่ได้
+                      เป็นเพียงลวดลายงดงาม แต่บันทึกเรื่องราวของชุมชนและคุณค่า
+                      ของการสร้างสรรค์ด้วยมือ
                     </p>
                     <p>
-                      Praesent auctor purus luctus enim egestas, ac scelerisque
-                      ante pulvinar. Donec ut rhoncus ex. Suspendisse ac rhoncus
-                      nisl, eu tempor urna. Curabitur vel bibendum lorem. Morbi
-                      convallis convallis diam sit amet lacinia. Aliquam in
-                      elementum tellus.
+                      Merchroom นำแรงบันดาลใจจากงานคราฟต์เหล่านี้มาต่อยอดเป็น
+                      สินค้า contemporary ที่ใช้งานได้ในทุกวัน เพื่อให้งานทอมือ
+                      และภูมิปัญญาช่างไทยเดินทางไปพร้อมกับวิถีชีวิตร่วมสมัย โดย
+                      ยังคงเคารพรากเหง้าและตัวตนของผู้สร้างสรรค์เสมอ
                     </p>
                   </div>
                 </div>

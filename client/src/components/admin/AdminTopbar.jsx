@@ -2,7 +2,11 @@ import { Bell, Search, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { searchAdminDatabase } from "../../api/dashboard.api";
-import { getOrders, subscribeToOrderEvents } from "../../api/orders.api";
+import {
+  getOrderById,
+  getOrders,
+  subscribeToOrderEvents,
+} from "../../api/orders.api";
 import { useAuth } from "../../context/AuthContext";
 
 export default function AdminTopbar() {
@@ -16,6 +20,7 @@ export default function AdminTopbar() {
   const [notifications, setNotifications] = useState([]);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const knownOrderIds = useRef(null);
+  const createdNotificationIds = useRef(new Set());
   const paymentNotificationIds = useRef(new Set());
 
   useEffect(() => {
@@ -46,12 +51,26 @@ export default function AdminTopbar() {
         const orders = data?.orders || [];
         const ids = new Set(orders.map((order) => order._id));
         if (knownOrderIds.current) {
-          const incoming = orders.filter(
-            (order) => !knownOrderIds.current.has(order._id),
+          const incoming = orders.filter((order) => {
+            const id = String(order._id);
+            return (
+              !knownOrderIds.current.has(order._id) &&
+              !createdNotificationIds.current.has(id)
+            );
+          });
+          incoming.forEach((order) =>
+            createdNotificationIds.current.add(String(order._id)),
           );
           if (incoming.length && mounted)
             setNotifications((current) =>
-              [...incoming, ...current].slice(0, 10),
+              [
+                ...incoming.map((order) => ({
+                  ...order,
+                  _notificationKey: `created-${order._id}`,
+                  _notificationType: "created",
+                })),
+                ...current,
+              ].slice(0, 10),
             );
         }
         knownOrderIds.current = ids;
@@ -68,22 +87,49 @@ export default function AdminTopbar() {
   }, []);
 
   // Payment changes happen on an existing order, so polling for a new order ID
-  // cannot detect them. Listen to the admin SSE stream for paid payments.
+  // cannot detect them. The stream also delivers new orders immediately.
   useEffect(() => {
     const unsubscribe = subscribeToOrderEvents((event) => {
       try {
         const payload = JSON.parse(event.data || "{}");
+        const orderId = String(payload.orderId || "");
+        if (!orderId) return;
+
+        if (payload.type === "created") {
+          if (createdNotificationIds.current.has(orderId)) return;
+          createdNotificationIds.current.add(orderId);
+          knownOrderIds.current?.add(orderId);
+          getOrderById(orderId)
+            .then((data) => {
+              const order = data?.order;
+              if (!order) return;
+              setNotifications((current) =>
+                [
+                  {
+                    ...order,
+                    _notificationKey: `created-${order._id}`,
+                    _notificationType: "created",
+                  },
+                  ...current.filter(
+                    (item) => item._notificationKey !== `created-${order._id}`,
+                  ),
+                ].slice(0, 10),
+              );
+            })
+            .catch(() => {});
+          return;
+        }
+
         if (
           payload.type !== "payment-paid" ||
-          !payload.orderId ||
-          paymentNotificationIds.current.has(payload.orderId)
+          paymentNotificationIds.current.has(orderId)
         )
           return;
-        paymentNotificationIds.current.add(payload.orderId);
+        paymentNotificationIds.current.add(orderId);
         getOrders({ page: 1, limit: 100 })
           .then((data) => {
             const order = (data?.orders || []).find(
-              (item) => String(item._id) === String(payload.orderId),
+              (item) => String(item._id) === orderId,
             );
             if (!order) return;
             setNotifications((current) =>
